@@ -1,4 +1,40 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Read(//c/msys64/usr/bin/**)",
+      "Read(//c/msys64/mingw64/bin/**)",
+      "Read(//c/Program Files/mingw64/bin/**)",
+      "Read(//mingw64/bin/**)",
+      "Bash(powershell:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Read(//c/programmieren/dsstuff/**)",
+      "Bash(curl -sL \"https://api.github.com/repos/devkitPro/installer/releases/latest\")",
+      "Bash(mkdir:*)",
+      "Bash(\"c:/programmieren/dsstuff/mingw64/bin/g++.exe\" --version)",
+      "Bash(export PATH=\"/c/programmieren/dsstuff/mingw64/bin:$PATH\")",
+      "Bash(mingw32-make run:*)",
+      "Bash(g++ -std=c++17 -Wall -Wextra -g -I. -Inds -o test_types.exe test_types.cpp)",
+      "Bash(./test_types.exe)",
+      "Bash(export DEVKITPRO=/opt/devkitpro)",
+      "Bash(export DEVKITARM=/opt/devkitpro/devkitARM)",
+      "Bash(export PATH=\"$DEVKITARM/bin:$DEVKITPRO/tools/bin:$PATH\")",
+      "Read(//opt/**)",
+      "Read(//c/devkitPro//**)",
+      "Bash(export DEVKITPRO=/c/devkitPro)",
+      "Bash(export DEVKITARM=/c/devkitPro/devkitARM)",
+      "Bash(export LIBNDS=/c/devkitPro/libnds)",
+      "Bash(export PATH=\"$DEVKITARM/bin:$DEVKITPRO/tools/bin:/c/programmieren/dsstuff/mingw64/bin:$PATH\")",
+      "Bash(arm-none-eabi-gcc --version)",
+      "Bash(ndstool --version)",
+      "Bash(make)",
+      "Bash(export PATH=\"$DEVKITARM/bin:$DEVKITPRO/tools/bin:$DEVKITPRO/msys2/usr/bin:/c/programmieren/dsstuff/mingw64/bin:$PATH\")",
+      "Bash(export PATH=\"/c/devkitPro/devkitARM/bin:/c/devkitPro/tools/bin:/c/devkitPro/msys2/usr/bin:/c/programmieren/dsstuff/mingw64/bin:$PATH\")",
+      "Bash(export PATH=\"/c/devkitPro/devkitARM/bin:/c/devkitPro/tools/bin:/c/devkitPro/msys2/usr/bin:$PATH\")",
+      "Bash(make clean:*)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -37,11 +73,6 @@
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(python3:*)"
     ]
   }
 }
