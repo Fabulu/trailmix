@@ -1,0 +1,24 @@
+# Claude agent run directories (local only — contents never committed)
+runs/
+!runs/.gitkeep
+
+# Log files
+*.log
+
+# Popup tent source (already installed)
+popup-tent/
+popup-tent.zip
+
+# Build artifacts (devkitARM)
+build/
+*.o
+*.d
+*.elf
+*.nds
+*.arm9
+*.arm7
+
+# IDE
+.vscode/
+*.swp
+*~
