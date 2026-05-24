@@ -235,8 +235,8 @@ bool shopUpdate() {
             shopDirty = true;
         }
 
-        // Perk card: y=90..122, x < 130
-        if (ty >= PERK_Y && ty < PERK_Y + PERK_H && tx < 130) {
+        // Perk card: y=90..122, x < 130 (only if lock button didn't handle it)
+        else if (ty >= PERK_Y && ty < PERK_Y + PERK_H && tx < 130) {
             ShopCard& pc = gShop.perkCard;
             if (!pc.sold) {
                 if (gShop.selectedCard == 6) {
@@ -250,8 +250,8 @@ bool shopUpdate() {
             }
         }
 
-        // REROLL button: y=90..122, x >= 150
-        if (ty >= REROLL_Y && ty < REROLL_Y + REROLL_H && tx >= 150) {
+        // REROLL button: y=90..122, x >= 150 (only if lock/perk didn't handle it)
+        else if (ty >= REROLL_Y && ty < REROLL_Y + REROLL_H && tx >= 150) {
             int cost = 3 + gShop.rerollCount;
 
             // Yellow T1 (Fortune): free reroll once per shop visit
