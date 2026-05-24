@@ -16,7 +16,7 @@ Pack source pages:
 | Final file | Original source file | Source pack page |
 | --- | --- | --- |
 | `shoot.wav` | `pepSound3.ogg` | Digital Audio |
-| `hit.wav` | `select_001.ogg` | Interface Sounds |
+| `hit.wav` | `click_002.ogg` | Interface Sounds |
 | `explode.wav` | `spaceTrash3.ogg` | Digital Audio |
 | `pickup_gold.wav` | `bong_001.ogg` | Interface Sounds |
 | `merge.wav` | `powerUp4.ogg` | Digital Audio |

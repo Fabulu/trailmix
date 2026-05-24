@@ -129,6 +129,9 @@ static int currentMusic = -1;
 static int musicSoundId = -1;
 
 void audioPlayMusic(int id) {
+    // Music disabled — WAV loops sound too compressed at 8-bit.
+    // Waiting for tracker format (MOD/XM) replacements.
+    return;
     if (id == currentMusic) return;
     if (id < 0 || id > 4) return;
 
