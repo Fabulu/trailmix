@@ -23,6 +23,10 @@ enum SfxId {
     GSFX_TIMESTOP = 15,
     GSFX_HEAL    = 16,
     GSFX_SYNERGY = 17,
+    GSFX_ENEMY_SHOOT = 18,
+    GSFX_MINE_PLACE  = 19,
+    GSFX_BOSS_PHASE  = 20,
+    GSFX_VICTORY     = 21,
     GSFX_COUNT
 };
 

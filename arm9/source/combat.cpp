@@ -287,6 +287,7 @@ static void updateEnemies() {
                     e.aiState++;
                     // Spawn a zone at the player's current position
                     spawnZone(gPlayer.pos, 16, 1, 15, 180, 4, ZONE_POISON);
+                    audioPlaySfx(GSFX_MINE_PLACE);
                 }
                 break;
             }
@@ -311,7 +312,8 @@ static void updateEnemies() {
                         static_cast<Fixed>(fixMul(dir.y, FP_ONE))
                     };
                     Bullet* sb = spawnBullet(e.pos, shotVel, 4, 2, BFLAG_SLOW, 0, 120, 180);
-                    (void)sb; // bullet is self-managing
+                    (void)sb;
+                    audioPlaySfx(GSFX_ENEMY_SHOOT);
                 }
                 break;
             }

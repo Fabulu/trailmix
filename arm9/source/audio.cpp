@@ -20,6 +20,10 @@
 #include "timestop_wav.h"
 #include "heal_wav.h"
 #include "sfx_synergy_wav.h"
+#include "enemy_shoot_wav.h"
+#include "mine_place_wav.h"
+#include "boss_phase_wav.h"
+#include "victory_wav.h"
 
 // SFX lookup: maps GSFX_ enum to WAV data pointer and size
 struct WavEntry { const u8* data; size_t size; };
@@ -42,6 +46,10 @@ static const WavEntry sfxTable[GSFX_COUNT] = {
     { timestop_wav,    timestop_wav_size },      // GSFX_TIMESTOP
     { heal_wav,        heal_wav_size },          // GSFX_HEAL
     { sfx_synergy_wav, sfx_synergy_wav_size },       // GSFX_SYNERGY
+    { enemy_shoot_wav, enemy_shoot_wav_size },     // GSFX_ENEMY_SHOOT
+    { mine_place_wav,  mine_place_wav_size },      // GSFX_MINE_PLACE
+    { boss_phase_wav,  boss_phase_wav_size },      // GSFX_BOSS_PHASE
+    { victory_wav,     victory_wav_size },          // GSFX_VICTORY
 };
 
 void audioInit() {
@@ -87,6 +95,10 @@ static const SfxTuning sfxTuning[GSFX_COUNT] = {
     { 18, 22050},  // TIMESTOP
     { 18, 22050},  // HEAL
     { 20, 22050},  // SYNERGY
+    {  8, 22050},  // ENEMY_SHOOT
+    { 15, 22050},  // MINE_PLACE
+    { 22, 22050},  // BOSS_PHASE
+    { 25, 22050},  // VICTORY
 };
 
 void audioPlaySfx(SfxId id) {
