@@ -1,5 +1,5 @@
 #---------------------------------------------------------------------------------
-# ARM9 Makefile for DS Pill Shooter
+# ARM9 Makefile for Trail Mix
 # Compatible with both BlocksDS and devkitPro
 #---------------------------------------------------------------------------------
 

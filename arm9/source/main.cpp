@@ -3,36 +3,52 @@
 #include "game.h"
 #include "render.h"
 #include "strings.h"
+#include "enemy_sprites.h"
+#include "entities.h"
 
-// Simple bouncing shape for the language select screen
-struct BouncyEnemy {
-    s16 x, y, dx, dy, size;
-    u16 color;
+// Bouncing enemy sprite for the language select screen
+struct BouncySprite {
+    s16 x, y, dx, dy;
+    u8 type;      // ETYPE_* (0-11, no bosses)
+    u8 sizeClass; // 0=small, 1=medium, 2=large (rarely)
+    u8 frame;     // animation frame (0 or 1)
+    u8 spriteSize; // pixel size (8, 16, or 24)
 };
 
 void languageSelect() {
+    // Init enemy sprite lookup table (just ROM pointers, no VRAM needed)
+    enemySpriteInit();
+
     // Top screen: framebuffer mode for animated bouncing enemies
     videoSetMode(MODE_FB0);
     vramSetBankA(VRAM_A_LCD);
     u16* fb = VRAM_A;
 
-    // Init 8 bouncing geometric shapes (fewer = less drawing = no tearing)
+    // Init 8 bouncing enemy sprites — random types, mostly small/medium, rarely large
     constexpr int NUM_BOUNCERS = 8;
-    BouncyEnemy bouncers[NUM_BOUNCERS];
-    static const u16 colors[] = {
-        RGB15(31,5,5), RGB15(5,10,31), RGB15(5,28,5), RGB15(31,28,0),
-        RGB15(20,0,31), RGB15(0,28,28), RGB15(31,10,10), RGB15(10,20,31),
+    BouncySprite bouncers[NUM_BOUNCERS];
+
+    // Deterministic "random" type selection — pick a variety of regular enemies
+    static const u8 typePool[] = {
+        ETYPE_GRUNT, ETYPE_CHARGER, ETYPE_SPITTER, ETYPE_BOMBER,
+        ETYPE_SWARM_DRONE, ETYPE_GHOST, ETYPE_BRUTE, ETYPE_SPLITTER,
     };
+    // Size distribution: mostly small/medium, one large
+    static const u8 sizePool[] = { 0, 1, 0, 1, 1, 0, 1, 2 };
+    static const u8 pxSizes[]  = { 8, 16, 24 };
+
     for (int i = 0; i < NUM_BOUNCERS; i++) {
+        bouncers[i].type = typePool[i];
+        bouncers[i].sizeClass = sizePool[i];
+        bouncers[i].spriteSize = pxSizes[sizePool[i]];
+        bouncers[i].frame = 0;
         bouncers[i].x = 20 + (i * 37) % 216;
         bouncers[i].y = 15 + (i * 23) % 162;
         bouncers[i].dx = (i % 2 == 0) ? 1 : -1;
         bouncers[i].dy = (i % 3 == 0) ? 1 : -1;
-        bouncers[i].size = 8 + (i % 3) * 4; // 8, 12, 16
-        bouncers[i].color = colors[i] | BIT(15);
     }
 
-    // Fill screen once with dark background before entering loop
+    // Fill screen with dark background
     {
         u16 dark = RGB15(1, 1, 3) | BIT(15);
         for (int i = 0; i < 256 * 192; i++) fb[i] = dark;
@@ -46,11 +62,12 @@ void languageSelect() {
     consoleSelect(&langConsole);
 
     int selection = 0;
+    int frameCount = 0;
 
     while (true) {
         consoleClear();
         printf("\n\n\n");
-        printf("    === PILL ARMY ===\n\n");
+        printf("    === TRAIL MIX ===\n\n");
         printf("    Select Language:\n\n");
         printf("    %s English\n", selection == 0 ? ">" : " ");
         printf("    %s Deutsch\n", selection == 1 ? ">" : " ");
@@ -58,15 +75,16 @@ void languageSelect() {
         printf("    A to confirm\n");
 
         swiWaitForVBlank();
+        frameCount++;
 
-        // Erase each bouncer at old position, move, draw at new position
         u16 dark = RGB15(1, 1, 3) | BIT(15);
         for (int i = 0; i < NUM_BOUNCERS; i++) {
-            BouncyEnemy& b = bouncers[i];
+            BouncySprite& b = bouncers[i];
+            int sz = b.spriteSize;
 
-            // Erase old position (fill with dark)
-            for (int py = 0; py < b.size; py++) {
-                for (int px = 0; px < b.size; px++) {
+            // Erase old position
+            for (int py = 0; py < sz; py++) {
+                for (int px = 0; px < sz; px++) {
                     int sx = b.x + px, sy = b.y + py;
                     if (sx >= 0 && sx < 256 && sy >= 0 && sy < 192)
                         fb[sy * 256 + sx] = dark;
@@ -76,29 +94,16 @@ void languageSelect() {
             // Move
             b.x += b.dx;
             b.y += b.dy;
-            if (b.x <= 0 || b.x + b.size >= 256) { b.dx = -b.dx; b.x += b.dx * 2; }
-            if (b.y <= 0 || b.y + b.size >= 192) { b.dy = -b.dy; b.y += b.dy * 2; }
+            if (b.x <= 0 || b.x + sz >= 256) { b.dx = -b.dx; b.x += b.dx * 2; }
+            if (b.y <= 0 || b.y + sz >= 192) { b.dy = -b.dy; b.y += b.dy * 2; }
             if (b.x < 0) b.x = 0;
             if (b.y < 0) b.y = 0;
 
-            // Draw at new position
-            for (int py = 0; py < b.size; py++) {
-                for (int px = 0; px < b.size; px++) {
-                    bool draw;
-                    if (i % 2 == 0) {
-                        draw = true;
-                    } else {
-                        int half = b.size / 2;
-                        int cx = px - half, cy = py - half;
-                        draw = ((cx < 0 ? -cx : cx) + (cy < 0 ? -cy : cy)) <= half;
-                    }
-                    if (draw) {
-                        int sx = b.x + px, sy = b.y + py;
-                        if (sx >= 0 && sx < 256 && sy >= 0 && sy < 192)
-                            fb[sy * 256 + sx] = b.color;
-                    }
-                }
-            }
+            // Toggle animation frame every 16 frames
+            b.frame = (frameCount >> 4) & 1;
+
+            // Draw sprite at new position
+            enemySpriteBlitTo(fb, b.type, b.sizeClass, b.frame, b.x, b.y);
         }
 
         scanKeys();

@@ -1,4 +1,4 @@
-# Pixel Art Sprite Brief -- DS Pill Game
+# Pixel Art Sprite Brief -- Trail Mix
 
 ## Context
 

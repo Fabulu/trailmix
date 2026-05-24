@@ -28,6 +28,7 @@ arm9/build/
 *.bak
 .tmp_audio_sources/
 .claude/
+subagents/
 
 # OS
 Thumbs.db

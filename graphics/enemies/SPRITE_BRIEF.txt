@@ -1,4 +1,4 @@
-ENEMY SPRITE ART BRIEF — DS Pill Game
+ENEMY SPRITE ART BRIEF — Trail Mix
 ======================================
 Top-down roguelike, 256x192 NDS. 4bpp indexed color, transparent BG.
 Clean pixel art. No anti-aliasing, no dithering. 1px dark outline on all bodies.

@@ -17,4 +17,8 @@ void enemySpriteBlitMain(u8 type, u8 sizeClass, u8 frame,
                          int screenX, int screenY,
                          u8 tintMode = 0, u8 alpha = 4);
 
+// Blit to an arbitrary framebuffer (for language select screen etc.)
+void enemySpriteBlitTo(u16* fb, u8 type, u8 sizeClass, u8 frame,
+                       int screenX, int screenY);
+
 #endif

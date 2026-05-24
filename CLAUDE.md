@@ -1,11 +1,11 @@
-# DS Pill Game — Claude Code Project Guide
+# Trail Mix — Claude Code Project Guide
 
 ## Project Overview
 
-A Nintendo DS roguelike auto-chess shooter. The player controls a pill that auto-shoots at geometric shapes (enemies). Lower screen handles roguelike upgrade choices. Collect pills of the same color for synergy effects — 3 pills merge into a Super pill, 3 Supers into an Ultra, 3 Ultras into a Mega.
+A Nintendo DS roguelike auto-chess shooter called Trail Mix. The player controls a character that auto-shoots at enemies. Lower screen handles roguelike upgrade choices. Collect companions of the same color for synergy effects — 3 identical companions merge into an upgraded version.
 
 **Tech target:** Nintendo DS homebrew (ARM9/ARM7, dual screen, devkitARM + libnds)
-**Graphics:** Simple geometric shapes, solid colors, particle effects. No complex sprites.
+**Graphics:** Pixel art sprites, particle effects, bitmap framebuffer rendering.
 **Input:** D-pad for movement, touch screen for roguelike choices.
 
 ---

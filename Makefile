@@ -1,9 +1,9 @@
 #---------------------------------------------------------------------------------
-# Top-level Makefile — DS Pill Shooter
+# Top-level Makefile — Trail Mix
 # Builds ARM9, bundles with default ARM7 into .nds ROM
 #---------------------------------------------------------------------------------
 
-export TARGET := dsgame
+export TARGET := trailmix
 
 # Export toolchain paths so sub-makes inherit them
 export DEVKITPRO ?= /c/devkitPro
@@ -26,7 +26,7 @@ $(TARGET).nds: arm9
 	ndstool -c $(TARGET).nds \
 		-9 arm9/arm9.elf \
 		-7 $(ARM7_ELF) \
-		-b graphics/icon.bmp "Pill Shooter;DS Roguelike;Homebrew"
+		-b graphics/icon.bmp "Trail Mix;Roguelike Auto-Chess;Shooter"
 
 # Clean everything
 clean:

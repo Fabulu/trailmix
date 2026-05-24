@@ -238,3 +238,37 @@ void enemySpriteBlitMain(u8 type, u8 sizeClass, u8 frame,
         }
     }
 }
+
+// Simple blit to an arbitrary framebuffer (no tint, no alpha — for title screen)
+void enemySpriteBlitTo(u16* fb, u8 type, u8 sizeClass, u8 frame,
+                       int screenX, int screenY) {
+    if (!fb || type > 15) return;
+    u8 sc = (type >= 12) ? 0 : sizeClass;
+    if (sc > 2) sc = 1;
+
+    const EnemySpriteEntry& entry = sSpriteTable[type][sc];
+    if (!entry.pixels) return;
+
+    int w = entry.frameW;
+    int h = entry.frameH;
+    int frameBytes = w * h / 2;
+    const u8* src = entry.pixels + (frame ? frameBytes : 0);
+    const u16* rawPal = reinterpret_cast<const u16*>(entry.palette);
+
+    int srcIdx = 0;
+    for (int y = 0; y < h; y++) {
+        int sy = screenY + y;
+        if (sy < 0 || sy >= 192) { srcIdx += w / 2; continue; }
+        u16* row = fb + sy * 256;
+        for (int x = 0; x < w; x += 2) {
+            u8 packed = src[srcIdx++];
+            u8 lo = packed & 0x0F;
+            u8 hi = (packed >> 4) & 0x0F;
+            int sx0 = screenX + x;
+            if (lo != 0 && sx0 >= 0 && sx0 < 256)
+                row[sx0] = rawPal[lo] | BIT(15);
+            if (hi != 0 && sx0 + 1 >= 0 && sx0 + 1 < 256)
+                row[sx0 + 1] = rawPal[hi] | BIT(15);
+        }
+    }
+}
