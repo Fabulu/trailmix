@@ -54,6 +54,13 @@ static const int REROLL_H    = 32;
 // Inventory bar
 static const int COMP_Y      = 128;
 
+// Heal button
+static const int HEAL_Y      = 144;
+static const int HEAL_H      = 16;
+static const int HEAL_W      = 80;
+static const int HEAL_X      = 2;
+static const int HEAL_COST   = 8;
+
 // Start wave button
 static const int START_Y     = 164;
 static const int START_W     = 240;
@@ -370,6 +377,29 @@ bool shopUpdate() {
                 slotX += 14;
             }
         }
+
+        // Heal button: y=144..160, x=2..82
+        if (ty >= HEAL_Y && ty < HEAL_Y + HEAL_H
+            && tx >= HEAL_X && tx < HEAL_X + HEAL_W) {
+            if (gPlayer.gold >= HEAL_COST && gPlayer.hp < gPlayer.maxHp) {
+                gPlayer.gold = static_cast<u16>(gPlayer.gold - HEAL_COST);
+                // Heal player 20%
+                s16 heal = gPlayer.maxHp / 5;
+                if (heal < 1) heal = 1;
+                gPlayer.hp += heal;
+                if (gPlayer.hp > gPlayer.maxHp) gPlayer.hp = gPlayer.maxHp;
+                // Heal all companions 20%
+                for (auto& c : gCompanions) {
+                    if (!c.active) continue;
+                    s16 cheal = c.maxHp / 5;
+                    if (cheal < 1) cheal = 1;
+                    c.hp += cheal;
+                    if (c.hp > c.maxHp) c.hp = c.maxHp;
+                }
+                audioPlaySfx(GSFX_HEAL);
+                shopDirty = true;
+            }
+        }
     }
 
     // D-pad can also deselect: press B to clear selection
@@ -641,5 +671,17 @@ void shopRender() {
         int swtw = renderTextWidth(swText);
         renderTextSub(START_X + (START_W - swtw) / 2, START_Y + 8, swText,
             RGB15(14, 31, 14));
+    }
+
+    // Heal button
+    {
+        bool canHeal = (gPlayer.gold >= HEAL_COST && gPlayer.hp < gPlayer.maxHp);
+        u16 healBg = canHeal ? RGB15(2, 12, 4) : RGB15(4, 4, 4);
+        u16 healTxt = canHeal ? RGB15(10, 31, 10) : RGB15(10, 10, 10);
+        renderFilledRectSub(HEAL_X, HEAL_Y, HEAL_W, HEAL_H, healBg);
+        char healBuf[20];
+        snprintf(healBuf, sizeof(healBuf), "HEAL %dg", HEAL_COST);
+        int htw = renderTextWidth(healBuf);
+        renderTextSub(HEAL_X + (HEAL_W - htw) / 2, HEAL_Y + 4, healBuf, healTxt);
     }
 }
