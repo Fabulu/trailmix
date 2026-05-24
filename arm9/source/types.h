@@ -32,13 +32,10 @@ struct Vec2 {
 constexpr int SCREEN_W = 256;
 constexpr int SCREEN_H = 192;
 
-// Pill tiers
-enum class PillTier : u8 {
-    Normal = 0,
-    Super  = 1,
-    Ultra  = 2,
-    Mega   = 3,
-};
+// Arena dimensions
+constexpr int ARENA_W = 512;
+constexpr int ARENA_H = 384;
+constexpr int WALL_THICK = 16;
 
 // Pill / synergy colors
 enum class PillColor : u8 {
@@ -46,12 +43,12 @@ enum class PillColor : u8 {
     Blue   = 1,  // speed
     Green  = 2,  // regen
     Yellow = 3,  // fire rate
+    Purple = 4,  // corruption
+    Cyan   = 5,  // technology
     COUNT
 };
 
 constexpr int PILL_COLOR_COUNT = static_cast<int>(PillColor::COUNT);
-constexpr int PILL_TIER_COUNT  = 4;
-constexpr int MERGE_THRESHOLD  = 3;
 
 // AABB for collision
 struct Rect {

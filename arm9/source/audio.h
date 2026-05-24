@@ -3,15 +3,27 @@
 
 #include <nds.h>
 
-// SFX IDs — will map to soundbank entries once assets are added
+// Game SFX IDs — prefixed with GSFX_ to avoid collision with soundbank.h #defines
 enum SfxId {
-    SFX_SHOOT   = 0,
-    SFX_EXPLODE = 1,
-    SFX_PICKUP  = 2,
-    SFX_MERGE   = 3,
-    SFX_HIT     = 4,
-    SFX_SELECT  = 5,
-    SFX_COUNT
+    GSFX_SHOOT   = 0,
+    GSFX_EXPLODE = 1,
+    GSFX_GOLD    = 2,
+    GSFX_MERGE   = 3,
+    GSFX_HIT     = 4,
+    GSFX_SELECT  = 5,
+    GSFX_DASH    = 6,
+    GSFX_BUY     = 7,
+    GSFX_SELL    = 8,
+    GSFX_REROLL  = 9,
+    GSFX_WAVE_CLEAR = 10,
+    GSFX_WAVE_START = 11,
+    GSFX_PLAYER_HIT = 12,
+    GSFX_PERK    = 13,
+    GSFX_BOSS    = 14,
+    GSFX_TIMESTOP = 15,
+    GSFX_HEAL    = 16,
+    GSFX_SYNERGY = 17,
+    GSFX_COUNT
 };
 
 void audioInit();

@@ -1,0 +1,645 @@
+#include "shop.h"
+#include "render.h"
+#include "player.h"
+#include "companion.h"
+#include "audio.h"
+#include "rng.h"
+#include "game.h"
+#include "strings.h"
+#include "synergy.h"
+// Forward declarations from perk.h (avoid including directly due to
+// PERK_COUNT redefinition conflict with strings.h in the same TU)
+enum PerkId : u8 {
+    PERK_BULLET_HELL = 0, PERK_OVERCHARGE, PERK_GLASS_CANNON, PERK_CHAIN_LIGHTNING,
+    PERK_PHOENIX_DOWN, PERK_FORTRESS, PERK_SHIELD_BASH, PERK_SECOND_WIND,
+    PERK_GOLD_FEVER, PERK_WAR_CHEST, PERK_JACKPOT, PERK_WHOLESALE,
+    PERK_PACK_RAT, PERK_WARP_DRIVE, PERK_SOUL_SURGE,
+};
+bool perkIsActive(PerkId id);
+int perkGetRandom();
+void perkApplyOnBuy(PerkId id);
+int perkMaxCompanions();
+static const u16 kPerkPriceShop[15] = {
+    60,70,75,65,60,65,55,70,50,65,60,80,55,65,70
+};
+#include <nds.h>
+#include <cstdio>
+
+ShopState gShop;
+
+// Dirty flag: only re-render when something changed
+static bool shopDirty = true;
+
+// ---------------------------------------------------------------------------
+// Layout constants -- all pixel coordinates for the 256x192 sub screen
+// ---------------------------------------------------------------------------
+
+// Card grid: 2 rows of 3 cards, 78x38 each
+static const int CARD_W      = 78;
+static const int CARD_H      = 38;
+static const int CARD_X[3]   = { 2, 84, 166 };
+static const int CARD_ROW_Y[2] = { 4, 46 };
+
+// Row 3: perk card + reroll
+static const int PERK_Y      = 90;
+static const int PERK_W      = 120;
+static const int PERK_H      = 32;
+static const int PERK_X      = 2;
+
+static const int REROLL_X    = 180;
+static const int REROLL_Y    = 90;
+static const int REROLL_W    = 70;
+static const int REROLL_H    = 32;
+
+// Inventory bar
+static const int COMP_Y      = 128;
+
+// Start wave button
+static const int START_Y     = 164;
+static const int START_W     = 240;
+static const int START_H     = 24;
+static const int START_X     = (256 - START_W) / 2;
+
+// ── shopGenerate ──────────────────────────────────────────────────
+
+void shopGenerate(int wave) {
+    for (int i = 0; i < SHOP_CARDS; ++i) {
+        ShopCard& c = gShop.cards[i];
+
+        // Skip locked cards
+        if (c.locked) continue;
+
+        // Roll class using weighted rarity: Common=60%, Uncommon=30%, Rare=10%
+        int roll = rngRange(10);
+        u8 targetRarity;
+        if (roll < 6)       targetRarity = 0; // Common  (60%)
+        else if (roll < 9)  targetRarity = 1; // Uncommon (30%)
+        else                targetRarity = 2; // Rare    (10%)
+
+        // Pick a random color
+        c.color = static_cast<PillColor>(rngRange(PILL_COLOR_COUNT));
+
+        // Pick a random class of the target rarity within that color
+        int colorBase = static_cast<int>(c.color) * 6;
+        u8 candidates[6];
+        int numCandidates = 0;
+        for (int ci = 0; ci < 6; ci++) {
+            if (kClassDefs[colorBase + ci].rarity == targetRarity) {
+                candidates[numCandidates++] = static_cast<u8>(ci);
+            }
+        }
+        c.classId = candidates[rngRange(numCandidates)];
+        c.rarity = targetRarity;
+
+        // Price by rarity: flat prices
+        int base;
+        switch (c.rarity) {
+            case 0:  base = 8; break;
+            case 1:  base = 14; break;
+            default: base = 32; break;
+        }
+        // Wholesale: 30% discount on companions
+        if (perkIsActive(PERK_WHOLESALE)) {
+            base = base * 7 / 10;
+            if (base < 1) base = 1;
+        }
+        c.price = static_cast<u16>(base);
+
+        c.sold   = false;
+        c.isPerk = false;
+        c.perkId = 0;
+        c.locked = false;
+    }
+
+    // Owned-class weighting: 40% chance to match an owned companion
+    for (int i = 0; i < SHOP_CARDS; i++) {
+        ShopCard& c = gShop.cards[i];
+        if (c.sold || c.locked) continue;
+        if (gCompanionCount > 0 && rngRange(100) < 40) {
+            // Match an owned companion's COLOR only; pick a random class within that color.
+            int pick = rngRange(gCompanionCount);
+            int found = 0;
+            for (int j = 0; j < MAX_COMPANIONS; ++j) {
+                if (!gCompanions[j].active) continue;
+                if (found == pick) {
+                    c.color = gCompanions[j].color;
+                    // Re-roll classId within the matched color at the card's existing rarity
+                    int colorBase = static_cast<int>(c.color) * 6;
+                    u8 cands[6];
+                    int numCands = 0;
+                    for (int ci = 0; ci < 6; ci++) {
+                        if (kClassDefs[colorBase + ci].rarity == c.rarity) {
+                            cands[numCands++] = static_cast<u8>(ci);
+                        }
+                    }
+                    if (numCands > 0) c.classId = cands[rngRange(numCands)];
+                    int fci = colorBase + c.classId;
+                    int base = (c.rarity == 0) ? 8 : (c.rarity == 1) ? 14 : 32;
+                    if (perkIsActive(PERK_WHOLESALE)) {
+                        base = base * 7 / 10;
+                        if (base < 1) base = 1;
+                    }
+                    c.price = static_cast<u16>(base);
+                    break;
+                }
+                found++;
+            }
+        }
+    }
+
+    // Perk slot
+    gShop.perkCard.isPerk = true;
+    int pid = perkGetRandom();
+    if (pid >= 0) {
+        gShop.perkCard.perkId = static_cast<u8>(pid);
+        gShop.perkCard.price = kPerkPriceShop[pid];
+        gShop.perkCard.sold = false;
+        gShop.perkCard.locked = false;
+    } else {
+        // All perks owned
+        gShop.perkCard.sold = true;
+    }
+
+    gShop.rerollCount = 0;
+    gShop.selectedCard = -1;
+    gShop.selectedCompanion = -1;
+    gShop.lockTarget = -1;
+    gShop.errorCard = -1;
+    gShop.errorTimer = 0;
+
+    // Yellow T1 (Fortune): reset free reroll for this shop visit
+    gSynergy.yellowFreeRerollUsed = false;
+
+    shopDirty = true;
+}
+
+// ── shopUpdate ────────────────────────────────────────────────────
+
+bool shopUpdate() {
+    // Tick down error flash timer
+    if (gShop.errorTimer > 0) {
+        gShop.errorTimer--;
+        if (gShop.errorTimer == 0) {
+            gShop.errorCard = -1;
+            shopDirty = true;
+        } else {
+            shopDirty = true;
+        }
+    }
+
+    if (keysDown() & KEY_START) {
+        return true;
+    }
+
+    if (keysDown() & KEY_TOUCH) {
+        touchPosition touch;
+        touchRead(&touch);
+        int ty = touch.py;
+        int tx = touch.px;
+
+        // Card buttons: row 0 y=4..42, row 1 y=46..84
+        int btnRow = -1;
+        if (ty >= CARD_ROW_Y[0] && ty < CARD_ROW_Y[0] + CARD_H) btnRow = 0;
+        if (ty >= CARD_ROW_Y[1] && ty < CARD_ROW_Y[1] + CARD_H) btnRow = 1;
+
+        if (btnRow >= 0) {
+            int col = -1;
+            for (int c = 0; c < 3; ++c) {
+                if (tx >= CARD_X[c] && tx < CARD_X[c] + CARD_W) { col = c; break; }
+            }
+            if (col >= 0) {
+                int cardIdx = btnRow * 3 + col;
+                if (cardIdx >= 0 && cardIdx < SHOP_CARDS) {
+                    ShopCard& c = gShop.cards[cardIdx];
+                    if (!c.sold) {
+                        if (gShop.selectedCard == static_cast<s8>(cardIdx)) {
+                            // Tap same card again: deselect
+                            gShop.selectedCard = -1;
+                        } else {
+                            gShop.selectedCard = static_cast<s8>(cardIdx);
+                            gShop.selectedCompanion = -1;
+                        }
+                        shopDirty = true;
+                    }
+                }
+            }
+        }
+
+        // Lock toggle button: fixed position between perk card and reroll (x=124..178, y=90..122)
+        static const int LOCK_BTN_X = 124;
+        static const int LOCK_BTN_W = 54;
+        if (ty >= PERK_Y && ty < PERK_Y + PERK_H
+            && tx >= LOCK_BTN_X && tx < LOCK_BTN_X + LOCK_BTN_W
+            && gShop.selectedCard >= 0 && gShop.selectedCard < SHOP_CARDS) {
+            gShop.cards[gShop.selectedCard].locked = !gShop.cards[gShop.selectedCard].locked;
+            shopDirty = true;
+        }
+
+        // Perk card: y=90..122, x < 130
+        if (ty >= PERK_Y && ty < PERK_Y + PERK_H && tx < 130) {
+            ShopCard& pc = gShop.perkCard;
+            if (!pc.sold) {
+                if (gShop.selectedCard == 6) {
+                    // Tap perk again: deselect
+                    gShop.selectedCard = -1;
+                } else {
+                    gShop.selectedCard = 6;
+                    gShop.selectedCompanion = -1;
+                }
+                shopDirty = true;
+            }
+        }
+
+        // REROLL button: y=90..122, x >= 150
+        if (ty >= REROLL_Y && ty < REROLL_Y + REROLL_H && tx >= 150) {
+            int cost = 3 + gShop.rerollCount;
+
+            // Yellow T1 (Fortune): free reroll once per shop visit
+            bool freeRR = synergyFreeReroll();
+            if (freeRR) cost = 0;
+
+            if (gPlayer.gold >= static_cast<u16>(cost)) {
+                gPlayer.gold = static_cast<u16>(gPlayer.gold - cost);
+                u8 savedRerolls = static_cast<u8>(gShop.rerollCount + 1);
+
+                if (freeRR) synergyMarkFreeRerollUsed();
+
+                // Save lock states
+                ShopCard savedCards[SHOP_CARDS];
+                for (int i = 0; i < SHOP_CARDS; i++) {
+                    savedCards[i] = gShop.cards[i];
+                }
+
+                gShop.selectedCard = -1;
+                gShop.selectedCompanion = -1;
+                audioPlaySfx(GSFX_REROLL);
+                shopGenerate(gameGetWave());
+                gShop.rerollCount = savedRerolls;
+
+                // Restore locked cards (shopGenerate already skips them,
+                // but we saved state just in case)
+            }
+        }
+
+        // Context button: y=164..188
+        if (ty >= START_Y && ty < START_Y + START_H
+            && tx >= START_X && tx < START_X + START_W) {
+            if (gShop.selectedCard >= 0 && gShop.selectedCard < SHOP_CARDS) {
+                // BUY companion
+                ShopCard& c = gShop.cards[gShop.selectedCard];
+                if (!c.sold && gPlayer.gold >= c.price) {
+                    bool canAdd = (gCompanionCount < perkMaxCompanions());
+                    if (!canAdd) {
+                        // Check if buying would trigger a merge (making room)
+                        int fci = static_cast<int>(c.color) * 6 + c.classId;
+                        int sameCount = 0;
+                        for (int j = 0; j < MAX_COMPANIONS; j++) {
+                            if (gCompanions[j].active && companionFullClassId(gCompanions[j]) == fci && gCompanions[j].tier == 0)
+                                sameCount++;
+                        }
+                        canAdd = (sameCount >= 2); // 2 existing + 1 new = 3, triggers T1->T2 merge
+                    }
+                    if (!canAdd) {
+                        audioPlaySfx(GSFX_HIT);
+                        gShop.errorCard = gShop.selectedCard;
+                        gShop.errorTimer = 30;
+                    } else {
+                        gPlayer.gold = static_cast<u16>(gPlayer.gold - c.price);
+                        Companion* spawned = companionBuy(c.classId, c.color);
+                        if (spawned) {
+                            while (companionCheckMerge()) {}
+                            c.sold = true;
+                            audioPlaySfx(GSFX_BUY);
+                        } else {
+                            // Inventory full, no merge possible -- refund and show error
+                            gPlayer.gold = static_cast<u16>(gPlayer.gold + c.price);
+                            audioPlaySfx(GSFX_HIT);
+                            gShop.errorCard = gShop.selectedCard;
+                            gShop.errorTimer = 30;
+                        }
+                    }
+                }
+                gShop.selectedCard = -1;
+                shopDirty = true;
+            } else if (gShop.selectedCard == 6) {
+                // BUY perk
+                ShopCard& pc = gShop.perkCard;
+                if (!pc.sold && gPlayer.gold >= pc.price) {
+                    gPlayer.gold = static_cast<u16>(gPlayer.gold - pc.price);
+                    perkApplyOnBuy(static_cast<PerkId>(pc.perkId));
+                    pc.sold = true;
+                    audioPlaySfx(GSFX_BUY);
+                }
+                gShop.selectedCard = -1;
+                shopDirty = true;
+            } else if (gShop.selectedCompanion >= 0) {
+                // SELL companion
+                int slot = gShop.selectedCompanion;
+                if (slot >= 0 && slot < MAX_COMPANIONS && gCompanions[slot].active) {
+                    static const u16 sellByRarity[] = {3, 5, 12};
+                    int fci = companionFullClassId(gCompanions[slot]);
+                    u16 sellValue = sellByRarity[kClassDefs[fci].rarity];
+                    gPlayer.gold = static_cast<u16>(gPlayer.gold + sellValue);
+                    companionRemove(slot);
+                    audioPlaySfx(GSFX_SELL);
+                }
+                gShop.selectedCompanion = -1;
+                shopDirty = true;
+            } else {
+                // START WAVE
+                return true;
+            }
+        }
+
+        // Inventory tap: select companion for preview (y=128..140)
+        if (ty >= COMP_Y && ty < COMP_Y + 12) {
+            int slotX = 4;
+            for (int i = 0; i < MAX_COMPANIONS; ++i) {
+                if (!gCompanions[i].active) continue;
+                if (tx >= slotX && tx < slotX + 10) {
+                    if (gShop.selectedCompanion == static_cast<s8>(i)) {
+                        // Tap same companion again: deselect
+                        gShop.selectedCompanion = -1;
+                    } else {
+                        gShop.selectedCompanion = static_cast<s8>(i);
+                        gShop.selectedCard = -1;
+                    }
+                    shopDirty = true;
+                    break;
+                }
+                slotX += 14;
+            }
+        }
+    }
+
+    // D-pad can also deselect: press B to clear selection
+    if (keysDown() & KEY_B) {
+        if (gShop.selectedCard >= 0 || gShop.selectedCompanion >= 0) {
+            gShop.selectedCard = -1;
+            gShop.selectedCompanion = -1;
+            shopDirty = true;
+        }
+    }
+
+    return false;
+}
+
+// ── shopRender ────────────────────────────────────────────────────
+
+static void drawCompanionCard(int cardIdx) {
+    const ShopCard& card = gShop.cards[cardIdx];
+    int row = cardIdx / 3;
+    int col = cardIdx % 3;
+    int bx  = CARD_X[col];
+    int by  = CARD_ROW_Y[row];
+
+    bool selected = (gShop.selectedCard == static_cast<s8>(cardIdx));
+    bool canAfford = (gPlayer.gold >= card.price);
+    int colorIdx = static_cast<int>(card.color);
+
+    // Background color
+    u16 bgColor;
+    bool isErrorFlash = (gShop.errorCard == static_cast<s8>(cardIdx) && gShop.errorTimer > 0);
+    if (card.sold) {
+        bgColor = RGB15(5, 5, 5);
+    } else if (isErrorFlash) {
+        bgColor = RGB15(28, 4, 4); // red flash: slots full
+    } else {
+        u16 full = pillColorToRGB(card.color);
+        if (selected) {
+            bgColor = full;
+        } else if (!canAfford) {
+            bgColor = (full >> 2) & 0x1CE7;
+        } else {
+            bgColor = (full >> 1) & 0x3DEF;
+        }
+    }
+    renderFilledRectSub(bx, by, CARD_W, CARD_H, bgColor);
+
+    if (card.sold) {
+        int tw = renderTextWidth("SOLD");
+        renderTextSub(bx + (CARD_W - tw) / 2, by + 16, "SOLD", RGB15(14, 14, 14));
+        return;
+    }
+
+    // Locked: gold/yellow border (2px)
+    if (card.locked) {
+        u16 lc = RGB15(31, 28, 0);
+        renderFilledRectSub(bx,              by,              CARD_W, 2,      lc);
+        renderFilledRectSub(bx,              by + CARD_H - 2, CARD_W, 2,      lc);
+        renderFilledRectSub(bx,              by,              2,      CARD_H, lc);
+        renderFilledRectSub(bx + CARD_W - 2, by,              2,      CARD_H, lc);
+    }
+
+    // Selected: 2px bright border (on top of lock border if both)
+    if (selected) {
+        u16 bc = RGB15(31, 31, 31);
+        renderFilledRectSub(bx,              by,              CARD_W, 2,      bc);
+        renderFilledRectSub(bx,              by + CARD_H - 2, CARD_W, 2,      bc);
+        renderFilledRectSub(bx,              by,              2,      CARD_H, bc);
+        renderFilledRectSub(bx + CARD_W - 2, by,              2,      CARD_H, bc);
+    }
+
+    // Rarity indicator: small yellow dots top-right
+    if (card.rarity >= 1)
+        renderFilledRectSub(bx + CARD_W - 5, by + 2, 3, 3, RGB15(31, 28, 0));
+    if (card.rarity >= 2)
+        renderFilledRectSub(bx + CARD_W - 9, by + 2, 3, 3, RGB15(31, 28, 0));
+
+    // Class name (centered)
+    const char* name = str(kClassNames[colorIdx][card.classId][0]);
+    char nameBuf[12];
+    int ni = 0;
+    while (name[ni] && ni < 11) { nameBuf[ni] = name[ni]; ni++; }
+    nameBuf[ni] = '\0';
+
+    int tw = renderTextWidth(nameBuf);
+    u16 textColor = canAfford ? RGB15(31, 31, 31) : RGB15(16, 16, 16);
+    renderTextSub(bx + (CARD_W - tw) / 2, by + 6, nameBuf, textColor);
+
+    // Cost (bottom, centered)
+    char costBuf[8];
+    snprintf(costBuf, sizeof(costBuf), "%dg", card.price);
+    int cw = renderTextWidth(costBuf);
+    renderTextSub(bx + (CARD_W - cw) / 2, by + CARD_H - 12, costBuf,
+        canAfford ? RGB15(31, 28, 0) : RGB15(14, 12, 0));
+}
+
+static void drawPerkCard() {
+    const ShopCard& card = gShop.perkCard;
+    bool selected = (gShop.selectedCard == 6);
+    bool canAfford = (gPlayer.gold >= card.price);
+
+    // Gold background
+    u16 bgColor;
+    if (card.sold) {
+        bgColor = RGB15(5, 5, 5);
+    } else {
+        bgColor = RGB15(31, 28, 0);
+    }
+    renderFilledRectSub(PERK_X, PERK_Y, PERK_W, PERK_H, bgColor);
+
+    if (card.sold) {
+        int tw = renderTextWidth("SOLD");
+        renderTextSub(PERK_X + (PERK_W - tw) / 2, PERK_Y + 12, "SOLD", RGB15(14, 14, 14));
+        return;
+    }
+
+    // Selected border
+    if (selected) {
+        u16 bc = RGB15(31, 31, 31);
+        renderFilledRectSub(PERK_X,              PERK_Y,              PERK_W, 2,      bc);
+        renderFilledRectSub(PERK_X,              PERK_Y + PERK_H - 2, PERK_W, 2,      bc);
+        renderFilledRectSub(PERK_X,              PERK_Y,              2,      PERK_H, bc);
+        renderFilledRectSub(PERK_X + PERK_W - 2, PERK_Y,              2,      PERK_H, bc);
+    }
+
+    // Perk name (dark text on gold)
+    const char* name = str(kPerks[card.perkId].name);
+    char nameBuf[16];
+    int ni = 0;
+    while (name[ni] && ni < 15) { nameBuf[ni] = name[ni]; ni++; }
+    nameBuf[ni] = '\0';
+
+    u16 textColor = RGB15(4, 4, 0);
+    int tw = renderTextWidth(nameBuf);
+    renderTextSub(PERK_X + (PERK_W - tw) / 2, PERK_Y + 4, nameBuf, textColor);
+
+    // Cost
+    char costBuf[8];
+    snprintf(costBuf, sizeof(costBuf), "%dg", card.price);
+    int cw = renderTextWidth(costBuf);
+    renderTextSub(PERK_X + (PERK_W - cw) / 2, PERK_Y + PERK_H - 12, costBuf,
+        canAfford ? RGB15(4, 4, 0) : RGB15(14, 12, 0));
+}
+
+void shopRender() {
+    if (!shopDirty) return;
+    shopDirty = false;
+
+    renderClearSub();
+
+    // ── Companion cards (2 rows x 3 columns) ─────────────────────
+    for (int i = 0; i < SHOP_CARDS; ++i) {
+        drawCompanionCard(i);
+    }
+
+    // ── Lock button: fixed slot between perk card and reroll (x=124, y=90, 54x32) ──
+    // Only visible when a companion card is selected.
+    static const int LOCK_BTN_X = 124;
+    static const int LOCK_BTN_W = 54;
+    if (gShop.selectedCard >= 0 && gShop.selectedCard < SHOP_CARDS) {
+        bool isLocked = gShop.cards[gShop.selectedCard].locked;
+        u16 lbBg = isLocked ? RGB15(14, 12, 0) : RGB15(6, 6, 6);
+        renderFilledRectSub(LOCK_BTN_X, PERK_Y, LOCK_BTN_W, PERK_H, lbBg);
+        const char* lockText = isLocked ? "UNLOCK" : "LOCK";
+        int ltw = renderTextWidth(lockText);
+        u16 lockColor = isLocked ? RGB15(31, 28, 0) : RGB15(20, 20, 20);
+        renderTextSub(LOCK_BTN_X + (LOCK_BTN_W - ltw) / 2, PERK_Y + (PERK_H - 8) / 2, lockText, lockColor);
+    }
+
+    // ── Perk card (row 3 left) ───────────────────────────────────
+    drawPerkCard();
+
+    // ── Reroll button (row 3 right) ──────────────────────────────
+    int rerollCost = 3 + gShop.rerollCount;
+    bool freeRR = synergyFreeReroll();
+    bool canReroll = freeRR || (gPlayer.gold >= static_cast<u16>(rerollCost));
+    u16 rerollBg = freeRR ? RGB15(10, 16, 0) : canReroll ? RGB15(6, 10, 6) : RGB15(4, 4, 4);
+    renderFilledRectSub(REROLL_X, REROLL_Y, REROLL_W, REROLL_H, rerollBg);
+    char rerollBuf[12];
+    if (freeRR)
+        snprintf(rerollBuf, sizeof(rerollBuf), "RR FREE");
+    else
+        snprintf(rerollBuf, sizeof(rerollBuf), "RR %dg", rerollCost);
+    int rtw = renderTextWidth(rerollBuf);
+    u16 rerollTextColor = freeRR ? RGB15(31, 31, 0) : canReroll ? RGB15(10, 31, 10) : RGB15(10, 14, 10);
+    renderTextSub(REROLL_X + (REROLL_W - rtw) / 2, REROLL_Y + 10, rerollBuf, rerollTextColor);
+
+    // ── Gold display + Interest ──────────────────────────────────
+    char goldBuf[16];
+    snprintf(goldBuf, sizeof(goldBuf), "GOLD: %d", gPlayer.gold);
+    renderTextSub(140, COMP_Y + 2, goldBuf, RGB15(31, 28, 0));
+
+    char intBuf[12];
+    snprintf(intBuf, sizeof(intBuf), "+%d INT", gameGetShopInterest());
+    renderTextSub(210, COMP_Y + 2, intBuf, RGB15(20, 28, 20));
+
+    // ── Companion inventory bar (y=128) ──────────────────────────
+    int compX = 4;
+    for (int i = 0; i < MAX_COMPANIONS; ++i) {
+        if (!gCompanions[i].active) continue;
+        const Companion& comp = gCompanions[i];
+
+        u16 fullColor = pillColorToRGB(comp.baseColor);
+        int hpPct = (comp.maxHp > 0) ? (comp.hp * 100) / comp.maxHp : 0;
+        if (hpPct < 0) hpPct = 0;
+        if (hpPct > 100) hpPct = 100;
+        u16 r = ((fullColor >>  0) & 0x1F) * (50 + hpPct / 2) / 100;
+        u16 g = ((fullColor >>  5) & 0x1F) * (50 + hpPct / 2) / 100;
+        u16 b = ((fullColor >> 10) & 0x1F) * (50 + hpPct / 2) / 100;
+        u16 sqColor = static_cast<u16>(r | (g << 5) | (b << 10));
+        renderFilledRectSub(compX, COMP_Y, 10, 10, sqColor);
+
+        // Selection border for selected companion
+        if (gShop.selectedCompanion == static_cast<s8>(i)) {
+            u16 bc = RGB15(31, 31, 31);
+            renderFilledRectSub(compX,     COMP_Y,     10, 1,  bc);
+            renderFilledRectSub(compX,     COMP_Y + 9, 10, 1,  bc);
+            renderFilledRectSub(compX,     COMP_Y,     1,  10, bc);
+            renderFilledRectSub(compX + 9, COMP_Y,     1,  10, bc);
+        }
+
+        // Tier number
+        char tBuf[2];
+        tBuf[0] = static_cast<char>('0' + comp.tier + 1);
+        tBuf[1] = '\0';
+        renderTextSub(compX + 2, COMP_Y + 2, tBuf, RGB15(31, 31, 31));
+
+        compX += 14;
+    }
+
+    // ── Context-sensitive bottom button ────────────────────────────
+    if (gShop.selectedCard >= 0 && gShop.selectedCard < SHOP_CARDS) {
+        // BUY companion button
+        const ShopCard& selCard = gShop.cards[gShop.selectedCard];
+        bool canBuy = (!selCard.sold && gPlayer.gold >= selCard.price);
+        u16 buyBg = canBuy ? RGB15(2, 16, 2) : RGB15(6, 4, 4);
+        renderFilledRectSub(START_X, START_Y, START_W, START_H, buyBg);
+        char buyBuf[20];
+        snprintf(buyBuf, sizeof(buyBuf), "BUY %dG", selCard.price);
+        int btw = renderTextWidth(buyBuf);
+        renderTextSub(START_X + (START_W - btw) / 2, START_Y + 8, buyBuf, RGB15(31, 31, 31));
+    } else if (gShop.selectedCard == 6) {
+        // BUY perk button
+        const ShopCard& pc = gShop.perkCard;
+        bool canBuy = (!pc.sold && gPlayer.gold >= pc.price);
+        u16 buyBg = canBuy ? RGB15(2, 16, 2) : RGB15(6, 4, 4);
+        renderFilledRectSub(START_X, START_Y, START_W, START_H, buyBg);
+        char buyBuf[20];
+        snprintf(buyBuf, sizeof(buyBuf), "BUY %dG", pc.price);
+        int btw = renderTextWidth(buyBuf);
+        renderTextSub(START_X + (START_W - btw) / 2, START_Y + 8, buyBuf, RGB15(31, 31, 31));
+    } else if (gShop.selectedCompanion >= 0) {
+        // SELL companion button
+        static const u16 sellByRarity[] = {3, 5, 12};
+        int slot = gShop.selectedCompanion;
+        u16 sellPrice = 0;
+        if (slot >= 0 && slot < MAX_COMPANIONS && gCompanions[slot].active) {
+            int fci = companionFullClassId(gCompanions[slot]);
+            sellPrice = sellByRarity[kClassDefs[fci].rarity];
+        }
+        renderFilledRectSub(START_X, START_Y, START_W, START_H, RGB15(16, 2, 2));
+        char sellBuf[20];
+        snprintf(sellBuf, sizeof(sellBuf), "SELL %dG", sellPrice);
+        int stw = renderTextWidth(sellBuf);
+        renderTextSub(START_X + (START_W - stw) / 2, START_Y + 8, sellBuf, RGB15(31, 31, 31));
+    } else {
+        // START WAVE (default)
+        renderFilledRectSub(START_X, START_Y, START_W, START_H, RGB15(2, 14, 2));
+        const char* swText = str(kUI[12]);
+        int swtw = renderTextWidth(swText);
+        renderTextSub(START_X + (START_W - swtw) / 2, START_Y + 8, swText,
+            RGB15(14, 31, 14));
+    }
+}

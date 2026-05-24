@@ -1,0 +1,84 @@
+ENEMY SPRITE ART BRIEF — DS Pill Game
+======================================
+Top-down roguelike, 256x192 NDS. 4bpp indexed color, transparent BG.
+Clean pixel art. No anti-aliasing, no dithering. 1px dark outline on all bodies.
+You choose the creature designs. These are characters, not geometric shapes.
+
+FORMAT: Each file is a 2-frame horizontal strip (frame 1 | frame 2).
+Sizes: small=8px (16x8 PNG), medium=16px (32x16 PNG), large=24px (48x24 PNG), boss=32px (64x32 PNG).
+
+SIZE DIFFERENCES: Small = minimal detail, just silhouette + color. Medium = full detail, readable features. Large = same character, bulkier proportions, extra detail (scars, armor, thicker limbs).
+
+REGULAR ENEMIES (12 types x 3 sizes = 36 files)
+-------------------------------------------------
+
+1. GRUNT — "Footslogger." Dull, relentless, trudges straight at the player. Slow and stupid.
+   Frame 1: walking pose. Frame 2: alternate step.
+   Files: grunt_s.png (16x8), grunt_m.png (32x16), grunt_l.png (48x24)
+
+2. CHARGER — "Razorfang." Agile flanker that darts to the player's sides before striking.
+   Frame 1: crouched/ready. Frame 2: lunging forward.
+   Files: charger_s/m/l.png
+
+3. BRUTE — "Ironhide." Massive slow tank, absorbs punishment, pushes forward like a wall.
+   Frame 1: standing heavy. Frame 2: leaning into stride.
+   Files: brute_s/m/l.png
+
+4. SPITTER — "Plaguespit." Keeps distance, strafes, spits projectiles at the player.
+   Frame 1: mouth closed (idle). Frame 2: mouth open (shooting).
+   Files: spitter_s/m/l.png
+
+5. SNIPER — "Deadeye." Nearly stationary, fires fast accurate shots from far away.
+   Frame 1: aiming (sensor dim). Frame 2: firing (sensor bright/glowing).
+   Files: sniper_s/m/l.png
+
+6. SPLITTER — "Clutchmother." Walks at the player; splits into two small Grunts on death.
+   Frame 1: body whole. Frame 2: body showing visible seam/crack (foreshadowing the split).
+   Files: splitter_s/m/l.png
+
+7. SHIELD — "Pavise." Carries a barrier on its front face, must be shot from behind.
+   Frame 1: shield raised, facing right. Frame 2: shield shifted slightly (shuffle step).
+   Files: shield_s/m/l.png
+
+8. ARTILLERY — "Mortarback." Stationary cannon creature, lobs explosive arcing shots.
+   Frame 1: barrel upright (idle). Frame 2: barrel tilted/recoiling (firing).
+   Files: artillery_s/m/l.png
+
+9. NIGHTMARE — "Dreadmaw." Creepy, emits a fear pulse that scatters nearby enemies.
+   Frame 1: neutral. Frame 2: expanded/pulsing (mid-scream).
+   Files: nightmare_s/m/l.png
+
+10. GHOST — "Wraith." Teleports near the player every 2 seconds. Flickers in and out.
+    Frame 1: semi-visible. Frame 2: fading/translucent (fewer filled pixels).
+    Files: ghost_s/m/l.png
+
+11. SWARM DRONE — "Stinger." Tiny, extremely fast, attacks in coordinated packs.
+    Frame 1: wings/legs spread. Frame 2: wings/legs tucked.
+    Files: drone_s/m/l.png
+
+12. BOMBER — "Cinderling." Charges at the player and explodes on contact. Volatile, glowing.
+    Frame 1: running, body dim. Frame 2: running, body bright (about to blow).
+    Files: bomber_s/m/l.png
+
+BOSSES (4 types, 32px only = 4 files)
+--------------------------------------
+
+13. SENTINEL — Rotating turret boss, fires 4-way bullet spreads. Armored, mechanical feel.
+    Frame 1: turret at 0 degrees. Frame 2: turret rotated 45 degrees.
+    File: boss_sentinel.png (64x32)
+
+14. DREADNOUGHT — Heavy bruiser boss, slams the ground creating 8-way shockwaves.
+    Frame 1: standing tall. Frame 2: crouched mid-slam.
+    File: boss_dreadnought.png (64x32)
+
+15. LEVIATHAN — Summoner boss, periodically spawns small Grunts from its body.
+    Frame 1: closed/dormant. Frame 2: open/spawning (visible cavity or maw).
+    File: boss_leviathan.png (64x32)
+
+16. NIGHTMARE KING — Circles the player, emits mass fear pulses. Evolved Dreadmaw.
+    Frame 1: drifting. Frame 2: expanded/screaming (pulse moment).
+    File: boss_nightmare.png (64x32)
+
+PALETTE: Dark backgrounds, high-contrast bodies. Each enemy type should have a distinct dominant hue readable at 8px. Bosses should look like larger, more dangerous versions of their theme, not just scaled-up regulars.
+
+TOTAL: 40 PNG files.

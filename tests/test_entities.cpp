@@ -43,13 +43,13 @@ TEST(spawnEnemy_basic) {
     entitiesInit();
     Vec2 pos = {toFixed(50), toFixed(60)};
     Vec2 vel = {0, toFixed(1)};
-    Enemy* e = spawnEnemy(pos, vel, 10, 2, 8);
+    Enemy* e = spawnEnemy(pos, vel, 10, ETYPE_BRUTE, SIZE_SMALL, SPRITE_SIZE_SMALL);
     ASSERT(e != nullptr);
     ASSERT(e->active);
     ASSERT_EQ(e->hp, 10);
     ASSERT_EQ(e->maxHp, 10);
-    ASSERT_EQ(e->type, 2);
-    ASSERT_EQ(e->size, 8);
+    ASSERT_EQ(e->type, ETYPE_BRUTE);
+    ASSERT_EQ(e->spriteSize, SPRITE_SIZE_SMALL);
     ASSERT_EQ(e->frame, 0);
 }
 
@@ -57,9 +57,9 @@ TEST(spawnEnemy_exhaustion) {
     entitiesInit();
     Vec2 p = {0, 0}, v = {0, 0};
     for (int i = 0; i < MAX_ENEMIES; ++i) {
-        ASSERT(spawnEnemy(p, v, 1, 0, 4) != nullptr);
+        ASSERT(spawnEnemy(p, v, 1, ETYPE_GRUNT, SIZE_SMALL, SPRITE_SIZE_SMALL) != nullptr);
     }
-    ASSERT(spawnEnemy(p, v, 1, 0, 4) == nullptr);
+    ASSERT(spawnEnemy(p, v, 1, ETYPE_GRUNT, SIZE_SMALL, SPRITE_SIZE_SMALL) == nullptr);
 }
 
 TEST(spawnPill_basic) {
@@ -77,7 +77,7 @@ TEST(entitiesClear_resets_all) {
     // Fill up some slots
     Vec2 z = {0, 0};
     spawnBullet(z, z, 0, 1);
-    spawnEnemy(z, z, 1, 0, 4);
+    spawnEnemy(z, z, 1, ETYPE_GRUNT, SIZE_SMALL, SPRITE_SIZE_SMALL);
     spawnPill(z, PillColor::Green, PillTier::Super);
     spawnParticle(z, z, 10, 1);
 

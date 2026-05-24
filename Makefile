@@ -10,7 +10,8 @@ export DEVKITPRO ?= /c/devkitPro
 export DEVKITARM ?= $(DEVKITPRO)/devkitARM
 export LIBNDS    ?= $(DEVKITPRO)/libnds
 
-CALICO := $(DEVKITPRO)/calico
+# ARM7 binary: use local copy (checked into repo) so CI works without calico
+ARM7_ELF := arm7/ds7_maine.elf
 
 .PHONY: all arm9 clean run
 
@@ -24,7 +25,7 @@ arm9:
 $(TARGET).nds: arm9
 	ndstool -c $(TARGET).nds \
 		-9 arm9/arm9.elf \
-		-7 $(CALICO)/bin/ds7_maine.elf \
+		-7 $(ARM7_ELF) \
 		-b graphics/icon.bmp "Pill Shooter;DS Roguelike;Homebrew"
 
 # Clean everything
