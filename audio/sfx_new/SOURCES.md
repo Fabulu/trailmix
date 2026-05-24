@@ -16,9 +16,9 @@ Pack source pages:
 | Final file | Original source file | Source pack page |
 | --- | --- | --- |
 | `shoot.wav` | `pepSound3.ogg` | Digital Audio |
-| `hit.wav` | `impactSoft_medium_002.ogg` | Impact Sounds |
+| `hit.wav` | `select_001.ogg` | Interface Sounds |
 | `explode.wav` | `spaceTrash3.ogg` | Digital Audio |
-| `pickup_gold.wav` | `handleCoins2.ogg` | RPG Audio |
+| `pickup_gold.wav` | `bong_001.ogg` | Interface Sounds |
 | `merge.wav` | `powerUp4.ogg` | Digital Audio |
 | `select.wav` | `click_001.ogg` | Interface Sounds |
 | `buy.wav` | `confirmation_001.ogg` | Interface Sounds |
