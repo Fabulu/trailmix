@@ -77,7 +77,7 @@ static void enterPlay() {
 }
 
 static void applyInterest() {
-    int interest = gPlayer.gold / 10;  // breakpoints at 10/20/30/40/50g
+    int interest = gPlayer.gold / 4;  // 25% interest rate (breakpoints at 4/8/12/16/20g)
     int cap = perkInterestCap();
     // Late-game interest growth
     int wave = gameGetWave();
