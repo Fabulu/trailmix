@@ -27,7 +27,7 @@ TARGET		:= $(notdir $(CURDIR))
 BUILD		:= build
 SOURCES		:= source
 INCLUDES	:= source data
-DATA		:= data data/sprites data/enemies
+DATA		:= data data/sprites data/enemies data/music
 GRAPHICS	:=
 
 ARCH	:= -mthumb -mthumb-interwork -march=armv5te -mtune=arm946e-s

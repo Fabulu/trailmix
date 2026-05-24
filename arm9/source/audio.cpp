@@ -21,6 +21,12 @@
 #include "heal_wav.h"
 #include "sfx_synergy_wav.h"
 #include "enemy_shoot_wav.h"
+
+// Music WAV data (6-second loops, embedded via bin2s)
+#include "mus_menu_wav.h"
+#include "mus_battle_wav.h"
+#include "mus_shop_wav.h"
+#include "mus_boss_wav.h"
 #include "mine_place_wav.h"
 #include "boss_phase_wav.h"
 #include "victory_wav.h"
@@ -111,11 +117,41 @@ void audioPlaySfx(SfxId id) {
     soundPlaySample(pcm, SoundFormat_8Bit, pcmLen, t.rate, t.volume, 64, false, 0);
 }
 
-void audioPlayMusic([[maybe_unused]] int id) {
-    // Music disabled — maxmod fights with soundPlaySample over hardware channels.
-    // TODO: re-enable once calico ARM7 channel separation is solved.
+// Music: play looping WAV sample on channel 0 (reserved for music)
+static const WavEntry musicTable[] = {
+    { mus_menu_wav,   mus_menu_wav_size },    // 0 = menu
+    { mus_battle_wav, mus_battle_wav_size },   // 1 = battle
+    { mus_shop_wav,   mus_shop_wav_size },     // 2 = shop (unused for now)
+    { mus_boss_wav,   mus_boss_wav_size },     // 3 = boss (unused for now)
+    { mus_shop_wav,   mus_shop_wav_size },     // 4 = shop (alias)
+};
+static int currentMusic = -1;
+static int musicSoundId = -1;
+
+void audioPlayMusic(int id) {
+    if (id == currentMusic) return;
+    if (id < 0 || id > 4) return;
+
+    // Stop current music if playing
+    if (musicSoundId >= 0) {
+        soundKill(musicSoundId);
+        musicSoundId = -1;
+    }
+
+    const WavEntry& m = musicTable[id];
+    size_t pcmLen = 0;
+    const u8* pcm = wavFindData(m.data, m.size, pcmLen);
+    if (!pcm || pcmLen < 64) { currentMusic = -1; return; }
+
+    // Loop the music sample at low volume
+    musicSoundId = soundPlaySample(pcm, SoundFormat_8Bit, pcmLen, 22050, 16, 64, true, 0);
+    currentMusic = id;
 }
 
 void audioStopMusic() {
-    // No-op while music is disabled
+    if (musicSoundId >= 0) {
+        soundKill(musicSoundId);
+        musicSoundId = -1;
+    }
+    currentMusic = -1;
 }
