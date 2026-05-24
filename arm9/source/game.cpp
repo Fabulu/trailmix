@@ -104,6 +104,14 @@ static void enterShop() {
     // Soul Surge: heal all units 20% maxHP on wave clear
     perkOnWaveClear();
 
+    // Player heals 20% of maxHp between waves
+    {
+        s16 heal = gPlayer.maxHp / 5;
+        if (heal < 1) heal = 1;
+        gPlayer.hp += heal;
+        if (gPlayer.hp > gPlayer.maxHp) gPlayer.hp = gPlayer.maxHp;
+    }
+
     // Wave-end heal: restore 50% of maxHp to every active companion (capped at maxHp)
     for (auto& c : gCompanions) {
         if (!c.active) continue;
