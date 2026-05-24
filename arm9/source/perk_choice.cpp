@@ -225,6 +225,12 @@ static void renderBottomScreen() {
 static void renderTopScreen() {
     renderClearParticleLayer();
 
+    // Hide OAM sprites so companions/player don't show through
+    for (int i = 0; i < 128; i++)
+        oamSet(&oamMain, i, 0, 0, 0, 0, SpriteSize_16x16,
+               SpriteColorFormat_16Color, nullptr, -1, false, true, false, false, false);
+    oamUpdate(&oamMain);
+
     // Deep-space background fill
     renderFilledRect(0, 0, 256, 192, RGB15(1, 1, 4));
 

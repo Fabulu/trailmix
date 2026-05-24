@@ -8,5 +8,6 @@ void uiUpdate();
 void uiRenderHUD();
 void uiRenderShop();
 void uiRenderShopScreen();
+void uiForceRedraw();
 
 #endif // UI_H

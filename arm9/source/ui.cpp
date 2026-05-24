@@ -19,6 +19,10 @@ void uiUpdate() {
     // Reserved for future per-frame sub-screen logic.
 }
 
+// Force next HUD/shop draw to redraw everything (call on state transitions)
+static bool sForceRedraw = false;
+void uiForceRedraw() { sForceRedraw = true; }
+
 // ---------------------------------------------------------------------------
 // HUD — drawn onto sub-screen bitmap during gameplay
 // ---------------------------------------------------------------------------
@@ -31,16 +35,19 @@ void uiRenderHUD() {
     static int prevWaveClear      = -1;
     static int prevBossDefeated   = -1;
     static bool firstCall         = true;
+    if (sForceRedraw) { firstCall = true; sForceRedraw = false; }
     // Companion / synergy dirty tracking: hash of (hp, maxHp, active, color) per slot
     static u32 prevCompHash = 0;
 
     int curWave = gameGetWave();
+    // Dash state: quantized to ~6 steps during cooldown (not per-frame) to limit redraws
     int curDashState;
-    if (gPlayer.isDashing)          curDashState = 1;
-    else if (gPlayer.dashCooldown > 0) curDashState = 2 + gPlayer.dashCooldown;
-    else                            curDashState = 0;
-    int curWaveClear    = gameGetWaveClearTimer();
-    int curBossDefeated = static_cast<int>(gameGetBossDefeatedTimer());
+    if (gPlayer.isDashing)              curDashState = 1;
+    else if (gPlayer.dashCooldown > 0)  curDashState = 2 + gPlayer.dashCooldown / 15;
+    else                                curDashState = 0;
+    // Quantize countdowns to avoid per-frame redraws
+    int curWaveClear    = gameGetWaveClearTimer() / 15;
+    int curBossDefeated = gameGetBossDefeatedTimer() / 15;
 
     // Build a lightweight hash over companion state for dirty detection
     u32 curCompHash = 0;
@@ -81,7 +88,7 @@ void uiRenderHUD() {
 
     // Title bar
     renderFilledRectSub(0, 0, 256, 12, RGB15(4, 4, 12));
-    renderTextSub(4, 3, "PILL ARMY", RGB15(20, 20, 31));
+    renderTextSub(4, 3, "TRAIL MIX", RGB15(20, 20, 31));
 
     // Wave
     char waveBuf[16];
@@ -105,22 +112,20 @@ void uiRenderHUD() {
     snprintf(goldBuf, sizeof(goldBuf), "%s: %d", str(kUI[8]), gPlayer.gold);
     renderTextSub(4, 34, goldBuf, RGB15(31, 28, 0));
 
-    // Dash indicator
-    const char* dashStr;
-    u16 dashColor;
+    // Dash indicator — bar + text
     if (gPlayer.isDashing) {
-        dashStr = "DASH: ACTIVE";
-        dashColor = RGB15(20, 31, 20);
+        renderTextSub(4, 46, "DASH", RGB15(20, 31, 20));
     } else if (gPlayer.dashCooldown > 0) {
-        static char dashCdBuf[16];
-        snprintf(dashCdBuf, sizeof(dashCdBuf), "DASH: %d", gPlayer.dashCooldown);
-        dashStr = dashCdBuf;
-        dashColor = RGB15(20, 20, 20);
+        renderTextSub(4, 46, "DASH", RGB15(14, 14, 14));
+        // Cooldown bar: fills left to right as cooldown expires
+        int barW = 40;
+        int filled = barW * (90 - gPlayer.dashCooldown) / 90;
+        renderFilledRectSub(36, 47, barW, 4, RGB15(6, 6, 6));
+        if (filled > 0) renderFilledRectSub(36, 47, filled, 4, RGB15(14, 14, 20));
     } else {
-        dashStr = "DASH: READY";
-        dashColor = RGB15(10, 31, 10);
+        renderTextSub(4, 46, "DASH", RGB15(10, 31, 10));
+        renderFilledRectSub(36, 47, 40, 4, RGB15(10, 31, 10));
     }
-    renderTextSub(4, 46, dashStr, dashColor);
 
     // -------------------------------------------------------------------------
     // Active synergies — y=60, one row, left-to-right, skip colors with <2

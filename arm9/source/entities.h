@@ -8,7 +8,7 @@ constexpr int MAX_ENEMIES   = 32;
 constexpr int MAX_GOLD      = 24;
 constexpr int MAX_SWARMS    = 4;
 constexpr int MAX_HEAL_ORBS = 8;   // Green3 synergy: healing orbs on the ground
-constexpr int MAX_PARTICLES  = 192;
+constexpr int MAX_PARTICLES  = 128;
 constexpr int MAX_ZONES      = 8;
 
 // Bullet behaviour flags (combinable with |)

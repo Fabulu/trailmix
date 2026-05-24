@@ -45,6 +45,7 @@ static u32 waveTimerFrames(int wave) {
 
 static void enterMenu() {
     state = GameState::Menu;
+    renderClearSub();
     audioPlayMusic(0); // MOD_MENU
 }
 
@@ -59,6 +60,19 @@ static void enterPlay() {
     frameCounter = 0;
     waveNumber = 0;
     waveActive = false;
+    // Reset shop state so locks/selections don't carry over between runs
+    gShop.lockTarget = -1;
+    gShop.selectedCard = -1;
+    gShop.selectedCompanion = -1;
+    gShop.rerollCount = 0;
+    gShop.errorCard = -1;
+    gShop.errorTimer = 0;
+    for (int i = 0; i < SHOP_CARDS; i++) gShop.cards[i].locked = false;
+    // Start wave 1 immediately so there's no empty frame
+    spawnWave();
+    waveAnnouncementStart(waveNumber);
+    waveActive = true;
+    uiForceRedraw();
     audioPlayMusic(1); // MOD_BATTLE
 }
 
@@ -74,11 +88,14 @@ static void enterPerkChoice() {
     state = GameState::PerkChoice;
     bossDefeatedTimer = 0;
     perkChoiceEnter();
+    // Force immediate draw of both screens to avoid flicker
+    perkChoiceRender();
     // Keep battle music going while player chooses — feels snappier
 }
 
 static void enterShop() {
     state = GameState::Shop;
+    renderClearSub();
     applyInterest();
 
     // Soul Surge: heal all units 20% maxHP on wave clear
@@ -97,6 +114,8 @@ static void enterShop() {
 }
 
 static void startNextWave() {
+    renderClearSub();
+    uiForceRedraw();
     audioPlaySfx(GSFX_WAVE_START);
     audioPlayMusic(1); // MOD_BATTLE
     perkOnWaveStart();
@@ -109,6 +128,7 @@ static void startNextWave() {
 
 static void enterGameOver() {
     state = GameState::GameOver;
+    renderClearSub();
     audioPlayMusic(0); // MOD_MENU
 }
 
@@ -232,7 +252,7 @@ static int baseHpForSize(u8 sc, int wave) {
         case SIZE_SMALL:  return 3 + wave;
         case SIZE_MEDIUM: return 6 + wave * 2;
         case SIZE_LARGE:  return 12 + wave * 3;
-        default:          return 40 + wave * 5; // boss
+        default:          return 250 + wave * 25; // boss
     }
 }
 

@@ -208,11 +208,12 @@ void renderFilledRect(int x, int y, int w, int h, u16 color) {
     int y0 = (y < 0) ? 0 : y;
     int x1 = (x + w > SCREEN_W) ? SCREEN_W : x + w;
     int y1 = (y + h > SCREEN_H) ? SCREEN_H : y + h;
+    int rowW = x1 - x0;
+    if (rowW <= 0) return;
 
     for (int py = y0; py < y1; ++py) {
-        for (int px = x0; px < x1; ++px) {
-            particleFB[py * 256 + px] = c;
-        }
+        u16* row = particleFB + py * 256 + x0;
+        for (int i = 0; i < rowW; ++i) row[i] = c;
     }
 }
 
@@ -228,16 +229,20 @@ void renderFilledCircle(int cx, int cy, int r, u16 color) {
         int dx2 = r2 - dy * dy;
         if (dx2 < 0) continue;
 
-        // Integer square root approximation
-        int dx = 0;
-        while ((dx + 1) * (dx + 1) <= dx2) dx++;
+        // Fast integer sqrt via Newton's method (2 iterations)
+        int dx = r;  // initial guess
+        if (dx > 0) {
+            dx = (dx + dx2 / dx) >> 1;
+            dx = (dx + dx2 / dx) >> 1;
+        }
 
         int x0 = (cx - dx < 0) ? 0 : cx - dx;
         int x1 = (cx + dx >= SCREEN_W) ? SCREEN_W - 1 : cx + dx;
 
-        for (int px = x0; px <= x1; ++px) {
-            particleFB[py * 256 + px] = c;
-        }
+        // Fill row with DMA-style u16 writes
+        u16* row = particleFB + py * 256 + x0;
+        int count = x1 - x0 + 1;
+        while (count-- > 0) *row++ = c;
     }
 }
 
@@ -578,12 +583,16 @@ void renderGameplay() {
     }
 
     // --- Companion aura visual effects ---
-    // Helper: brighten a 15-bit colour by companion tier (T1=1.0x, T2=1.3x, T3=1.6x)
+    // Helper: brighten a 15-bit colour by companion tier using shifts (no division)
+    // T1=1.0x, T2=+25%, T3=+50%
     static auto scaleBrightness = [](u16 color, u8 tier) -> u16 {
-        int scale = 10 + tier * 3;
-        int r = ((color >> 0) & 0x1F) * scale / 10; if (r > 31) r = 31;
-        int g = ((color >> 5) & 0x1F) * scale / 10; if (g > 31) g = 31;
-        int b = ((color >> 10) & 0x1F) * scale / 10; if (b > 31) b = 31;
+        if (tier == 0) return color;
+        int r = (color >> 0) & 0x1F;
+        int g = (color >> 5) & 0x1F;
+        int b = (color >> 10) & 0x1F;
+        if (tier >= 2) { r += r >> 1; g += g >> 1; b += b >> 1; }
+        else           { r += r >> 2; g += g >> 2; b += b >> 2; }
+        if (r > 31) r = 31; if (g > 31) g = 31; if (b > 31) b = 31;
         return static_cast<u16>(r | (g << 5) | (b << 10));
     };
     static const s8 kOrbitX[8] = { 12, 8, 0, -8, -12, -8, 0, 8 };
@@ -700,20 +709,16 @@ void renderGameplay() {
             renderPixel(rx + 1, ry, hazeCol);
         }
 
-        // Interior scatter: 6 random-ish pixels per frame inside the cloud
-        // Use renderFrame + zone slot index to vary scatter across simultaneous zones
+        // Interior scatter: 4 pixels per frame inside the cloud
         u32 zoneIdx = static_cast<u32>(&z - gZones);
         u32 rbase = renderFrame * 7 + zoneIdx * 97u;
         u16 cloudCol = (z.type == ZONE_POISON) ? RGB15(8, 20, 8) : RGB15(20, 10, 0);
-        for (int k = 0; k < 6; k++) {
-            // Cheap deterministic scatter using bit-rotated frame counter
-            u32 h = (rbase + k * 13) * 2654435761u;  // Knuth multiplicative hash
-            int ox = static_cast<int>((h >> 24) & 0xFF) % (z.radius * 2) - z.radius;
-            int oy = static_cast<int>((h >> 16) & 0xFF) % (z.radius * 2) - z.radius;
-            // Reject pixels outside circle (cheap square approx: keep |ox|+|oy| <= r*1.4)
-            int absOx = ox < 0 ? -ox : ox;
-            int absOy = oy < 0 ? -oy : oy;
-            if (absOx + absOy > z.radius + z.radius / 2) continue;
+        int r2 = z.radius * 2;
+        for (int k = 0; k < 4; k++) {
+            u32 h = (rbase + k * 13) * 2654435761u;
+            // Use AND mask instead of modulo (approximate, but fast)
+            int ox = static_cast<int>((h >> 24) & (r2 > 16 ? 31 : 15)) - z.radius;
+            int oy = static_cast<int>((h >> 16) & (r2 > 16 ? 31 : 15)) - z.radius;
             renderPixel(zx + ox, zy + oy, cloudCol);
         }
 
@@ -1037,7 +1042,7 @@ void renderMenu() {
     renderFilledRect(30, 56, 196, 56, RGB15(2, 2, 8));
 
     // Title text
-    renderText(128 - renderTextWidth("PILL ARMY") / 2, 66, "PILL ARMY", RGB15(31, 31, 31));
+    renderText(128 - renderTextWidth("TRAIL MIX") / 2, 66, "TRAIL MIX", RGB15(31, 31, 31));
     renderText(128 - renderTextWidth("PRESS START") / 2, 90, "PRESS START", RGB15(20, 20, 31));
 
     // Hide OAM sprites on menu

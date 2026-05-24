@@ -66,28 +66,27 @@ static const u8* wavFindData(const u8* wav, size_t fileSize, size_t& outLen) {
     return nullptr;
 }
 
-// Per-SFX volume and pitch tuning: softer, less aggressive
-// Lower sample rate = deeper/softer tone. Lower volume = quieter.
+// Per-SFX volume tuning — original sample rates preserved, just quiet
 struct SfxTuning { u8 volume; u16 rate; };
 static const SfxTuning sfxTuning[GSFX_COUNT] = {
-    {  5, 11000},  // SHOOT — barely audible whisper
-    {  4,  8000},  // EXPLODE — near-silent ultra-muffled thump
-    { 20, 14000},  // GOLD — gentle clink
-    { 30, 14000},  // MERGE — soft chime
-    { 15, 11000},  // HIT — soft muffled thud
-    { 18, 14000},  // SELECT — tiny click
-    { 20, 11000},  // DASH — soft whoosh
-    { 20, 14000},  // BUY — soft ping
-    { 18, 14000},  // SELL — soft
-    { 15, 14000},  // REROLL — soft shuffle
-    { 25, 14000},  // WAVE_CLEAR — moderate, not loud
-    { 22, 14000},  // WAVE_START — soft alert
-    { 20, 11000},  // PLAYER_HIT — muffled impact
-    { 25, 14000},  // PERK — soft chime
-    { 30, 11000},  // BOSS — moderate deep
-    { 20, 11000},  // TIMESTOP — soft freeze
-    { 18, 14000},  // HEAL — gentle warm tone
-    { 22, 14000},  // SYNERGY — soft magical
+    { 10, 22050},  // SHOOT
+    {  8, 22050},  // EXPLODE
+    { 20, 22050},  // GOLD
+    { 25, 22050},  // MERGE
+    { 12, 22050},  // HIT
+    { 18, 22050},  // SELECT
+    { 15, 22050},  // DASH
+    { 20, 22050},  // BUY
+    { 18, 22050},  // SELL
+    { 15, 22050},  // REROLL
+    { 12, 22050},  // WAVE_CLEAR
+    { 10, 22050},  // WAVE_START
+    { 15, 22050},  // PLAYER_HIT
+    { 22, 22050},  // PERK
+    { 25, 22050},  // BOSS
+    { 18, 22050},  // TIMESTOP
+    { 18, 22050},  // HEAL
+    { 20, 22050},  // SYNERGY
 };
 
 void audioPlaySfx(SfxId id) {

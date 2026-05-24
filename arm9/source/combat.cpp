@@ -198,7 +198,7 @@ static void updateEnemies() {
                         if (dist < static_cast<s32>(toFixed(100)) * toFixed(100))
                             other.fearTimer = 90;
                     }
-                    spawnParticleBurst(e.pos, 16, 20, 4); // purple burst
+                    spawnParticleBurst(e.pos, 6, 12, 4); // purple burst
                 }
                 break;
             }
@@ -297,7 +297,7 @@ static void updateEnemies() {
                 if (e.shootTimer > 0) { e.shootTimer--; }
                 else {
                     e.shootTimer = 150;
-                    spawnParticleBurst(e.pos, 20, 25, 4);
+                    spawnParticleBurst(e.pos, 8, 15, 4);
                 }
                 break;
             }
@@ -399,7 +399,7 @@ static void updateParticles() {
 // Helper: kill or drop gold for an enemy that just reached 0 hp
 static void killEnemy(Enemy& e, u8 bulletColor) {
     e.active = false;
-    spawnParticleBurst(e.pos, 12, 15, bulletColor);
+    spawnParticleBurst(e.pos, 10, 14, bulletColor);
     audioPlaySfx(GSFX_EXPLODE);
 
     // Splitter on-death: spawn 2 small Grunts at same position (if not already small)
@@ -431,7 +431,7 @@ static void killEnemy(Enemy& e, u8 bulletColor) {
             s16 dmg = synergyOnPlayerHit(4);
             if (dmg > 0) { gPlayer.hp -= dmg; perkOnPlayerHit(); }
         }
-        spawnParticleBurst(e.pos, 24, 18, 1); // large red burst
+        spawnParticleBurst(e.pos, 8, 12, 1); // red burst
         audioPlaySfx(GSFX_EXPLODE);
     }
 

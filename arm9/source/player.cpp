@@ -4,6 +4,7 @@
 #include "camera.h"
 #include "perk.h"
 #include "rng.h"
+#include "companion.h"
 
 DTCM_BSS Player gPlayer;
 
@@ -65,16 +66,27 @@ static void autoShoot() {
     if (!target) return;
 
     Vec2 dir = target->pos - gPlayer.pos;
+    int dx = static_cast<int>(dir.x);
+    int dy = static_cast<int>(dir.y);
+    if (dx == 0 && dy == 0) return;
 
-    // Simple 8-direction approximation
-    Fixed bspeed = toFixed(3);
-    Vec2 vel = {0, 0};
+    // Normalize to bullet speed using integer sqrt approximation
+    // dist = sqrt(dx*dx + dy*dy), vel = dir * speed / dist
+    int distSq = dx * dx + dy * dy;
+    // Fast integer sqrt (Newton's method, 3 iterations is plenty for s16 range)
+    int dist = 1;
+    if (distSq > 0) {
+        dist = (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy); // initial guess
+        dist = (dist + distSq / dist) >> 1;
+        dist = (dist + distSq / dist) >> 1;
+        dist = (dist + distSq / dist) >> 1;
+        if (dist < 1) dist = 1;
+    }
 
-    if (dir.x > 0) vel.x = bspeed;
-    else if (dir.x < 0) vel.x = static_cast<Fixed>(-bspeed);
-
-    if (dir.y > 0) vel.y = bspeed;
-    else if (dir.y < 0) vel.y = static_cast<Fixed>(-bspeed);
+    int speed = static_cast<int>(toFixed(3));
+    Vec2 vel;
+    vel.x = static_cast<Fixed>(dx * speed / dist);
+    vel.y = static_cast<Fixed>(dy * speed / dist);
 
     if (vel.x == 0 && vel.y == 0) return;
 
@@ -103,14 +115,20 @@ static void autoShoot() {
 void playerDash() {
     gPlayer.isDashing = true;
     gPlayer.dashInvincible = true;
-    gPlayer.dashTimer = perkIsActive(PERK_WARP_DRIVE) ? 16 : 8;
+    gPlayer.dashTimer = perkIsActive(PERK_WARP_DRIVE) ? 20 : 12;
     gPlayer.dashCooldown = 90;
 
     // Dash in current movement direction, or last-faced direction
     gPlayer.dashDir = gPlayer.facing;
 
+    // Companions gain invincibility for the dash duration
+    for (auto& c : gCompanions) {
+        if (!c.active) continue;
+        c.iframes = gPlayer.dashTimer + 4; // slight buffer after dash ends
+    }
+
     audioPlaySfx(GSFX_DASH);
-    cameraShake(6, 8);
+    cameraShake(8, 12);
 }
 
 void playerUpdate(u32 held, u32 down) {
@@ -128,6 +146,12 @@ void playerUpdate(u32 held, u32 down) {
     if (move.x != 0 && move.y != 0) {
         move.x = static_cast<Fixed>(static_cast<s32>(move.x) * 11 / 16);
         move.y = static_cast<Fixed>(static_cast<s32>(move.y) * 11 / 16);
+    }
+
+    // Hold L for half speed (precision movement)
+    if (held & KEY_L) {
+        move.x = static_cast<Fixed>(move.x / 2);
+        move.y = static_cast<Fixed>(move.y / 2);
     }
 
     // Fortress: 25% slower movement
@@ -156,40 +180,17 @@ void playerUpdate(u32 held, u32 down) {
         gPlayer.pos += dashMove;
         clampToArena();
 
-        // Shield Bash: damage enemies overlapping player during dash
-        if (perkIsActive(PERK_SHIELD_BASH)) {
+        // Dash damages enemies you pass through
+        {
             Rect pr = playerRect();
-            for (auto& e : gEnemies) {
-                if (!e.active) continue;
-                int half = e.spriteSize / 2;
-                Rect er = {static_cast<s16>(e.pos.pixelX() - half),
-                           static_cast<s16>(e.pos.pixelY() - half),
-                           static_cast<s16>(e.spriteSize), static_cast<s16>(e.spriteSize)};
-                if (pr.overlaps(er)) {
-                    e.hp -= 8;
-                    if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 8, 12, 0); }
-                }
-            }
-        }
-
-        // Spawn trail particle each frame during dash
-        Vec2 pvel = {static_cast<Fixed>(rngRange(8) - 4), static_cast<Fixed>(rngRange(8) - 4)};
-        spawnParticle(gPlayer.pos, pvel, 10, 2);
-
-        // Warp Drive: extra trail particles + damage hitbox along trail
-        if (perkIsActive(PERK_WARP_DRIVE)) {
-            Vec2 pvel2 = {static_cast<Fixed>(rngRange(12) - 6), static_cast<Fixed>(rngRange(12) - 6)};
-            spawnParticle(gPlayer.pos, pvel2, 14, 5);
-
-            // Damage trail: hurt enemies overlapping the dash path
-            Rect pr = playerRect();
-            // Expand hitbox slightly for trail width
+            // Expand hitbox for the dash trail
             Rect trailRect = {
                 static_cast<s16>(pr.x - 4),
                 static_cast<s16>(pr.y - 4),
                 static_cast<s16>(pr.w + 8),
                 static_cast<s16>(pr.h + 8)
             };
+            int dmg = perkIsActive(PERK_SHIELD_BASH) ? 12 : 5;
             for (auto& e : gEnemies) {
                 if (!e.active) continue;
                 int half = e.spriteSize / 2;
@@ -197,11 +198,23 @@ void playerUpdate(u32 held, u32 down) {
                            static_cast<s16>(e.pos.pixelY() - half),
                            static_cast<s16>(e.spriteSize), static_cast<s16>(e.spriteSize)};
                 if (trailRect.overlaps(er)) {
-                    e.hp -= 4;
-                    spawnParticleBurst(e.pos, 4, 8, 5);
-                    if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 8, 12, 5); }
+                    e.hp -= dmg;
+                    spawnParticleBurst(e.pos, 2, 6, 2);
+                    if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 5, 8, 2); }
                 }
             }
+        }
+
+        // Trail particles — 2 per frame
+        for (int p = 0; p < 2; p++) {
+            Vec2 pvel = {static_cast<Fixed>(rngRange(10) - 5), static_cast<Fixed>(rngRange(10) - 5)};
+            spawnParticle(gPlayer.pos, pvel, 10, 2);
+        }
+
+        // Warp Drive: extra trail
+        if (perkIsActive(PERK_WARP_DRIVE)) {
+            Vec2 pvel2 = {static_cast<Fixed>(rngRange(12) - 6), static_cast<Fixed>(rngRange(12) - 6)};
+            spawnParticle(gPlayer.pos, pvel2, 14, 5);
         }
 
         --gPlayer.dashTimer;
@@ -219,8 +232,8 @@ void playerUpdate(u32 held, u32 down) {
             --gPlayer.dashCooldown;
         }
 
-        // Dash trigger
-        if ((down & KEY_R) && gPlayer.dashCooldown == 0) {
+        // Dash trigger — R or any face button
+        if ((down & (KEY_R | KEY_A | KEY_B | KEY_X | KEY_Y)) && gPlayer.dashCooldown == 0) {
             playerDash();
         }
     }
