@@ -1,6 +1,7 @@
 #include "combat.h"
 #include "player.h"
 #include "entities.h"
+#include "camera.h"
 #include "audio.h"
 #include "perk.h"
 #include "rng.h"
@@ -336,73 +337,281 @@ static void updateEnemies() {
                 }
                 break;
             }
-            // Bosses (17+): all charge + special abilities
-            case ETYPE_BOSS_SENTINEL: { // Sentinel (17) — rotating turret: fires 4-way spread every 60f
-                e.vel.x += fixMul(dir.x, FP_ONE / 4);
-                e.vel.y += fixMul(dir.y, FP_ONE / 4);
+            // ============ BOSSES — real behavior, not just charge+shoot ============
+
+            case ETYPE_BOSS_SENTINEL: { // Sentinel — orbiting turret, rotates around arena center
+                // Orbit the center of the arena, gradually closing distance to player
+                Fixed cx = toFixed(ARENA_W / 2), cy = toFixed(ARENA_H / 2);
+                Vec2 toCenter = {static_cast<Fixed>(cx - e.pos.x), static_cast<Fixed>(cy - e.pos.y)};
+                // Perpendicular orbit + slight pull toward player
+                e.vel.x += fixMul(-toCenter.y, FP_ONE / 16) + fixMul(dir.x, FP_ONE / 8);
+                e.vel.y += fixMul(toCenter.x, FP_ONE / 16) + fixMul(dir.y, FP_ONE / 8);
+
+                e.frame++;
                 if (e.shootTimer > 0) { e.shootTimer--; }
                 else {
-                    e.shootTimer = 60;
-                    const Fixed spd = toFixed(2);
-                    Bullet* b0 = spawnBullet(e.pos, {spd, 0}, 3, 6);
-                    Bullet* b1 = spawnBullet(e.pos, {static_cast<Fixed>(-spd), 0}, 3, 6);
-                    Bullet* b2 = spawnBullet(e.pos, {0, spd}, 3, 6);
-                    Bullet* b3 = spawnBullet(e.pos, {0, static_cast<Fixed>(-spd)}, 3, 6);
-                    if (b0) b0->lifetime = 60;
-                    if (b1) b1->lifetime = 60;
-                    if (b2) b2->lifetime = 60;
-                    if (b3) b3->lifetime = 60;
+                    // Alternating attack patterns using aiState
+                    if (e.aiState == 0) {
+                        // 4-way cardinal burst
+                        e.shootTimer = 50;
+                        const Fixed spd = toFixed(2);
+                        Bullet* b;
+                        b = spawnBullet(e.pos, {spd, 0}, 3, 5); if(b) b->lifetime=60;
+                        b = spawnBullet(e.pos, {static_cast<Fixed>(-spd), 0}, 3, 5); if(b) b->lifetime=60;
+                        b = spawnBullet(e.pos, {0, spd}, 3, 5); if(b) b->lifetime=60;
+                        b = spawnBullet(e.pos, {0, static_cast<Fixed>(-spd)}, 3, 5); if(b) b->lifetime=60;
+                        e.aiState = 1;
+                    } else if (e.aiState == 1) {
+                        // 4-way diagonal burst
+                        e.shootTimer = 50;
+                        const Fixed d = toFixed(1) + FP_ONE/2;
+                        Bullet* b;
+                        b = spawnBullet(e.pos, {d, d}, 3, 5); if(b) b->lifetime=60;
+                        b = spawnBullet(e.pos, {static_cast<Fixed>(-d), d}, 3, 5); if(b) b->lifetime=60;
+                        b = spawnBullet(e.pos, {d, static_cast<Fixed>(-d)}, 3, 5); if(b) b->lifetime=60;
+                        b = spawnBullet(e.pos, {static_cast<Fixed>(-d), static_cast<Fixed>(-d)}, 3, 5); if(b) b->lifetime=60;
+                        e.aiState = 2;
+                    } else {
+                        // Aimed 3-shot volley at player
+                        e.shootTimer = 70;
+                        Fixed spd = toFixed(2);
+                        Vec2 aimed = {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))};
+                        spawnBullet(e.pos, aimed, 3, 6);
+                        // Spread shots
+                        Vec2 left = {static_cast<Fixed>(aimed.x - aimed.y/4), static_cast<Fixed>(aimed.y + aimed.x/4)};
+                        Vec2 right = {static_cast<Fixed>(aimed.x + aimed.y/4), static_cast<Fixed>(aimed.y - aimed.x/4)};
+                        spawnBullet(e.pos, left, 3, 4);
+                        spawnBullet(e.pos, right, 3, 4);
+                        e.aiState = 0;
+                    }
+                    cameraShake(3, 6);
                 }
                 break;
             }
-            case ETYPE_BOSS_DREADNOUGHT: { // Dreadnought (18) — heavy charge + shockwave slam
-                e.vel.x += fixMul(dir.x, FP_ONE / 3);
-                e.vel.y += fixMul(dir.y, FP_ONE / 3);
+
+            case ETYPE_BOSS_DREADNOUGHT: { // Dreadnought — charges then slams, alternating
+                e.frame++;
                 if (e.shootTimer > 0) { e.shootTimer--; }
-                else {
-                    e.shootTimer = 90;
-                    // Shockwave: 8-way burst
-                    for (int a = 0; a < 8; a++) {
-                        Fixed cos8[8] = { toFixed(1), toFixed(1)/2, 0, static_cast<Fixed>(-toFixed(1)/2),
-                                         static_cast<Fixed>(-toFixed(1)), static_cast<Fixed>(-toFixed(1)/2), 0, toFixed(1)/2 };
-                        Fixed sin8[8] = { 0, toFixed(1)/2, toFixed(1), toFixed(1)/2,
-                                         0, static_cast<Fixed>(-toFixed(1)/2), static_cast<Fixed>(-toFixed(1)), static_cast<Fixed>(-toFixed(1)/2) };
-                        Vec2 bv = {static_cast<Fixed>(cos8[a]*2), static_cast<Fixed>(sin8[a]*2)};
-                        Bullet* sb = spawnBullet(e.pos, bv, 3, 4);
-                        if (sb) sb->lifetime = 50;
+
+                if (e.aiState == 0) {
+                    // Phase: charging toward player fast
+                    e.vel.x += fixMul(dir.x, FP_ONE / 2);
+                    e.vel.y += fixMul(dir.y, FP_ONE / 2);
+                    // Check if close enough to slam
+                    s32 distSq = static_cast<s32>(toPlayer.x) * toPlayer.x + static_cast<s32>(toPlayer.y) * toPlayer.y;
+                    if (distSq < static_cast<s32>(toFixed(50)) * toFixed(50) || e.shootTimer == 0) {
+                        // SLAM! 8-way shockwave
+                        static const Fixed cos8[] = { 16,11,0,-11,-16,-11,0,11 };
+                        static const Fixed sin8[] = { 0,-11,-16,-11,0,11,16,11 };
+                        for (int a = 0; a < 8; a++) {
+                            Vec2 bv = {static_cast<Fixed>(cos8[a]*2), static_cast<Fixed>(sin8[a]*2)};
+                            Bullet* sb = spawnBullet(e.pos, bv, 3, 5, BFLAG_EXPLODE, 16);
+                            if (sb) sb->lifetime = 40;
+                        }
+                        cameraShake(6, 12);
+                        spawnParticleBurst(e.pos, 8, 12, 1);
+                        // Stun self briefly (stop moving)
+                        e.vel = {0, 0};
+                        e.shootTimer = 60;
+                        e.aiState = 1;
+                    } else if (e.shootTimer == 0) {
+                        e.shootTimer = 90;
+                    }
+                } else {
+                    // Phase: stunned after slam, recovering
+                    e.vel.x = static_cast<Fixed>(e.vel.x * 6 / 16);
+                    e.vel.y = static_cast<Fixed>(e.vel.y * 6 / 16);
+                    if (e.shootTimer == 0) {
+                        e.aiState = 0;
+                        e.shootTimer = 30; // brief pause before next charge
                     }
                 }
                 break;
             }
-            case ETYPE_BOSS_LEVIATHAN: { // Leviathan (19) — spawns Grunt adds every 120 frames
-                e.vel.x += fixMul(dir.x, FP_ONE / 5);
-                e.vel.y += fixMul(dir.y, FP_ONE / 5);
+
+            case ETYPE_BOSS_LEVIATHAN: { // Leviathan — circles slowly, summons varied adds, spits
+                e.frame++;
+                // Slow orbit around player
+                e.vel.x += fixMul(-dir.y, FP_ONE / 12) + fixMul(dir.x, FP_ONE / 10);
+                e.vel.y += fixMul(dir.x, FP_ONE / 12) + fixMul(dir.y, FP_ONE / 10);
+
                 if (e.shootTimer > 0) { e.shootTimer--; }
                 else {
-                    e.shootTimer = 120;
-                    // Summon 2 small Grunts near self
-                    for (int s = 0; s < 2; s++) {
-                        Fixed ox = toFixed((rngRange(48)) - 24);
-                        Fixed oy = toFixed((rngRange(48)) - 24);
+                    if (e.aiState == 0) {
+                        // Summon 2 mixed adds
+                        e.shootTimer = 100;
+                        static const u8 addTypes[] = { ETYPE_GRUNT, ETYPE_CHARGER, ETYPE_SPITTER, ETYPE_BOMBER };
+                        for (int s = 0; s < 2; s++) {
+                            u8 addType = addTypes[rngRange(4)];
+                            Fixed ox = toFixed(rngRange(40) - 20);
+                            Fixed oy = toFixed(rngRange(40) - 20);
+                            Vec2 spos = {static_cast<Fixed>(e.pos.x + ox), static_cast<Fixed>(e.pos.y + oy)};
+                            spawnEnemy(spos, {0,0}, static_cast<s16>(e.maxHp / 10), addType, SIZE_SMALL, 8);
+                        }
+                        spawnParticleBurst(e.pos, 6, 10, 2);
+                        e.aiState = 1;
+                    } else {
+                        // Spit 3-way aimed volley
+                        e.shootTimer = 80;
+                        Fixed spd = static_cast<Fixed>(FP_ONE * 3 / 2);
+                        Vec2 aimed = {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))};
+                        spawnBullet(e.pos, aimed, 2, 4);
+                        Vec2 left = {static_cast<Fixed>(aimed.x - aimed.y/3), static_cast<Fixed>(aimed.y + aimed.x/3)};
+                        Vec2 right = {static_cast<Fixed>(aimed.x + aimed.y/3), static_cast<Fixed>(aimed.y - aimed.x/3)};
+                        spawnBullet(e.pos, left, 2, 3);
+                        spawnBullet(e.pos, right, 2, 3);
+                        e.aiState = 0;
+                    }
+                }
+                break;
+            }
+
+            case ETYPE_BOSS_NIGHTMARE_B: { // Nightmare King — circles, fear pulses, spawns nightmares
+                e.frame++;
+                // Orbit player, reversing direction periodically
+                Fixed orbitDir = ((e.frame >> 6) & 1) ? FP_ONE : static_cast<Fixed>(-FP_ONE);
+                e.vel.x += fixMul(-dir.y, fixMul(orbitDir, FP_ONE / 10)) + fixMul(dir.x, FP_ONE / 12);
+                e.vel.y += fixMul(dir.x, fixMul(orbitDir, FP_ONE / 10)) + fixMul(dir.y, FP_ONE / 12);
+
+                if (e.shootTimer > 0) { e.shootTimer--; }
+                else {
+                    if (e.aiState == 0) {
+                        // Fear pulse: fear all companions + slow player
+                        e.shootTimer = 120;
+                        for (auto& comp : gCompanions) {
+                            if (comp.active) comp.iframes = 30; // scatter via iframes
+                        }
+                        // 6-way slow projectiles
+                        static const Fixed cos6[] = { 16, 8, -8, -16, -8, 8 };
+                        static const Fixed sin6[] = { 0, -14, -14, 0, 14, 14 };
+                        for (int a = 0; a < 6; a++) {
+                            Vec2 bv = {cos6[a], sin6[a]};
+                            Bullet* sb = spawnBullet(e.pos, bv, 4, 3, BFLAG_SLOW, 0, 60);
+                            if (sb) sb->lifetime = 90;
+                        }
+                        spawnParticleBurst(e.pos, 8, 15, 4);
+                        cameraShake(4, 8);
+                        e.aiState = 1;
+                    } else {
+                        // Summon 1 small Nightmare
+                        e.shootTimer = 90;
+                        Fixed ox = toFixed(rngRange(60) - 30);
+                        Fixed oy = toFixed(rngRange(60) - 30);
                         Vec2 spos = {static_cast<Fixed>(e.pos.x + ox), static_cast<Fixed>(e.pos.y + oy)};
-                        spawnEnemy(spos, {0,0}, static_cast<s16>(e.maxHp / 8), ETYPE_GRUNT, SIZE_SMALL, 8);
+                        spawnEnemy(spos, {0,0}, static_cast<s16>(e.maxHp / 8), ETYPE_NIGHTMARE, SIZE_SMALL, 8);
+                        spawnParticleBurst(spos, 4, 8, 4);
+                        e.aiState = 0;
                     }
                 }
                 break;
             }
-            default: { // ETYPE_BOSS_NIGHTMARE_B (20+) or unknown — circles player, fear pulses
-                e.vel.x += fixMul(dir.x, FP_ONE / 6);
-                e.vel.y += fixMul(dir.y, FP_ONE / 6);
-                Fixed circle = ((e.frame >> 4) & 1) ? FP_ONE : static_cast<Fixed>(-FP_ONE);
-                e.vel.x += fixMul(-dir.y, circle);
-                e.vel.y += fixMul(dir.x, circle);
+
+            case ETYPE_BOSS_APOTHECARY: { // Apothecary — 3-phase final boss
+                e.frame++;
+                // Determine phase: 0 = >66% HP, 1 = 33-66%, 2 = <33%
+                int phase = (e.hp > e.maxHp * 2 / 3) ? 0 :
+                            (e.hp > e.maxHp / 3) ? 1 : 2;
+
+                // Movement: P0 slow orbit, P1 chase + dash, P2 erratic teleport
+                if (phase == 0) {
+                    // Slow orbit around arena center
+                    Fixed cx = toFixed(ARENA_W / 2), cy = toFixed(ARENA_H / 2);
+                    Vec2 toC = {static_cast<Fixed>(cx - e.pos.x), static_cast<Fixed>(cy - e.pos.y)};
+                    e.vel.x += fixMul(-toC.y, FP_ONE / 20) + fixMul(dir.x, FP_ONE / 12);
+                    e.vel.y += fixMul(toC.x, FP_ONE / 20) + fixMul(dir.y, FP_ONE / 12);
+                } else if (phase == 1) {
+                    // Aggressive chase
+                    e.vel.x += fixMul(dir.x, FP_ONE / 4);
+                    e.vel.y += fixMul(dir.y, FP_ONE / 4);
+                    // Occasional dash (every 180 frames)
+                    if ((e.frame % 180) == 0) {
+                        e.vel.x = fixMul(dir.x, toFixed(4));
+                        e.vel.y = fixMul(dir.y, toFixed(4));
+                        cameraShake(3, 6);
+                    }
+                } else {
+                    // Erratic: short teleports every 90 frames
+                    e.vel.x += fixMul(dir.x, FP_ONE / 6);
+                    e.vel.y += fixMul(dir.y, FP_ONE / 6);
+                    if ((e.frame % 90) == 0) {
+                        int px = gPlayer.pos.pixelX() + rngRange(120) - 60;
+                        int py = gPlayer.pos.pixelY() + rngRange(120) - 60;
+                        if (px < WALL_THICK+32) px = WALL_THICK+32;
+                        if (px > ARENA_W-WALL_THICK-32) px = ARENA_W-WALL_THICK-32;
+                        if (py < WALL_THICK+32) py = WALL_THICK+32;
+                        if (py > ARENA_H-WALL_THICK-32) py = ARENA_H-WALL_THICK-32;
+                        e.pos = {toFixed(px), toFixed(py)};
+                        e.vel = {0, 0};
+                        spawnParticleBurst(e.pos, 6, 10, 5);
+                    }
+                }
+
                 if (e.shootTimer > 0) { e.shootTimer--; }
                 else {
-                    e.shootTimer = 150;
-                    spawnParticleBurst(e.pos, 8, 15, 4);
+                    if (phase == 0) {
+                        // Phase 1: Pestle slam — aimed 4-bullet cross + 1 aimed shot
+                        e.shootTimer = 90;
+                        Fixed spd = toFixed(2);
+                        Vec2 aimed = {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))};
+                        spawnBullet(e.pos, aimed, 5, 6);
+                        spawnBullet(e.pos, {spd, 0}, 5, 4);
+                        spawnBullet(e.pos, {static_cast<Fixed>(-spd), 0}, 5, 4);
+                        spawnBullet(e.pos, {0, spd}, 5, 4);
+                        spawnBullet(e.pos, {0, static_cast<Fixed>(-spd)}, 5, 4);
+                        cameraShake(4, 8);
+                    } else if (phase == 1) {
+                        // Phase 2: alternating — spawn adds or grinding zones
+                        if (e.aiState & 1) {
+                            // Spawn 2 mixed adds
+                            e.shootTimer = 70;
+                            static const u8 addPool[] = {ETYPE_CHARGER, ETYPE_SPITTER, ETYPE_SHIELD, ETYPE_BOMBER};
+                            for (int s = 0; s < 2; s++) {
+                                u8 addType = addPool[rngRange(4)];
+                                Fixed ox = toFixed(rngRange(48) - 24);
+                                Fixed oy = toFixed(rngRange(48) - 24);
+                                Vec2 spos = {static_cast<Fixed>(e.pos.x + ox), static_cast<Fixed>(e.pos.y + oy)};
+                                spawnEnemy(spos, {0,0}, 12, addType, SIZE_SMALL, 8);
+                            }
+                            spawnParticleBurst(e.pos, 6, 10, 2);
+                        } else {
+                            // Spawn 2 poison zones near player
+                            e.shootTimer = 80;
+                            for (int z = 0; z < 2; z++) {
+                                Vec2 zpos = gPlayer.pos;
+                                zpos.x = static_cast<Fixed>(zpos.x + toFixed(rngRange(40) - 20));
+                                zpos.y = static_cast<Fixed>(zpos.y + toFixed(rngRange(40) - 20));
+                                spawnZone(zpos, 20, 2, 20, 180, 4, ZONE_POISON);
+                            }
+                        }
+                        e.aiState++;
+                    } else {
+                        // Phase 3: Meltdown — 6-way hex burst every attack
+                        e.shootTimer = 45;
+                        static const Fixed cos6[] = { 16, 8, -8, -16, -8, 8 };
+                        static const Fixed sin6[] = { 0, -14, -14, 0, 14, 14 };
+                        for (int a = 0; a < 6; a++) {
+                            Vec2 bv = {static_cast<Fixed>(cos6[a] * 2), static_cast<Fixed>(sin6[a] * 2)};
+                            Bullet* sb = spawnBullet(e.pos, bv, 5, 5);
+                            if (sb) sb->lifetime = 50;
+                        }
+                        // Also fire aimed shot
+                        Fixed spd = toFixed(3);
+                        spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))}, 5, 7);
+                        cameraShake(2, 4);
+                        // Spawn dangerous adds periodically
+                        if ((e.aiState & 3) == 0) {
+                            u8 addType = (rngRange(3) == 0) ? ETYPE_NIGHTMARE : ETYPE_BOMBER;
+                            Fixed ox = toFixed(rngRange(60) - 30);
+                            Vec2 spos = {static_cast<Fixed>(e.pos.x + ox), static_cast<Fixed>(e.pos.y + ox)};
+                            spawnEnemy(spos, {0,0}, 8, addType, SIZE_SMALL, 8);
+                        }
+                        e.aiState++;
+                    }
                 }
                 break;
             }
+
+            default: break;
         }
 
         applySpeedCap:
