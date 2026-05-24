@@ -17,14 +17,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install Python Pillow
         run: |
           apt-get update && apt-get install -y python3-pip
           pip3 install --break-system-packages Pillow
-
-      - name: Install ndstool
-        run: |
-          dkp-pacman -Sy --noconfirm ndstool libnds
 
       - name: Convert sprites
         run: |
@@ -32,11 +28,9 @@ jobs:
           python3 tools/png2bin_enemy.py
 
       - name: Build ROM
-        run: make
-        env:
-          DEVKITPRO: /opt/devkitpro
-          DEVKITARM: /opt/devkitpro/devkitARM
-          PATH: /opt/devkitpro/devkitARM/bin:/opt/devkitpro/tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+        run: |
+          export PATH="/opt/devkitpro/devkitARM/bin:/opt/devkitpro/tools/bin:$PATH"
+          make
 
       - name: Upload ROM artifact
         uses: actions/upload-artifact@v4
