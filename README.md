@@ -1,54 +1,50 @@
 # Trail Mix
 
-**A conga line of chaos on your Nintendo DS.**
+A roguelike auto-chess shooter for the Nintendo DS. You collect weird little guys who follow you around and shoot things.
 
 ## What is this?
 
-Trail Mix is a roguelike auto-chess shooter for the Nintendo DS. You pilot a lone character through waves of increasingly rude enemies while collecting colorful companions who trail behind you in a wiggly conga line, blasting everything in sight. Buy guys, merge guys, watch guys do cool stuff. It's like herding cats, except the cats have flamethrowers.
+You run around a top-down arena dodging enemies. Between waves you hit the shop and buy companions - 36 different classes across 6 colors, from Pyromancers to Plague Doctors to whatever a "Circuit Hacker" is supposed to be. They trail behind you in a line and handle the shooting while you handle the not-dying. Buy three of the same guy and they smoosh into a stronger version.
+
+The whole thing runs on a Nintendo DS. Two screens, 256x192 each, and somehow it all fits.
 
 ## Features
 
-- **36 companion classes** across 6 color factions — Pyromancers, Hexers, Tesla Coils, Plague Doctors, and 32 other weirdos
-- **3-merge system** — three of the same companion smush together into a stronger version (auto-chess style)
-- **6 color synergies** with 4 tiers each — stack companions of one color for increasingly absurd bonuses
-- **15 perks** — free after boss waves, or blow your savings in the shop
-- **12 enemy types** in three sizes, plus 4 bosses who definitely don't play fair
-- **Interest economy** — unspent gold earns interest, rewarding the fiscally responsible
-- **Full English & German localization** — Zerstörung in zwei Sprachen
-- **Runs on real DS hardware** — as the homebrew gods intended
+- 36 companion classes, 6 color factions, 3 upgrade tiers per class
+- Color synergies that scale up the more of one color you stack (2/3/4/5 thresholds)
+- 15 perks - free pick after bosses, or pay through the nose in the shop
+- 12 enemy types in small/medium/large, plus 4 bosses that will ruin your run
+- Interest on unspent gold, because even in a fantasy shooter you can't escape economics
+- English and German
 
 ## Screenshots
 
-<!-- TODO: Add screenshot of the conga line in action -->
+<!-- TODO: gameplay -->
 
-<!-- TODO: Add screenshot of the shop/upgrade screen -->
+<!-- TODO: shop screen -->
 
-<!-- TODO: Add screenshot of a boss fight -->
+<!-- TODO: boss fight -->
 
-<!-- TODO: Add screenshot of synergy effects -->
+<!-- TODO: synergies going off -->
 
-## How to Play
+## Controls
 
-| Input | Action |
-|-------|--------|
-| D-Pad | Move your character |
-| Touch Screen | Pick upgrades, buy companions, manage your squad |
+| Input | What it does |
+|-------|-------------|
+| D-Pad | Move |
+| R | Dash (you're invincible during it, abuse this) |
+| Touch | Buy, sell, pick perks, manage your guys |
 
-Your companions follow you automatically and shoot on their own. Your job is to dodge, position, and make smart choices between waves. Three identical companions merge into a powered-up version — plan your purchases accordingly.
+## Building
 
-## Building from Source
+Needs [devkitPro](https://devkitpro.org/) with the NDS toolchain. Then:
 
-You'll need [devkitPro](https://devkitpro.org/) with the NDS development tools installed.
-
-```bash
-# Install devkitPro and nds-dev packages first, then:
+```
 make
 ```
 
-The build produces a `.nds` ROM you can run on hardware (via flashcart) or in an emulator like [melonDS](https://melonds.kuribo64.net/).
+Out comes `trailmix.nds`. Run it on hardware with a flashcart or in [melonDS](https://melonds.kuribo64.net/).
 
-## Credits
+## License
 
-Built with devkitARM, libnds, and an unreasonable amount of enthusiasm.
-
-Licensed under MIT. Do whatever you want with it — just don't blame us when you can't stop playing.
+MIT
