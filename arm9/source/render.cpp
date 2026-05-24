@@ -1337,6 +1337,22 @@ static void renderShotPreview(int frame, int fci, u16 bulletColor, int tier) {
             }
             return;
         }
+        case 26: { // Plague Doctor — poison cloud zone
+            u16 projCol = RGB15(16, 0, 28) | BIT(15);
+            u16 cloudCol = RGB15(10, 0, 18) | BIT(15);
+            int landX = MUZ_X + 60, landY = MUZ_Y;
+            if (ph < 30) {
+                // Parabolic arc: rises then falls
+                int bx = MUZ_X + ph * 60 / 30;
+                int by = MUZ_Y - (15 * ph - ph * ph / 2) * 2 / 30;
+                renderFilledRect(bx-1, by-1, 3, 3, projCol);
+            } else if (ph < 60) {
+                // Cloud expands from landing point
+                int r = (ph - 30) * 14 / 30 + 2;
+                renderFilledCircle(landX, landY, r, cloudCol);
+            }
+            return;
+        }
         case 18: { // Gambler — single bullet, flickering size
             if (ph < 60) {
                 int bx = MUZ_X + ph * (TGT_X - MUZ_X) / 60;
@@ -1354,6 +1370,17 @@ static void renderShotPreview(int frame, int fci, u16 bulletColor, int tier) {
             }
             // Draw a friendly companion icon on the left
             renderFilledRect(20, MUZ_Y-4, 8, 8, RGB15(0,20,0));
+            return;
+        }
+        case 15: { // Vinecaller — 3 slow tendrils spreading right
+            u16 vineCol = RGB15(0, 24, 0) | BIT(15);
+            if (ph < 60) {
+                for (int n = -1; n <= 1; n++) {
+                    int bx = MUZ_X + ph / 2;
+                    int by = MUZ_Y + n * ph / 6;
+                    renderFilledRect(bx-1, by-1, 3, 3, vineCol);
+                }
+            }
             return;
         }
         case 17: { // Lifeshaper — green heal pulse ring
@@ -1374,6 +1401,43 @@ static void renderShotPreview(int frame, int fci, u16 bulletColor, int tier) {
                     int by = MUZ_Y + n * ph / 4;
                     if (bx >= 0) renderFilledRect(bx-1, by-1, 3, 3, bc);
                 }
+            }
+            return;
+        }
+        case 20: { // Jester — ricochet pierce
+            u16 ricoCol = RGB15(31, 28, 0) | BIT(15);
+            // Bullet moves right, bounces off top wall, then off bottom wall
+            int bx, by;
+            if (ph < 20) {
+                // Phase 1: travel right toward wall
+                bx = MUZ_X + ph * (TGT_X + 20 - MUZ_X) / 20;
+                by = MUZ_Y;
+            } else if (ph < 40) {
+                // Phase 2: bounce diagonally down-left
+                int t2 = ph - 20;
+                bx = TGT_X + 20 - t2 * 3;
+                by = MUZ_Y + t2 * 2;
+            } else {
+                // Phase 3: bounce right again
+                int t3 = ph - 40;
+                bx = TGT_X + 20 - 20 * 3 + t3 * 3;
+                by = MUZ_Y + 20 * 2 - t3 * 2;
+            }
+            if (bx >= 0 && bx < 256 && by >= 0 && by < 192)
+                renderFilledRect(bx-1, by-1, 3, 3, ricoCol);
+            return;
+        }
+        case 21: { // Mimic — copies nearest ally, color cycles
+            static const u16 mimicCols[4] = {
+                RGB15(31,6,6) | BIT(15),   // red
+                RGB15(6,10,31) | BIT(15),  // blue
+                RGB15(0,28,0) | BIT(15),   // green
+                RGB15(31,28,0) | BIT(15)   // yellow
+            };
+            int colorIdx = (ph / 15) % 4;
+            if (ph < 60) {
+                int bx = MUZ_X + ph * (TGT_X - MUZ_X) / 60;
+                renderFilledRect(bx-1, MUZ_Y-1, 3, 3, mimicCols[colorIdx]);
             }
             return;
         }
