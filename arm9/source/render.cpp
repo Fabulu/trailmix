@@ -729,30 +729,104 @@ void renderGameplay() {
     }
 
     // Draw enemies using sprite data with status-effect overlays
-    for (const auto& e : gEnemies) {
+    for (auto& e : gEnemies) {
         if (!e.active) continue;
         int ex = e.pos.pixelX() - cx;
         int ey = e.pos.pixelY() - cy;
         int half = e.spriteSize / 2;
 
-        // Determine tint mode: 0=normal, 1=frozen, 2=slowed
+        // Decrement hurt timer each frame
+        if (e.hurtTimer > 0) e.hurtTimer--;
+
+        // Determine tint mode: 0=normal, 1=frozen, 2=slowed, 3=white flash
         u8 tintMode = 0;
         if (e.freezeTimer > 0) tintMode = 1;
         else if (e.slowTimer > 0) tintMode = 2;
+
+        // Per-type hurt visuals (override tint when hurtTimer active)
+        int drawX = ex - half;
+        int drawY = ey - half;
+        if (e.hurtTimer > 0) {
+            switch (e.type) {
+                // Light enemies: white flash for full duration
+                case ETYPE_GRUNT:
+                case ETYPE_SWARM_DRONE:
+                case ETYPE_CHARGER:
+                    tintMode = 3;
+                    drawY -= 1; // 1px knockback nudge
+                    break;
+
+                // Heavy enemies: brief clang (white flash only on first frame)
+                case ETYPE_BRUTE:
+                case ETYPE_SHIELD:
+                case ETYPE_ANCHOR:
+                    if (e.hurtTimer >= 3) tintMode = 3; // only first frame of 4
+                    break;
+
+                // Organic enemies: green particles + white flash
+                case ETYPE_SPITTER:
+                case ETYPE_TRAPPER:
+                    tintMode = 3;
+                    if (e.hurtTimer == 3) { // spawn particles once
+                        spawnParticle(e.pos, {0, -64}, 10, static_cast<u8>(PillColor::Green));
+                        spawnParticle(e.pos, {0,  64}, 10, static_cast<u8>(PillColor::Green));
+                    }
+                    break;
+
+                // Dark enemies: white flash (purple tint would fight freeze/slow)
+                case ETYPE_NIGHTMARE:
+                case ETYPE_HEXER:
+                    tintMode = 3;
+                    break;
+
+                // Ghost: disappear for 2 frames on hit
+                case ETYPE_GHOST:
+                    if (e.hurtTimer >= 2) { drawX = -999; } // hide off-screen
+                    else tintMode = 3;
+                    break;
+
+                // Bomber: red-orange particles + white flash
+                case ETYPE_BOMBER:
+                    tintMode = 3;
+                    if (e.hurtTimer == 3) {
+                        spawnParticle(e.pos, {-48, -48}, 10, static_cast<u8>(PillColor::Red));
+                        spawnParticle(e.pos, { 48, -48}, 10, static_cast<u8>(PillColor::Red));
+                    }
+                    break;
+
+                // Stationary heavy: sprite shake
+                case ETYPE_ARTILLERY:
+                case ETYPE_HIVE:
+                    tintMode = 3;
+                    drawX += (e.hurtTimer & 1) ? 1 : -1; // alternating 1px shake
+                    break;
+
+                // All other enemies: white flash
+                default:
+                    tintMode = 3;
+                    break;
+            }
+
+            // Bosses: white flash + camera shake on first hurt frame
+            if (e.type >= ETYPE_BOSS_SENTINEL && e.hurtTimer == 3) {
+                tintMode = 3;
+                cameraShake(1, 3);
+            }
+        }
 
         // Animation frame: alternate every 16 frames
         u8 animFrame = (renderFrame >> 4) & 1;
 
         // Alpha for ghost flicker (visible 3/4 of the time)
         u8 alpha = 4;
-        if (e.type == ETYPE_GHOST && tintMode != 1) {
+        if (e.type == ETYPE_GHOST && tintMode != 1 && e.hurtTimer == 0) {
             bool vis = ((renderFrame >> 2) & 3) != 0;
             alpha = vis ? 3 : 0;
         }
 
         // Blit the sprite centered on the enemy position
         enemySpriteBlitMain(e.type, e.sizeClass, animFrame,
-                            ex - half, ey - half, tintMode, alpha);
+                            drawX, drawY, tintMode, alpha);
 
         // Fear indicator: purple flicker above head
         if (e.fearTimer > 0 && (renderFrame & 4)) {

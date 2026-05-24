@@ -1,0 +1,247 @@
+ENEMY SPRITE ART BRIEF V2 — Trail Mix
+=========================================
+Top-down roguelike, 256x192 NDS. Clean pixel art, simple geometric-creature style.
+
+FORMAT RULES (read these first)
+-------------------------------
+- 4bpp indexed color: 16 colors per sprite, index 0 = transparent
+- NO anti-aliasing, NO dithering
+- 1px dark outline on all bodies (darkest color in the palette, never pure black #000)
+- Horizontal strip layout: frames are placed left-to-right in a single row
+- Transparent background (index 0)
+- File format: PNG, will be converted to linear 4bpp binary
+- Each enemy type has a distinct dominant hue readable even at 8x8 pixels
+- Bosses should look like larger, more dangerous creatures — NOT scaled-up regulars
+- High-contrast bodies against transparent BG. Rich, saturated palette.
+
+SIZE GUIDE
+----------
+- Small  (s): one frame = 8x8 px.   2-frame strip = 16x8 PNG
+- Medium (m): one frame = 16x16 px.  2-frame strip = 32x16 PNG
+- Large  (l): one frame = 24x24 px.  2-frame strip = 48x24 PNG
+- Boss:       one frame = 32x32 px.  2-frame strip = 64x32 PNG
+- Boss Large: one frame = 64x64 px.  8-frame strip = 512x64 PNG
+
+SIZE DIFFERENCES: Small = minimal detail, just silhouette + dominant color.
+Medium = full detail, readable features. Large = same character, bulkier
+proportions, extra detail (scars, armor, thicker limbs).
+
+DIRECTORY: All source PNGs go in graphics/enemies/
+Converted .bin files go in arm9/data/enemies/ (handled by build pipeline)
+
+========================================================================
+SECTION A: EXISTING ENEMIES — NO CHANGES NEEDED (keep as-is)
+========================================================================
+
+These 40 files already exist and need no modification. Listed for completeness.
+
+1. GRUNT — "Footslogger"
+   Dull, relentless creature, trudges straight at the player. Slow and stupid.
+   Frame 1: walking pose. Frame 2: alternate step.
+   Files: grunt_s.png (16x8), grunt_m.png (32x16), grunt_l.png (48x24)
+
+2. CHARGER — "Razorfang"
+   Agile flanker that darts to the player's sides before striking.
+   Frame 1: crouched/ready. Frame 2: lunging forward.
+   Files: charger_s.png (16x8), charger_m.png (32x16), charger_l.png (48x24)
+
+3. BRUTE — "Ironhide"
+   Massive slow tank, absorbs punishment, pushes forward like a wall.
+   Frame 1: standing heavy. Frame 2: leaning into stride.
+   Files: brute_s.png (16x8), brute_m.png (32x16), brute_l.png (48x24)
+
+4. SPITTER — "Plaguespit"
+   Keeps distance, strafes, spits projectiles at the player.
+   Frame 1: mouth closed (idle). Frame 2: mouth open (shooting).
+   Files: spitter_s.png (16x8), spitter_m.png (32x16), spitter_l.png (48x24)
+
+5. SNIPER — "Deadeye"
+   Nearly stationary, fires fast accurate shots from far away.
+   Frame 1: aiming (sensor dim). Frame 2: firing (sensor bright/glowing).
+   Files: sniper_s.png (16x8), sniper_m.png (32x16), sniper_l.png (48x24)
+
+6. SPLITTER — "Clutchmother"
+   Walks at the player; splits into two small Grunts on death.
+   Frame 1: body whole. Frame 2: body showing visible seam/crack.
+   Files: splitter_s.png (16x8), splitter_m.png (32x16), splitter_l.png (48x24)
+
+7. SHIELD — "Pavise"
+   Carries a barrier on its front face, must be shot from behind.
+   Frame 1: shield raised, facing right. Frame 2: shield shifted slightly.
+   Files: shield_s.png (16x8), shield_m.png (32x16), shield_l.png (48x24)
+
+8. ARTILLERY — "Mortarback"
+   Stationary cannon creature, lobs explosive arcing shots.
+   Frame 1: barrel upright (idle). Frame 2: barrel tilted/recoiling (firing).
+   Files: artillery_s.png (16x8), artillery_m.png (32x16), artillery_l.png (48x24)
+
+9. NIGHTMARE — "Dreadmaw"
+   Creepy emitter, fear pulse scatters nearby enemies.
+   Frame 1: neutral. Frame 2: expanded/pulsing (mid-scream).
+   Files: nightmare_s.png (16x8), nightmare_m.png (32x16), nightmare_l.png (48x24)
+
+10. GHOST — "Wraith"
+    Teleports near the player every 2 seconds. Flickers in and out.
+    Frame 1: semi-visible form. Frame 2: fading/translucent (fewer filled pixels).
+    Files: ghost_s.png (16x8), ghost_m.png (32x16), ghost_l.png (48x24)
+
+11. SWARM DRONE — "Stinger"
+    Tiny, extremely fast, attacks in coordinated packs.
+    Frame 1: wings/legs spread. Frame 2: wings/legs tucked.
+    Files: drone_s.png (16x8), drone_m.png (32x16), drone_l.png (48x24)
+
+12. BOMBER — "Cinderling"
+    Charges at the player and explodes on contact. Volatile, glowing.
+    Frame 1: running, body dim. Frame 2: running, body bright (about to blow).
+    Files: bomber_s.png (16x8), bomber_m.png (32x16), bomber_l.png (48x24)
+
+13. SENTINEL (Boss)
+    Rotating turret boss, fires 4-way bullet spreads. Armored, mechanical.
+    Frame 1: turret at 0 degrees. Frame 2: turret rotated 45 degrees.
+    File: boss_sentinel.png (64x32)
+
+14. DREADNOUGHT (Boss)
+    Heavy bruiser boss, slams the ground creating 8-way shockwaves.
+    Frame 1: standing tall. Frame 2: crouched mid-slam.
+    File: boss_dreadnought.png (64x32)
+
+15. LEVIATHAN (Boss)
+    Summoner boss, periodically spawns small Grunts from its body.
+    Frame 1: closed/dormant. Frame 2: open/spawning (visible maw).
+    File: boss_leviathan.png (64x32)
+
+16. NIGHTMARE KING (Boss)
+    Circles the player, emits mass fear pulses. Evolved Dreadmaw.
+    Frame 1: drifting. Frame 2: expanded/screaming.
+    File: boss_nightmare.png (64x32)
+
+========================================================================
+SECTION B: NEW REGULAR ENEMIES (5 types x 3 sizes = 15 files)
+========================================================================
+
+All new regular enemies follow the same strip format: 2 frames, horizontal.
+Each type needs s/m/l variants.
+
+17. MEDIC — "Apotheling"
+    Dominant color: BRIGHT GREEN with white cross markings.
+    A small hunched healer creature with glowing green hands/appendages. It
+    scurries away from the player while healing nearby allies. Think of a
+    nervous field medic — it wants nothing to do with combat but keeps its
+    friends alive. Visually distinct from the Spitter's sickly green — the
+    Medic's green is clean, clinical, almost minty.
+    Frame 1: hands down, running away. Frame 2: hands raised, emitting heal glow.
+    Priority target — player should want to shoot this first.
+    Files:
+      medic_s.png   (16x8)
+      medic_m.png   (32x16)
+      medic_l.png   (48x24)
+
+18. ANCHOR — "Monolith"
+    Dominant color: SLATE GRAY / STONE with orange-gold rune markings.
+    A heavy, rocky, totem-like creature that radiates a damage-resistance aura
+    to all nearby enemies. Squat and immovable-looking, like a walking obelisk
+    or a stone idol with stubby legs. The orange runes on its body glow when
+    the aura is active. Players must destroy it to break the aura and weaken
+    the pack around it.
+    Frame 1: runes dim (aura charging). Frame 2: runes bright (aura active).
+    Files:
+      anchor_s.png  (16x8)
+      anchor_m.png  (32x16)
+      anchor_l.png  (48x24)
+
+19. TRAPPER — "Spindler"
+    Dominant color: DEEP PURPLE with magenta accents.
+    A spider-like creature that scuttles to the player's recent position and
+    plants glowing mines/webs. Thin legs, compact body, always looking down
+    at the ground. Distinct from Nightmare's purple — Trapper is a deeper,
+    bluer purple. The mines it places slow the player's movement.
+    Frame 1: walking, legs spread. Frame 2: crouched, planting a mine/web.
+    Files:
+      trapper_s.png (16x8)
+      trapper_m.png (32x16)
+      trapper_l.png (48x24)
+
+20. HEXER — "Blightcaster"
+    Dominant color: DARK TEAL / CYAN with sickly yellow eye.
+    A floating cloaked figure that fires slow-moving debuff projectiles
+    reducing the player's fire rate. Hunched, one large eye visible under
+    the hood, trailing dark particles. Think evil wizard. Its projectiles
+    should be visually distinct from Spitter's — more like dark orbs than
+    spit. Menacing but physically frail.
+    Frame 1: hovering, cloak down. Frame 2: arm raised, casting (eye glows).
+    Files:
+      hexer_s.png   (16x8)
+      hexer_m.png   (32x16)
+      hexer_l.png   (48x24)
+
+21. HIVE — "Broodmound"
+    Dominant color: DARK RED / MAROON with yellow-orange honeycomb pattern.
+    A stationary organic mound — like a fleshy anthill or wasp nest. It never
+    moves after spawning. Periodically opens to release Swarm Drones (up to 4
+    at a time). Has visible openings/pores on its surface. When spawning, the
+    openings glow bright orange. Destroying it stops the drone flow. Should
+    look organic and gross, not mechanical.
+    Frame 1: openings closed (dormant). Frame 2: openings flared (spawning).
+    Files:
+      hive_s.png    (16x8)
+      hive_m.png    (32x16)
+      hive_l.png    (48x24)
+
+========================================================================
+SECTION C: NEW BOSS (1 boss, 64x64, 8 frames = 1 file)
+========================================================================
+
+22. THE APOTHECARY — Final Boss (Wave 30)
+    Dominant colors: WHITE LAB COAT, GOLD mortar-and-pestle weapon, shifting
+    accent colors (one per pill color: red, blue, green, yellow, purple, orange).
+
+    A towering alchemist figure — the mastermind behind the enemy pill creatures.
+    Wears a tattered white coat stained with colorful chemical splashes. Wields
+    an oversized golden pestle as both weapon and catalyst. Has a belt of
+    bubbling vials. Face obscured by round goggles and a mask. Imposing but
+    scientific — a mad pharmacist, not a warrior.
+
+    This is the final boss. It should look like the most important, most
+    dangerous, most detailed creature in the entire game. Every pixel counts.
+
+    8 FRAMES (512x64 horizontal strip):
+      Frame 0: Idle stance — standing tall, pestle at rest, coat flowing.
+      Frame 1: Pestle wind-up — pulling pestle back over shoulder.
+      Frame 2: Pestle swing — mid-strike, pestle blurred forward arc.
+      Frame 3: Casting — free hand extended, vials glowing, energy gathering.
+      Frame 4: Spawning adds — coat flared open, creatures emerging from belt.
+      Frame 5: Damage taken — recoiling, goggles cracked, coat torn further.
+      Frame 6: Meltdown phase — body glowing, coat dissolving, pestle cracking.
+      Frame 7: Death crumble — falling apart, vials shattering, golden dust.
+
+    File: boss_apothecary.png (512x64)
+
+========================================================================
+DELIVERY CHECKLIST
+========================================================================
+
+NEW files to create (16 total):
+  [ ] medic_s.png       16 x 8
+  [ ] medic_m.png       32 x 16
+  [ ] medic_l.png       48 x 24
+  [ ] anchor_s.png      16 x 8
+  [ ] anchor_m.png      32 x 16
+  [ ] anchor_l.png      48 x 24
+  [ ] trapper_s.png     16 x 8
+  [ ] trapper_m.png     32 x 16
+  [ ] trapper_l.png     48 x 24
+  [ ] hexer_s.png       16 x 8
+  [ ] hexer_m.png       32 x 16
+  [ ] hexer_l.png       48 x 24
+  [ ] hive_s.png        16 x 8
+  [ ] hive_m.png        32 x 16
+  [ ] hive_l.png        48 x 24
+  [ ] boss_apothecary.png  512 x 64
+
+EXISTING files (40 total) — no changes needed:
+  grunt_s/m/l.png, charger_s/m/l.png, brute_s/m/l.png, spitter_s/m/l.png,
+  sniper_s/m/l.png, splitter_s/m/l.png, shield_s/m/l.png, artillery_s/m/l.png,
+  nightmare_s/m/l.png, ghost_s/m/l.png, drone_s/m/l.png, bomber_s/m/l.png,
+  boss_sentinel.png, boss_dreadnought.png, boss_leviathan.png, boss_nightmare.png
+
+GRAND TOTAL: 56 PNG files (40 existing + 16 new)

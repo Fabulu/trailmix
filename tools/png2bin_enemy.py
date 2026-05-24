@@ -34,11 +34,17 @@ ENEMIES_OUT = os.path.join(PROJECT_DIR, "arm9", "data", "enemies")
 REGULAR_ENEMIES = [
     "grunt", "charger", "brute", "spitter", "sniper", "splitter",
     "shield", "artillery", "nightmare", "ghost", "drone", "bomber",
+    "medic", "anchor", "trapper", "hexer", "hive",
 ]
 
-# Boss enemy types (single 32px size)
+# Boss enemy types (single 32px size, 2 frames)
 BOSS_ENEMIES = [
     "boss_sentinel", "boss_dreadnought", "boss_leviathan", "boss_nightmare",
+]
+
+# Large bosses (64px, variable frame count)
+LARGE_BOSS_ENEMIES = [
+    ("boss_apothecary", 64, 8),  # (name, frame_size, frame_count)
 ]
 
 # Size suffix -> (frame_width, frame_height, png_width, png_height)
@@ -73,21 +79,22 @@ def extract_linear_frame_4bpp(img, frame_x, frame_w, frame_h):
     return bytes(data)
 
 
-def convert_enemy(png_path, bin_path, frame_w, frame_h, png_w, png_h):
-    """Convert a 2-frame enemy sprite strip to linear 4bpp data."""
+def convert_enemy(png_path, bin_path, frame_w, frame_h, num_frames=2):
+    """Convert an N-frame enemy sprite strip to linear 4bpp data."""
     img = Image.open(png_path)
+    expected_w = frame_w * num_frames
+    expected_h = frame_h
     assert img.mode == "P", f"Expected palette mode ('P'), got '{img.mode}' in {png_path}"
-    assert img.size == (png_w, png_h), (
-        f"Expected {png_w}x{png_h}, got {img.size[0]}x{img.size[1]} in {png_path}"
+    assert img.size == (expected_w, expected_h), (
+        f"Expected {expected_w}x{expected_h}, got {img.size[0]}x{img.size[1]} in {png_path}"
     )
 
     pixel_data = bytearray()
-    # Frame 1 at x=0, frame 2 at x=frame_w
-    pixel_data.extend(extract_linear_frame_4bpp(img, 0, frame_w, frame_h))
-    pixel_data.extend(extract_linear_frame_4bpp(img, frame_w, frame_w, frame_h))
+    for f in range(num_frames):
+        pixel_data.extend(extract_linear_frame_4bpp(img, f * frame_w, frame_w, frame_h))
 
-    with open(bin_path, "wb") as f:
-        f.write(pixel_data)
+    with open(bin_path, "wb") as fout:
+        fout.write(pixel_data)
 
     return len(pixel_data)
 
@@ -115,21 +122,6 @@ def convert_palette(png_path, pal_path):
     return len(pal_data)
 
 
-def build_file_list():
-    """Build list of (png_basename_no_ext, frame_w, frame_h, png_w, png_h)."""
-    entries = []
-
-    for enemy in REGULAR_ENEMIES:
-        for suffix, (fw, fh, pw, ph) in SIZE_MAP.items():
-            entries.append((f"{enemy}{suffix}", fw, fh, pw, ph))
-
-    for boss in BOSS_ENEMIES:
-        fw, fh, pw, ph = BOSS_SIZE
-        entries.append((boss, fw, fh, pw, ph))
-
-    return entries
-
-
 def main():
     os.makedirs(ENEMIES_OUT, exist_ok=True)
 
@@ -137,23 +129,51 @@ def main():
     print(f"Output directory: {ENEMIES_OUT}")
     print()
 
-    entries = build_file_list()
     converted = 0
     skipped = 0
 
-    for name, fw, fh, pw, ph in entries:
-        png_path = os.path.join(ENEMIES_IN, f"{name}.png")
-        bin_path = os.path.join(ENEMIES_OUT, f"e_{name}.bin")
-        pal_path = os.path.join(ENEMIES_OUT, f"e_{name}_pal.bin")
+    # Regular enemies: 2 frames each, 3 sizes
+    for enemy in REGULAR_ENEMIES:
+        for suffix, (fw, fh, pw, ph) in SIZE_MAP.items():
+            name = f"{enemy}{suffix}"
+            png_path = os.path.join(ENEMIES_IN, f"{name}.png")
+            bin_path = os.path.join(ENEMIES_OUT, f"e_{name}.bin")
+            pal_path = os.path.join(ENEMIES_OUT, f"e_{name}_pal.bin")
+            if not os.path.exists(png_path):
+                print(f"  WARNING: {name}.png not found, skipping")
+                skipped += 1
+                continue
+            size = convert_enemy(png_path, bin_path, fw, fh, 2)
+            pal_size = convert_palette(png_path, pal_path)
+            print(f"  {name}.png -> e_{name}.bin ({size}B) + pal ({pal_size}B)")
+            converted += 1
 
+    # Standard bosses: 32px, 2 frames
+    for boss in BOSS_ENEMIES:
+        png_path = os.path.join(ENEMIES_IN, f"{boss}.png")
+        bin_path = os.path.join(ENEMIES_OUT, f"e_{boss}.bin")
+        pal_path = os.path.join(ENEMIES_OUT, f"e_{boss}_pal.bin")
         if not os.path.exists(png_path):
-            print(f"  WARNING: {name}.png not found, skipping")
+            print(f"  WARNING: {boss}.png not found, skipping")
             skipped += 1
             continue
-
-        size = convert_enemy(png_path, bin_path, fw, fh, pw, ph)
+        size = convert_enemy(png_path, bin_path, 32, 32, 2)
         pal_size = convert_palette(png_path, pal_path)
-        print(f"  {name}.png -> e_{name}.bin ({size}B) + e_{name}_pal.bin ({pal_size}B)")
+        print(f"  {boss}.png -> e_{boss}.bin ({size}B) + pal ({pal_size}B)")
+        converted += 1
+
+    # Large bosses: variable size and frame count
+    for boss_name, frame_px, num_frames in LARGE_BOSS_ENEMIES:
+        png_path = os.path.join(ENEMIES_IN, f"{boss_name}.png")
+        bin_path = os.path.join(ENEMIES_OUT, f"e_{boss_name}.bin")
+        pal_path = os.path.join(ENEMIES_OUT, f"e_{boss_name}_pal.bin")
+        if not os.path.exists(png_path):
+            print(f"  WARNING: {boss_name}.png not found, skipping")
+            skipped += 1
+            continue
+        size = convert_enemy(png_path, bin_path, frame_px, frame_px, num_frames)
+        pal_size = convert_palette(png_path, pal_path)
+        print(f"  {boss_name}.png -> e_{boss_name}.bin ({size}B, {num_frames}f) + pal ({pal_size}B)")
         converted += 1
 
     print()

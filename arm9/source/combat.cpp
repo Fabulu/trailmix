@@ -6,6 +6,7 @@
 #include "rng.h"
 #include "companion.h"
 #include "synergy.h"
+#include "game.h"
 
 // Update bullets: move, wall ricochet (Blue T2), remove out-of-arena
 static void updateBullets() {
@@ -70,7 +71,7 @@ static void updateEnemies() {
         }
 
         // Per-type speed and behavior
-        // Types 0-11 = regular enemies, 12-15 = bosses
+        // Types 0-16 = regular enemies, 17+ = bosses
         switch (e.type) {
             case ETYPE_GRUNT: // Grunt (0) — slow march straight at player
                 e.vel.x += fixMul(dir.x, FP_ONE / 4);
@@ -234,8 +235,109 @@ static void updateEnemies() {
                 e.vel.y += fixMul(dir.y, FP_ONE * 3 / 8);
                 break;
             }
-            // Bosses (12-15): all charge + special abilities
-            case ETYPE_BOSS_SENTINEL: { // Sentinel (12) — rotating turret: fires 4-way spread every 60f
+            case ETYPE_MEDIC: { // Medic (12) — flees player, heals nearby damaged allies
+                // Flee: accelerate AWAY from player
+                e.vel.x -= fixMul(dir.x, FP_ONE / 4);
+                e.vel.y -= fixMul(dir.y, FP_ONE / 4);
+                // Every 90 frames: heal nearest damaged ally within 48px
+                if (e.shootTimer > 0) { e.shootTimer--; }
+                else {
+                    e.shootTimer = 90;
+                    Enemy* healTarget = nullptr;
+                    s32 bestDist = static_cast<s32>(toFixed(48)) * toFixed(48);
+                    for (auto& other : gEnemies) {
+                        if (!other.active || &other == &e) continue;
+                        if (other.hp >= other.maxHp) continue; // not damaged
+                        Vec2 d = other.pos - e.pos;
+                        s32 dist = static_cast<s32>(d.x) * d.x + static_cast<s32>(d.y) * d.y;
+                        if (dist < bestDist) { bestDist = dist; healTarget = &other; }
+                    }
+                    if (healTarget) {
+                        s16 heal = static_cast<s16>(healTarget->maxHp * 15 / 100);
+                        if (heal < 1) heal = 1;
+                        healTarget->hp += heal;
+                        if (healTarget->hp > healTarget->maxHp) healTarget->hp = healTarget->maxHp;
+                        spawnParticleBurst(healTarget->pos, 4, 8, 2); // green heal particles
+                    }
+                }
+                break;
+            }
+            case ETYPE_ANCHOR: { // Anchor (13) — slow approach, damage-resist aura (checked in collision code)
+                e.vel.x += fixMul(dir.x, FP_ONE / 6);
+                e.vel.y += fixMul(dir.y, FP_ONE / 6);
+                break;
+            }
+            case ETYPE_TRAPPER: { // Trapper (14) — maintains ~120px distance, plants slow zones
+                s32 distSq = static_cast<s32>(toPlayer.x) * toPlayer.x +
+                             static_cast<s32>(toPlayer.y) * toPlayer.y;
+                s32 idealDist = toFixed(120);
+                s32 idealSq = static_cast<s32>(idealDist) * idealDist;
+                if (distSq < idealSq) {
+                    e.vel.x -= fixMul(dir.x, FP_ONE / 3);
+                    e.vel.y -= fixMul(dir.y, FP_ONE / 3);
+                } else {
+                    e.vel.x += fixMul(dir.x, FP_ONE / 6);
+                    e.vel.y += fixMul(dir.y, FP_ONE / 6);
+                }
+                // Every 120 frames: spawn slow zone at player's current position (max 3 via aiState counter)
+                if (e.shootTimer > 0) { e.shootTimer--; }
+                else if (e.aiState < 3) {
+                    e.shootTimer = 120;
+                    e.aiState++;
+                    // Spawn a zone at the player's current position
+                    spawnZone(gPlayer.pos, 16, 1, 15, 180, 4, ZONE_POISON);
+                }
+                break;
+            }
+            case ETYPE_HEXER: { // Hexer (15) — maintains ~180px distance, fires slow projectile
+                s32 distSq = static_cast<s32>(toPlayer.x) * toPlayer.x +
+                             static_cast<s32>(toPlayer.y) * toPlayer.y;
+                s32 idealDist = toFixed(180);
+                s32 idealSq = static_cast<s32>(idealDist) * idealDist;
+                if (distSq < idealSq) {
+                    e.vel.x -= fixMul(dir.x, FP_ONE / 4);
+                    e.vel.y -= fixMul(dir.y, FP_ONE / 4);
+                } else {
+                    e.vel.x += fixMul(dir.x, FP_ONE / 6);
+                    e.vel.y += fixMul(dir.y, FP_ONE / 6);
+                }
+                // Every 150 frames: fire a slow projectile (speed 1, BFLAG_SLOW, effectDuration=120)
+                if (e.shootTimer > 0) { e.shootTimer--; }
+                else {
+                    e.shootTimer = 150;
+                    Vec2 shotVel = {
+                        static_cast<Fixed>(fixMul(dir.x, FP_ONE)),
+                        static_cast<Fixed>(fixMul(dir.y, FP_ONE))
+                    };
+                    Bullet* sb = spawnBullet(e.pos, shotVel, 4, 2, BFLAG_SLOW, 0, 120, 180);
+                    (void)sb; // bullet is self-managing
+                }
+                break;
+            }
+            case ETYPE_HIVE: { // Hive (16) — stationary, spawns drones periodically
+                // Does NOT move: apply heavy friction to stay still
+                e.vel.x = static_cast<Fixed>(e.vel.x * 4 / 16);
+                e.vel.y = static_cast<Fixed>(e.vel.y * 4 / 16);
+                // Every 180 frames: spawn 1 Swarm Drone if fewer than 4 alive
+                if (e.shootTimer > 0) { e.shootTimer--; }
+                else {
+                    e.shootTimer = 180;
+                    // Count active drones
+                    int droneCount = 0;
+                    for (auto& other : gEnemies) {
+                        if (other.active && other.type == ETYPE_SWARM_DRONE) droneCount++;
+                    }
+                    if (droneCount < 4) {
+                        Fixed ox = toFixed(rngRange(16) - 8);
+                        Fixed oy = toFixed(rngRange(16) - 8);
+                        Vec2 spos = {static_cast<Fixed>(e.pos.x + ox), static_cast<Fixed>(e.pos.y + oy)};
+                        spawnEnemy(spos, {0, 0}, static_cast<s16>(e.maxHp / 4), ETYPE_SWARM_DRONE, SIZE_SMALL, SPRITE_SIZE_SMALL);
+                    }
+                }
+                break;
+            }
+            // Bosses (17+): all charge + special abilities
+            case ETYPE_BOSS_SENTINEL: { // Sentinel (17) — rotating turret: fires 4-way spread every 60f
                 e.vel.x += fixMul(dir.x, FP_ONE / 4);
                 e.vel.y += fixMul(dir.y, FP_ONE / 4);
                 if (e.shootTimer > 0) { e.shootTimer--; }
@@ -253,7 +355,7 @@ static void updateEnemies() {
                 }
                 break;
             }
-            case ETYPE_BOSS_DREADNOUGHT: { // Dreadnought (13) — heavy charge + shockwave slam
+            case ETYPE_BOSS_DREADNOUGHT: { // Dreadnought (18) — heavy charge + shockwave slam
                 e.vel.x += fixMul(dir.x, FP_ONE / 3);
                 e.vel.y += fixMul(dir.y, FP_ONE / 3);
                 if (e.shootTimer > 0) { e.shootTimer--; }
@@ -272,7 +374,7 @@ static void updateEnemies() {
                 }
                 break;
             }
-            case ETYPE_BOSS_LEVIATHAN: { // Leviathan (14) — spawns Grunt adds every 120 frames
+            case ETYPE_BOSS_LEVIATHAN: { // Leviathan (19) — spawns Grunt adds every 120 frames
                 e.vel.x += fixMul(dir.x, FP_ONE / 5);
                 e.vel.y += fixMul(dir.y, FP_ONE / 5);
                 if (e.shootTimer > 0) { e.shootTimer--; }
@@ -288,7 +390,7 @@ static void updateEnemies() {
                 }
                 break;
             }
-            default: { // ETYPE_BOSS_NIGHTMARE (15) or unknown — circles player, fear pulses
+            default: { // ETYPE_BOSS_NIGHTMARE_B (20+) or unknown — circles player, fear pulses
                 e.vel.x += fixMul(dir.x, FP_ONE / 6);
                 e.vel.y += fixMul(dir.y, FP_ONE / 6);
                 Fixed circle = ((e.frame >> 4) & 1) ? FP_ONE : static_cast<Fixed>(-FP_ONE);
@@ -304,7 +406,7 @@ static void updateEnemies() {
         }
 
         applySpeedCap:
-        // Speed cap table indexed by type (types 12-15 share boss speed)
+        // Speed cap table indexed by type (0-16 regular+new, 17+ bosses)
         static const Fixed maxSpeedTable[] = {
             toFixed(1),                           //  0 Grunt
             toFixed(2),                           //  1 Charger
@@ -318,12 +420,18 @@ static void updateEnemies() {
             toFixed(2),                           //  9 Ghost
             static_cast<Fixed>(FP_ONE * 5 / 2),  // 10 Swarm Drone
             static_cast<Fixed>(FP_ONE * 3 / 2),  // 11 Bomber
-            static_cast<Fixed>(FP_ONE * 5 / 4),  // 12 Boss: Sentinel
-            static_cast<Fixed>(FP_ONE * 3 / 2),  // 13 Boss: Dreadnought
-            toFixed(1),                           // 14 Boss: Leviathan
-            toFixed(1),                           // 15 Boss: Nightmare
+            static_cast<Fixed>(FP_ONE * 3 / 2),  // 12 Medic
+            static_cast<Fixed>(FP_ONE * 3 / 4),  // 13 Anchor
+            toFixed(1),                           // 14 Trapper
+            static_cast<Fixed>(FP_ONE * 3 / 4),  // 15 Hexer
+            static_cast<Fixed>(FP_ONE / 2),      // 16 Hive (stationary)
+            static_cast<Fixed>(FP_ONE * 5 / 4),  // 17 Boss: Sentinel
+            static_cast<Fixed>(FP_ONE * 3 / 2),  // 18 Boss: Dreadnought
+            toFixed(1),                           // 19 Boss: Leviathan
+            toFixed(1),                           // 20 Boss: Nightmare
+            toFixed(1),                           // 21 Boss: Apothecary
         };
-        int typeIdx = (e.type < 16) ? e.type : 15;
+        int typeIdx = (e.type < 22) ? e.type : 20;
         Fixed maxSpd = maxSpeedTable[typeIdx];
         Fixed mag = (e.vel.x < 0 ? -e.vel.x : e.vel.x);
         Fixed magy = (e.vel.y < 0 ? -e.vel.y : e.vel.y);
@@ -449,7 +557,19 @@ static void killEnemy(Enemy& e, u8 bulletColor) {
         case ETYPE_GHOST:       goldValue = 3;  break;
         case ETYPE_SWARM_DRONE: goldValue = 1;  break;
         case ETYPE_BOMBER:      goldValue = 2;  break;
+        case ETYPE_MEDIC:       goldValue = 3;  break;
+        case ETYPE_ANCHOR:      goldValue = 3;  break;
+        case ETYPE_TRAPPER:     goldValue = 2;  break;
+        case ETYPE_HEXER:       goldValue = 3;  break;
+        case ETYPE_HIVE:        goldValue = 4;  break;
         default:                goldValue = 15; break; // bosses
+    }
+    // Late-game gold scaling: +12% per wave past 15
+    {
+        int wave = gameGetWave();
+        if (wave > 15) {
+            goldValue = static_cast<u8>(goldValue * (100 + (wave - 15) * 12) / 100);
+        }
     }
     // Gold Fever: 2x gold for duration
     if (gPerks.goldFeverWaves > 0) {
@@ -585,6 +705,18 @@ static void checkBulletEnemyCollisions() {
             {
                 int mult = synergyEnemyDamageTakenPct();
                 if (mult != 100) dmg = static_cast<u8>(dmg * mult / 100);
+            }
+
+            // Anchor aura: enemies within 32px of an active Anchor take 30% less damage
+            for (auto& anchor : gEnemies) {
+                if (!anchor.active || anchor.type != ETYPE_ANCHOR) continue;
+                if (&anchor == &e) continue;
+                Vec2 ad = anchor.pos - e.pos;
+                s32 adist = static_cast<s32>(ad.x) * ad.x + static_cast<s32>(ad.y) * ad.y;
+                if (adist < static_cast<s32>(toFixed(32)) * toFixed(32)) {
+                    dmg = static_cast<u8>(dmg * 70 / 100);
+                    break; // only one Anchor reduction
+                }
             }
 
             e.hp -= dmg;

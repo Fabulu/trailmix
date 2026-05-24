@@ -4,7 +4,7 @@
 #include <nds.h>
 
 // bin2s-generated headers for enemy sprite data (linear 4bpp)
-// Regular enemies: 12 types x 3 sizes
+// Regular enemies: 17 types x 3 sizes
 #include "e_grunt_s_bin.h"
 #include "e_grunt_m_bin.h"
 #include "e_grunt_l_bin.h"
@@ -41,12 +41,28 @@
 #include "e_bomber_s_bin.h"
 #include "e_bomber_m_bin.h"
 #include "e_bomber_l_bin.h"
+#include "e_medic_s_bin.h"
+#include "e_medic_m_bin.h"
+#include "e_medic_l_bin.h"
+#include "e_anchor_s_bin.h"
+#include "e_anchor_m_bin.h"
+#include "e_anchor_l_bin.h"
+#include "e_trapper_s_bin.h"
+#include "e_trapper_m_bin.h"
+#include "e_trapper_l_bin.h"
+#include "e_hexer_s_bin.h"
+#include "e_hexer_m_bin.h"
+#include "e_hexer_l_bin.h"
+#include "e_hive_s_bin.h"
+#include "e_hive_m_bin.h"
+#include "e_hive_l_bin.h"
 
-// Boss enemies: 4 types (32px only)
+// Boss enemies: 5 types (32px for original 4, 64px for Apothecary)
 #include "e_boss_sentinel_bin.h"
 #include "e_boss_dreadnought_bin.h"
 #include "e_boss_leviathan_bin.h"
 #include "e_boss_nightmare_bin.h"
+#include "e_boss_apothecary_bin.h"
 
 // Palette headers
 #include "e_grunt_s_pal_bin.h"
@@ -85,36 +101,53 @@
 #include "e_bomber_s_pal_bin.h"
 #include "e_bomber_m_pal_bin.h"
 #include "e_bomber_l_pal_bin.h"
+#include "e_medic_s_pal_bin.h"
+#include "e_medic_m_pal_bin.h"
+#include "e_medic_l_pal_bin.h"
+#include "e_anchor_s_pal_bin.h"
+#include "e_anchor_m_pal_bin.h"
+#include "e_anchor_l_pal_bin.h"
+#include "e_trapper_s_pal_bin.h"
+#include "e_trapper_m_pal_bin.h"
+#include "e_trapper_l_pal_bin.h"
+#include "e_hexer_s_pal_bin.h"
+#include "e_hexer_m_pal_bin.h"
+#include "e_hexer_l_pal_bin.h"
+#include "e_hive_s_pal_bin.h"
+#include "e_hive_m_pal_bin.h"
+#include "e_hive_l_pal_bin.h"
 #include "e_boss_sentinel_pal_bin.h"
 #include "e_boss_dreadnought_pal_bin.h"
 #include "e_boss_leviathan_pal_bin.h"
 #include "e_boss_nightmare_pal_bin.h"
+#include "e_boss_apothecary_pal_bin.h"
 
 // ---------------------------------------------------------------------------
 // Lookup table: [type][sizeClass] -> sprite data pointer and palette
-// For bosses (type >= 12), sizeClass is ignored (always use index 0)
+// For bosses (type >= ETYPE_BOSS_SENTINEL), sizeClass is ignored (always use index 0)
 // ---------------------------------------------------------------------------
 
 struct EnemySpriteEntry {
-    const u8* pixels;    // linear 4bpp data, 2 frames sequential
+    const u8* pixels;    // linear 4bpp data, N frames sequential
     const u8* palette;   // 16-color RGB555 palette (32 bytes)
     u8 frameW;           // pixel width of one frame
     u8 frameH;           // pixel height of one frame
+    u8 frameCount;       // number of animation frames (2 for regular, 8 for Apothecary)
 };
 
-// 16 types x 3 sizes (bosses only use slot 0)
-static EnemySpriteEntry sSpriteTable[16][3];
+// ETYPE_COUNT types x 3 sizes (bosses only use slot 0)
+static EnemySpriteEntry sSpriteTable[ETYPE_COUNT][3];
 
 void enemySpriteInit() {
     // Helper macro: populate table entry
-    #define ENTRY(t, sc, dat, pal, w, h) \
-        sSpriteTable[t][sc] = { dat, pal, w, h }
+    #define ENTRY(t, sc, dat, pal, w, h, fc) \
+        sSpriteTable[t][sc] = { dat, pal, w, h, fc }
 
-    // Regular enemies: all 3 sizes
+    // Regular enemies: all 3 sizes, 2 animation frames each
     #define REG(t, name) \
-        ENTRY(t, 0, e_##name##_s_bin, e_##name##_s_pal_bin, 8, 8); \
-        ENTRY(t, 1, e_##name##_m_bin, e_##name##_m_pal_bin, 16, 16); \
-        ENTRY(t, 2, e_##name##_l_bin, e_##name##_l_pal_bin, 24, 24)
+        ENTRY(t, 0, e_##name##_s_bin, e_##name##_s_pal_bin, 8, 8, 2); \
+        ENTRY(t, 1, e_##name##_m_bin, e_##name##_m_pal_bin, 16, 16, 2); \
+        ENTRY(t, 2, e_##name##_l_bin, e_##name##_l_pal_bin, 24, 24, 2)
 
     REG(ETYPE_GRUNT,       grunt);
     REG(ETYPE_CHARGER,     charger);
@@ -128,12 +161,20 @@ void enemySpriteInit() {
     REG(ETYPE_GHOST,       ghost);
     REG(ETYPE_SWARM_DRONE, drone);
     REG(ETYPE_BOMBER,      bomber);
+    REG(ETYPE_MEDIC,       medic);
+    REG(ETYPE_ANCHOR,      anchor);
+    REG(ETYPE_TRAPPER,     trapper);
+    REG(ETYPE_HEXER,       hexer);
+    REG(ETYPE_HIVE,        hive);
 
-    // Bosses: 32px, stored in slot 0
-    ENTRY(ETYPE_BOSS_SENTINEL,    0, e_boss_sentinel_bin,    e_boss_sentinel_pal_bin,    32, 32);
-    ENTRY(ETYPE_BOSS_DREADNOUGHT, 0, e_boss_dreadnought_bin, e_boss_dreadnought_pal_bin, 32, 32);
-    ENTRY(ETYPE_BOSS_LEVIATHAN,   0, e_boss_leviathan_bin,   e_boss_leviathan_pal_bin,   32, 32);
-    ENTRY(ETYPE_BOSS_NIGHTMARE_B, 0, e_boss_nightmare_bin,   e_boss_nightmare_pal_bin,   32, 32);
+    // Bosses: 32px, stored in slot 0, 2 animation frames
+    ENTRY(ETYPE_BOSS_SENTINEL,    0, e_boss_sentinel_bin,    e_boss_sentinel_pal_bin,    32, 32, 2);
+    ENTRY(ETYPE_BOSS_DREADNOUGHT, 0, e_boss_dreadnought_bin, e_boss_dreadnought_pal_bin, 32, 32, 2);
+    ENTRY(ETYPE_BOSS_LEVIATHAN,   0, e_boss_leviathan_bin,   e_boss_leviathan_pal_bin,   32, 32, 2);
+    ENTRY(ETYPE_BOSS_NIGHTMARE_B, 0, e_boss_nightmare_bin,   e_boss_nightmare_pal_bin,   32, 32, 2);
+
+    // Apothecary final boss: 64px, 8 animation frames
+    sSpriteTable[ETYPE_BOSS_APOTHECARY][0] = { e_boss_apothecary_bin, e_boss_apothecary_pal_bin, 64, 64, 8 };
 
     #undef REG
     #undef ENTRY
@@ -149,8 +190,8 @@ extern u16* renderGetActiveBuffer();
 void enemySpriteBlitMain(u8 type, u8 sizeClass, u8 frame,
                          int screenX, int screenY,
                          u8 tintMode, u8 alpha) {
-    if (type > 15) return;
-    u8 sc = (type >= 12) ? 0 : sizeClass;
+    if (type >= ETYPE_COUNT) return;
+    u8 sc = (type >= ETYPE_BOSS_SENTINEL) ? 0 : sizeClass;
     if (sc > 2) sc = 1;
 
     const EnemySpriteEntry& entry = sSpriteTable[type][sc];
@@ -158,6 +199,9 @@ void enemySpriteBlitMain(u8 type, u8 sizeClass, u8 frame,
 
     int w = entry.frameW;
     int h = entry.frameH;
+
+    // Clamp frame to valid range
+    if (frame >= entry.frameCount) frame = 0;
 
     // Early reject: fully off-screen
     if (screenX + w <= 0 || screenX >= 256 || screenY + h <= 0 || screenY >= 192)
@@ -167,7 +211,7 @@ void enemySpriteBlitMain(u8 type, u8 sizeClass, u8 frame,
     if (!fb) return;
 
     int frameBytes = w * h / 2;
-    const u8* src = entry.pixels + (frame ? frameBytes : 0);
+    const u8* src = entry.pixels + frame * frameBytes;
 
     // Pre-build palette with BIT(15) baked in + tint applied once
     const u16* rawPal = reinterpret_cast<const u16*>(entry.palette);
@@ -186,6 +230,15 @@ void enemySpriteBlitMain(u8 type, u8 sizeClass, u8 frame,
             int r = ((c & 0x1F) * 2) / 3;
             int g = (((c >> 5) & 0x1F) * 2) / 3;
             int b = (((c >> 10) & 0x1F) * 2) / 3;
+            pal[i] = (u16)(r | (g << 5) | (b << 10)) | BIT(15);
+        }
+    } else if (tintMode == 3) {
+        // White flash: shift all channels toward white
+        for (int i = 0; i < 16; i++) {
+            u16 c = rawPal[i];
+            int r = ((c & 0x1F) + 31) >> 1;
+            int g = (((c >> 5) & 0x1F) + 31) >> 1;
+            int b = (((c >> 10) & 0x1F) + 31) >> 1;
             pal[i] = (u16)(r | (g << 5) | (b << 10)) | BIT(15);
         }
     } else {
@@ -263,8 +316,8 @@ void enemySpriteBlitMain(u8 type, u8 sizeClass, u8 frame,
 // Simple blit to an arbitrary framebuffer (no tint, no alpha — for title screen)
 void enemySpriteBlitTo(u16* fb, u8 type, u8 sizeClass, u8 frame,
                        int screenX, int screenY) {
-    if (!fb || type > 15) return;
-    u8 sc = (type >= 12) ? 0 : sizeClass;
+    if (!fb || type >= ETYPE_COUNT) return;
+    u8 sc = (type >= ETYPE_BOSS_SENTINEL) ? 0 : sizeClass;
     if (sc > 2) sc = 1;
 
     const EnemySpriteEntry& entry = sSpriteTable[type][sc];
@@ -272,8 +325,12 @@ void enemySpriteBlitTo(u16* fb, u8 type, u8 sizeClass, u8 frame,
 
     int w = entry.frameW;
     int h = entry.frameH;
+
+    // Clamp frame to valid range
+    if (frame >= entry.frameCount) frame = 0;
+
     int frameBytes = w * h / 2;
-    const u8* src = entry.pixels + (frame ? frameBytes : 0);
+    const u8* src = entry.pixels + frame * frameBytes;
     const u16* rawPal = reinterpret_cast<const u16*>(entry.palette);
 
     int srcIdx = 0;

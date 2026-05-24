@@ -79,6 +79,9 @@ static void enterPlay() {
 static void applyInterest() {
     int interest = gPlayer.gold / 10;  // breakpoints at 10/20/30/40/50g
     int cap = perkInterestCap();
+    // Late-game interest growth
+    int wave = gameGetWave();
+    if (wave > 20) cap += (wave - 20) / 5;
     if (interest > cap) interest = cap;
     shopInterestEarned = static_cast<u8>(interest);
     gPlayer.gold = static_cast<u16>(gPlayer.gold + interest);
@@ -230,9 +233,9 @@ struct WaveTemplate {
     bool isBossWave;
 };
 
-// HP scaling: base * (100 + (wave-1)*28) / 100
+// HP scaling: base * (100 + (wave-1)*18) / 100
 static s16 scaledHp(int baseHp, int wave) {
-    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 28) / 100);
+    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 18) / 100);
     return (hp < 1) ? 1 : hp;
 }
 
@@ -247,12 +250,12 @@ static u8 spriteSzFromClass(u8 sc) {
 }
 
 // Base HP for a regular enemy at size sc before wave scaling
-static int baseHpForSize(u8 sc, int wave) {
+static int baseHpForSize(u8 sc, int /*wave*/) {
     switch (sc) {
-        case SIZE_SMALL:  return 3 + wave;
-        case SIZE_MEDIUM: return 6 + wave * 2;
-        case SIZE_LARGE:  return 12 + wave * 3;
-        default:          return 250 + wave * 25; // boss
+        case SIZE_SMALL:  return 4;
+        case SIZE_MEDIUM: return 8;
+        case SIZE_LARGE:  return 14;
+        default:          return 250;  // boss — already high base
     }
 }
 
@@ -408,6 +411,14 @@ static const WaveTemplate kWaveTemplates[15] = {
 
 // Endless (16+): pool of enemy types weighted by wave depth, randomised counts
 static void spawnEndlessWave(int wave) {
+    // Wave 30: final boss — no regular enemies
+    if (wave == 30) {
+        Vec2 pos = farthestEdgeFromPlayer();
+        s16 bossHp = scaledHp(250, wave);
+        spawnEnemy(pos, {0,0}, bossHp, ETYPE_BOSS_APOTHECARY, SIZE_LARGE, SPRITE_SIZE_BOSS_LARGE);
+        return;
+    }
+
     // How many total enemy-slots to fill, capped at MAX_ENEMIES - 1
     int budget = 8 + (wave - 15) * 2;
     if (budget > 28) budget = 28;

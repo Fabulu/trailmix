@@ -59,10 +59,19 @@ constexpr u8 ETYPE_GHOST          =  9;  // teleports near player every 2s
 constexpr u8 ETYPE_SWARM_DRONE    = 10;  // very fast, used in swarm patterns
 constexpr u8 ETYPE_BOMBER         = 11;  // charges in, contact triggers AoE explosion
 
-constexpr u8 ETYPE_BOSS_SENTINEL     = 12;  // 4-way rotating turret + adds
-constexpr u8 ETYPE_BOSS_DREADNOUGHT  = 13;  // 8-way shockwave slam
-constexpr u8 ETYPE_BOSS_LEVIATHAN    = 14;  // summoner + charge
-constexpr u8 ETYPE_BOSS_NIGHTMARE_B  = 15;  // circles player + mass fear pulse
+constexpr u8 ETYPE_MEDIC         = 12;  // heals nearby allies, flees player
+constexpr u8 ETYPE_ANCHOR        = 13;  // damage-resist aura to nearby enemies
+constexpr u8 ETYPE_TRAPPER       = 14;  // plants slowing mines
+constexpr u8 ETYPE_HEXER         = 15;  // fires debuff projectile (slow fire rate)
+constexpr u8 ETYPE_HIVE          = 16;  // stationary, spawns drones
+
+constexpr u8 ETYPE_BOSS_SENTINEL     = 17;  // 4-way rotating turret + adds
+constexpr u8 ETYPE_BOSS_DREADNOUGHT  = 18;  // 8-way shockwave slam
+constexpr u8 ETYPE_BOSS_LEVIATHAN    = 19;  // summoner + charge
+constexpr u8 ETYPE_BOSS_NIGHTMARE_B  = 20;  // circles player + mass fear pulse
+constexpr u8 ETYPE_BOSS_APOTHECARY   = 21;  // wave 30 final boss, 3 phases
+
+constexpr u8 ETYPE_COUNT             = 22;  // total enemy types
 
 // Size class constants
 constexpr u8 SIZE_SMALL  = 0;  // spriteSize = 8
@@ -74,6 +83,7 @@ constexpr u8 SPRITE_SIZE_SMALL  =  8;
 constexpr u8 SPRITE_SIZE_MEDIUM = 16;
 constexpr u8 SPRITE_SIZE_LARGE  = 24;
 constexpr u8 SPRITE_SIZE_BOSS   = 32;
+constexpr u8 SPRITE_SIZE_BOSS_LARGE = 64;
 
 // sizeClass: 0=small, 1=medium, 2=large
 // spriteSize: actual pixel dimension (8,16,24,32,48,64)
@@ -84,7 +94,7 @@ struct Enemy {
     Vec2 vel;
     s16  hp;
     s16  maxHp;
-    u8   type;         // 0-11 regular, 12-15 bosses
+    u8   type;         // 0-16 regular, 17+ bosses
     u8   sizeClass;    // 0=small, 1=medium, 2=large
     u8   spriteSize;   // pixel size: 8,16,24,32,48,64
     u8   frame;
@@ -95,6 +105,7 @@ struct Enemy {
     u8   slowTimer;    // frames of reduced speed remaining
     u8   freezeTimer;  // frames of full stop remaining
     u8   fearTimer;    // frames of fleeing (Nightmare fear pulse)
+    u8   hurtTimer;    // frames of hit flash remaining (per-type visual)
     u8   goldValue;    // gold dropped on death
     bool active;
 };
