@@ -617,6 +617,7 @@ static void applyAoe(const Bullet& b) {
         int dy = e.pos.pixelY() - by;
         if (dx * dx + dy * dy <= r * r) {
             e.hp -= b.damage;
+            e.hurtTimer = 4;
             spawnParticleBurst(e.pos, 4, 8, b.color);
             if (e.hp <= 0) killEnemy(e, b.color);
         }
@@ -720,6 +721,7 @@ static void checkBulletEnemyCollisions() {
             }
 
             e.hp -= dmg;
+            e.hurtTimer = 4;
             spawnParticleBurst(e.pos, 4, 8, b.color);
 
             // Cyan T3 (Volt): every bullet hit chains to 1 nearby enemy
@@ -900,6 +902,7 @@ static void updateZones() {
             int dy = e.pos.pixelY() - zy;
             if (dx * dx + dy * dy < z.radius * z.radius) {
                 e.hp -= z.damage;
+                e.hurtTimer = 4;
                 spawnParticle(e.pos, {0, 0}, 10, z.color);
                 if (e.hp <= 0) killEnemy(e, z.color);
             }

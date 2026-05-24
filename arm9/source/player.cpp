@@ -199,6 +199,7 @@ void playerUpdate(u32 held, u32 down) {
                            static_cast<s16>(e.spriteSize), static_cast<s16>(e.spriteSize)};
                 if (trailRect.overlaps(er)) {
                     e.hp -= dmg;
+                    e.hurtTimer = 4;
                     spawnParticleBurst(e.pos, 2, 6, 2);
                     if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 5, 8, 2); }
                 }
