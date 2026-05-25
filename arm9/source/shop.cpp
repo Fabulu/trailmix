@@ -601,9 +601,9 @@ void shopRender() {
     renderFilledRectSub(REROLL_X, REROLL_Y, REROLL_W, REROLL_H, rerollBg);
     char rerollBuf[12];
     if (freeRR)
-        snprintf(rerollBuf, sizeof(rerollBuf), "RR FREE");
+        snprintf(rerollBuf, sizeof(rerollBuf), "%s", str(kUI[32]));
     else
-        snprintf(rerollBuf, sizeof(rerollBuf), "RR %dg", rerollCost);
+        snprintf(rerollBuf, sizeof(rerollBuf), str(kUI[33]), rerollCost);
     int rtw = renderTextWidth(rerollBuf);
     u16 rerollTextColor = freeRR ? RGB15(31, 31, 0) : canReroll ? RGB15(10, 31, 10) : RGB15(10, 14, 10);
     renderTextSub(REROLL_X + (REROLL_W - rtw) / 2, REROLL_Y + 10, rerollBuf, rerollTextColor);
@@ -702,7 +702,7 @@ void shopRender() {
         u16 healTxt = canHeal ? RGB15(10, 31, 10) : RGB15(10, 10, 10);
         renderFilledRectSub(HEAL_X, HEAL_Y, HEAL_W, HEAL_H, healBg);
         char healBuf[20];
-        snprintf(healBuf, sizeof(healBuf), "HEAL %dg", HEAL_COST);
+        snprintf(healBuf, sizeof(healBuf), str(kUI[31]), HEAL_COST);
         int htw = renderTextWidth(healBuf);
         renderTextSub(HEAL_X + (HEAL_W - htw) / 2, HEAL_Y + 4, healBuf, healTxt);
     }

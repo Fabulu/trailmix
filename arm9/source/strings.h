@@ -59,6 +59,20 @@ constexpr StrEntry kUI[] = {
     /* STR_UI_PERMANENT   [19]  */ S("PERMANENT",       "DAUERHAFT"),
     /* STR_UI_SELL2       [20]  */ S("Sell",            "Verkaufen"),
     /* STR_UI_FREE        [21]  */ S("FREE",            "GRATIS"),
+    /* STR_UI_PRESS_START [22]  */ S("PRESS START",     "DRUECKE START"),
+    /* STR_UI_GAME_OVER2  [23]  */ S("GAME OVER",       "SPIEL VORBEI"),
+    /* STR_UI_VICTORY     [24]  */ S("VICTORY!",        "SIEG!"),
+    /* STR_UI_THE_APOTHE  [25]  */ S("THE APOTHECARY",  "DER APOTHEKER"),
+    /* STR_UI_DEFEATED    [26]  */ S("HAS BEEN DEFEATED","WURDE BESIEGT"),
+    /* STR_UI_ENDLESS     [27]  */ S("START: ENDLESS MODE","START: ENDLOS-MODUS"),
+    /* STR_UI_RETURN_MENU [28]  */ S("A: RETURN TO MENU","A: ZUM MENUE"),
+    /* STR_UI_SHOT        [29]  */ S("SHOT:",           "SCHUSS:"),
+    /* STR_UI_PASSIVE     [30]  */ S("PASSIVE:",        "PASSIV:"),
+    /* STR_UI_HEAL_FMT    [31]  */ S("HEAL %dg",       "HEILEN %dg"),
+    /* STR_UI_RR_FREE     [32]  */ S("RR FREE",        "UW GRATIS"),
+    /* STR_UI_RR_FMT      [33]  */ S("RR %dg",         "UW %dg"),
+    /* STR_UI_NA          [34]  */ S("N/A",             "K.A."),
+    /* STR_UI_TAP_HINT    [35]  */ S("TAP ONCE TO SELECT  TAP AGAIN TO CONFIRM", "ANTIPPEN ZUM WAEHLEN  NOCHMAL ZUM BESTAETIGEN"),
 };
 
 // Color abbreviations for HUD (indexed by PillColor)
@@ -181,19 +195,19 @@ constexpr int PERK_COUNT = 15;
 constexpr PerkEntry kPerks[PERK_COUNT] = {
     // ── OFFENSE ──
     /* [0]  BULLET_HELL     */ { S("Bullet Hell",     "Kugelhagel"),        S("Fire in all 4 directions!",        "Feuere in alle 4 Richtungen!") },
-    /* [1]  OVERCHARGE      */ { S("Overcharge",      "\xDCberladung"),     S("Companions fire 50% faster",       "Begleiter feuern 50% schneller") },
+    /* [1]  OVERCHARGE      */ { S("Overcharge",      "UEberladung"),      S("Companions fire 50% faster",       "Begleiter feuern 50% schneller") },
     /* [2]  GLASS_CANNON    */ { S("Glass Cannon",    "Glaskanone"),        S("+5 damage, half max HP",           "+5 Schaden, halbe max. LP") },
     /* [3]  CHAIN_LIGHTNING */ { S("Chain Lightning", "Kettenblitz"),       S("Kills zap a nearby enemy",         "Kills treffen einen nahen Feind") },
     // ── DEFENSE ──
-    /* [4]  PHOENIX_DOWN    */ { S("Phoenix Down",    "Ph\xF6nixfeder"),    S("First fallen ally revives/wave",   "Erster Verb\xFCndeter steht pro Welle auf") },
+    /* [4]  PHOENIX_DOWN    */ { S("Phoenix Down",    "Phoenixfeder"),      S("First fallen ally revives/wave",   "Erster Verbuendeter steht pro Welle auf") },
     /* [5]  FORTRESS        */ { S("Fortress",        "Festung"),           S("+40 HP, allies +20 HP, 25% slow",  "+40 LP, Verb. +20 LP, 25% langsamer") },
-    /* [6]  SHIELD_BASH     */ { S("Shield Bash",     "Schildsto\xDF"),     S("Dash deals 8 damage to enemies",   "Ausweichen macht 8 Schaden") },
+    /* [6]  SHIELD_BASH     */ { S("Shield Bash",     "Schildstoss"),       S("Dash deals 8 damage to enemies",   "Ausweichen macht 8 Schaden") },
     /* [7]  SECOND_WIND     */ { S("Second Wind",     "Zweite Luft"),       S("Full heal once when near death",   "Volle Heilung bei Todesgefahr") },
     // ── ECONOMY ──
-    /* [8]  GOLD_FEVER      */ { S("Gold Fever",      "Goldfieber"),        S("2x gold for 3 waves!",            "2x Gold f\xFCr 3 Wellen!") },
+    /* [8]  GOLD_FEVER      */ { S("Gold Fever",      "Goldfieber"),        S("2x gold for 3 waves!",            "2x Gold fuer 3 Wellen!") },
     /* [9]  WAR_CHEST       */ { S("War Chest",       "Kriegskasse"),       S("Get 15g now, +3g each wave",       "15g sofort, +3g jede Welle") },
     /* [10] JACKPOT         */ { S("Jackpot",         "Jackpot"),           S("Interest cap doubled to 10",       "Zinsobergrenze auf 10 verdoppelt") },
-    /* [11] WHOLESALE       */ { S("Wholesale",       "Gro\xDFhandel"),     S("Companions cost 30% less",         "Begleiter kosten 30% weniger") },
+    /* [11] WHOLESALE       */ { S("Wholesale",       "Grosshandel"),       S("Companions cost 30% less",         "Begleiter kosten 30% weniger") },
     // ── UTILITY ──
     /* [12] PACK_RAT        */ { S("Pack Rat",        "Hamsterer"),         S("+1 companion slot",                "+1 Begleiterslot") },
     /* [13] WARP_DRIVE      */ { S("Warp Drive",      "Warpantrieb"),       S("Dash 2x far + damage trail",      "Dash 2x weiter + Schadensspur") },
@@ -250,7 +264,7 @@ constexpr StrEntry kGameplay[] = {
     /* [8]  LEVEL_UP       */ S("Level Up!",           "Aufgestiegen!"),
     /* [9]  CHOOSE_UPGRADE */ S("Choose Upgrade",      "Upgrade wählen"),
     /* [10] BOSS_DEFEATED  */ S("BOSS DEFEATED!",      "BOSS BESIEGT!"),
-    /* [11] CHOOSE_A_PERK  */ S("CHOOSE A PERK",       "W\xC4" "HLE EIN TALENT"),
+    /* [11] CHOOSE_A_PERK  */ S("CHOOSE A PERK",       "WAEHLE EIN TALENT"),
 };
 
 // ─────────────────────────────────────────────────────────────────
@@ -269,17 +283,17 @@ constexpr int CLASS_TIERS  = 6;
 constexpr StrEntry kClassNames[PILL_COLOR_COUNT][CLASS_TIERS][3] = {
     /* Red */
     {
-        { S("Gunner",       "Kanonier"),      S("Gatling",            "Gatling"),          S("Obliterator",      "Ausl\xF6scher")       },
-        { S("Pyromaniac",   "Pyromane"),      S("Infernalist",        "Infernalist"),      S("Ragnarok Flame",   "Ragnar\xF6kfeuer")    },
+        { S("Gunner",       "Kanonier"),      S("Gatling",            "Gatling"),          S("Obliterator",      "Ausloescher")       },
+        { S("Pyromaniac",   "Pyromane"),      S("Infernalist",        "Infernalist"),      S("Ragnarok Flame",   "Ragnaroekfeuer")    },
         { S("Shotgunner",   "Schrotling"),    S("Siegebreaker",       "Mauerbrecher"),     S("Ruinbringer",      "Ruinenbringer")       },
-        { S("Berserker",    "Berserker"),     S("Bloodrager",         "Blutraser"),        S("Godslayer",        "G\xF6tterm\xF6rder")  },
-        { S("Detonator",    "Sprengmeister"), S("Annihilator",        "Vernichter"),       S("Worldender",       "Weltenzerst\xF6rer")  },
+        { S("Berserker",    "Berserker"),     S("Bloodrager",         "Blutraser"),        S("Godslayer",        "Goettermoerder")  },
+        { S("Detonator",    "Sprengmeister"), S("Annihilator",        "Vernichter"),       S("Worldender",       "Weltenzerstoerer")  },
         { S("Executioner",  "Scharfrichter"), S("Reaper",             "Schnitter"),        S("Death Incarnate",  "Tod Inkarniert")      },
     },
     /* Blue */
     {
         { S("Warden",       "Waechter"),      S("Bastion",            "Bastion"),          S("Eternal Bulwark",    "Ewiges Bollwerk")       },
-        { S("Channeler",    "Kanalwirker"),   S("Riftweaver",         "Rissknuepfer"),     S("Planar Sovereign",   "Planarsouver\xE4n")     },
+        { S("Channeler",    "Kanalwirker"),   S("Riftweaver",         "Rissknuepfer"),     S("Planar Sovereign",   "Planarsouveraen")     },
         { S("Frost Archer", "Frostschuetze"), S("Glacial Marksman",   "Glazialschuetze"),  S("Absolute Zero",     "Absoluter Nullpunkt")   },
         { S("Orbiter",      "Orbiter"),       S("Astral Sentinel",    "Astralwache"),      S("Celestial Arbiter",  "Himmlischer Richter")   },
         { S("Chronomancer", "Chronomant"),    S("Aeonkeeper",         "Aeonhueter"),       S("Lord of Ages",       "Herr der Zeitalter")    },
@@ -289,9 +303,9 @@ constexpr StrEntry kClassNames[PILL_COLOR_COUNT][CLASS_TIERS][3] = {
     {
         { S("Thornshot",    "Dornschuss"),    S("Briarstorm",         "Dornensturm"),      S("Nature's Wrath",     "Zorn der Natur")        },
         { S("Seedling",     "Saemling"),      S("Ancient Grove",      "Urwald"),            S("World Overgrowth",   "Weltenwucherung")       },
-        { S("Apothecary",   "Apotheker"),     S("Herbalist",          "Kr\xE4uterkundige"),S("Eternal Healer",     "Ewiger Heiler")         },
+        { S("Apothecary",   "Apotheker"),     S("Herbalist",          "Kraeuterkundige"),S("Eternal Healer",     "Ewiger Heiler")         },
         { S("Vinecaller",   "Rankenrufer"),   S("Rootwarden",         "Wurzelwacht"),       S("Primordial Titan",   "Urtitan")               },
-        { S("Sporewitch",   "Sporenhexe"),    S("Blightmother",       "Seuchenmutter"),     S("Plague Sovereign",   "Seuchensouver\xE4n")    },
+        { S("Sporewitch",   "Sporenhexe"),    S("Blightmother",       "Seuchenmutter"),     S("Plague Sovereign",   "Seuchensouveraen")    },
         { S("Lifeshaper",   "Lebensformer"),  S("Worldtree",          "Weltenbaum"),        S("Yggdrasil",          "Yggdrasil")             },
     },
     /* Yellow */
@@ -301,13 +315,13 @@ constexpr StrEntry kClassNames[PILL_COLOR_COUNT][CLASS_TIERS][3] = {
         { S("Jester",       "Narr"),          S("Fool King",          "Narrenkoenig"),     S("God of Chaos",       "Gott des Chaos")        },
         { S("Mimic",        "Mimik"),         S("Doppelgaenger",      "Doppelgaenger"),    S("Primordial Mirror",  "Urspiegelbild")         },
         { S("Alchemist",    "Alchemist"),     S("Philosopher",        "Philosoph"),        S("Aurum Eternal",      "Ewiges Aurum")          },
-        { S("Trickster",    "Gauner"),        S("Mastermind",         "Mastermind"),        S("Grand Architect",    "Gro\xDF" "er Architekt") },
+        { S("Trickster",    "Gauner"),        S("Mastermind",         "Mastermind"),        S("Grand Architect",    "Grosser Architekt") },
     },
     /* Purple */
     {
-        { S("Hexer",          "Hexer"),             S("Grand Hexer",    "Gro\xDFhexer"),         S("Damnation Lord",   "Verdammungsherr")       },
+        { S("Hexer",          "Hexer"),             S("Grand Hexer",    "Grosshexer"),         S("Damnation Lord",   "Verdammungsherr")       },
         { S("Blightling",     "Seuchenwesen"),      S("Plague Spawn",   "Seuchenbrut"),          S("Pestilence God",   "Seuchengott")           },
-        { S("Plague Doctor",  "Pestdoktor"),        S("Miasma Surgeon", "Miasma-Chirurg"),       S("Death's Vessel",   "Gef\xE4\xDF des Todes") },
+        { S("Plague Doctor",  "Pestdoktor"),        S("Miasma Surgeon", "Miasma-Chirurg"),       S("Death's Vessel",   "Gefaess des Todes") },
         { S("Wraith",         "Geist"),             S("Banshee",        "Banshee"),              S("Soul Devourer",    "Seelenverschlinger")    },
         { S("Voidcaller",     "Leerenrufer"),       S("Abyssal Herald", "Abyssherold"),          S("Void Sovereign",   "Leereherrscher")        },
         { S("Nightmare",      "Albtraum"),          S("Living Dread",   "Lebender Schrecken"),   S("Eternal Terror",   "Ewiger Schrecken")      },
@@ -315,9 +329,9 @@ constexpr StrEntry kClassNames[PILL_COLOR_COUNT][CLASS_TIERS][3] = {
     /* Cyan */
     {
         { S("Drone Pilot",    "Drohnenpilot"),      S("Swarm Commander","Schwarmkommandant"),    S("Hive Sovereign",      "Schwarmherrscher")      },
-        { S("Overclocker",    "\xDC" "bertakter"),      S("Overdriver",     "\xDC" "bertreiber"),       S("Singularity",         "Singularit\xE4t")       },
+        { S("Overclocker",    "UEbertakter"),           S("Overdriver",     "UEbertreiber"),            S("Singularity",         "Singularitaet")         },
         { S("Tesla Coil",     "Teslaspule"),        S("Arc Reactor",    "Bogenreaktor"),         S("Storm God",           "Sturmgott")             },
-        { S("Signal Jammer",  "Signalst\xF6rer"),   S("Blackout Node",  "Blackout-Knoten"),      S("Digital Apocalypse",  "Digitale Apokalypse")   },
+        { S("Signal Jammer",  "Signalstoerer"),   S("Blackout Node",  "Blackout-Knoten"),      S("Digital Apocalypse",  "Digitale Apokalypse")   },
         { S("Circuit Hacker", "Schaltungs-Hacker"), S("Ghost Protocol", "Geisterprotokoll"),     S("Omniscient",          "Allwissender")          },
         { S("Mech Pilot",     "Mechpilot"),         S("Titan Frame",    "Titanrahmen"),          S("Colossus Prime",      "Urkoloss")              },
     },
@@ -349,7 +363,7 @@ constexpr ClassAbilityEntry kClassAbility[PILL_COLOR_COUNT][6] = {
     /* Green */ {
         /* G1 Thornshot    */ { S("Fires a wall of thorns",         "Feuert eine Dornenwand"),              S("Regenerate 1 HP every 5 seconds",    "Regeneriere 1 LP alle 5 Sekunden")       },
         /* G2 Seedling     */ { S("Plants a timed mine",            "Pflanzt eine Zeitmine"),               S("Allies follow more tightly",         "Verbuendete folgen enger")               },
-        /* G3 Apothecary   */ { S("Heals weakest ally",              "Heilt schw\xE4" "chsten Verb."),          S("Picking up gold heals 1 HP",      "Gold aufheben heilt 1 LP")               },
+        /* G3 Apothecary   */ { S("Heals weakest ally",              "Heilt schwaechsten Verb."),          S("Picking up gold heals 1 HP",      "Gold aufheben heilt 1 LP")               },
         /* G4 Vinecaller   */ { S("Sends 3 slow tendrils",          "Sendet 3 langsame Ranken"),            S("No passive",                         "Kein Passiv")                            },
         /* G5 Sporewitch   */ { S("Triple spore spread",            "Dreifach-Sporensalve"),                S("No passive",                         "Kein Passiv")                            },
         /* G6 Lifeshaper   */ { S("Heal pulse to all allies",       "Heilpuls an alle Verb."),              S("You gain +5 max HP",                 "Du erhaeltst +5 max LP")                 },
@@ -367,14 +381,14 @@ constexpr ClassAbilityEntry kClassAbility[PILL_COLOR_COUNT][6] = {
         /* P2 Blightling   */ { S("Shoots 3 poison darts",          "Schiesst 3 Giftpfeile"),               S("Earn 10% more gold",                 "Verdiene 10% mehr Gold")                 },
         /* P3 Plague Doctor */ { S("Launches a toxic cloud",         "Startet eine Giftwolke"),              S("All allies deal +8% damage",         "Alle Verbuendeten +8% Schaden")          },
         /* P4 Wraith       */ { S("Fires a ghost bolt that pierces","Feuert durchdringenden Geistbolzen"),  S("No passive",                         "Kein Passiv")                            },
-        /* P5 Voidcaller   */ { S("Deep freeze bolt",               "Tiefk\xFChlbolzen"),                   S("No passive",                         "Kein Passiv")                            },
+        /* P5 Voidcaller   */ { S("Deep freeze bolt",               "Tiefkuehlbolzen"),                   S("No passive",                         "Kein Passiv")                            },
         /* P6 Nightmare    */ { S("Emits a fear pulse around self", "Sendet Furchtpuls um sich"),            S("All debuffs last 25% longer",        "Alle Debuffs dauern 25% laenger")        },
     },
     /* Cyan */ {
         /* C1 Drone Pilot  */ { S("Sends drones at 3 targets",     "Sendet Drohnen auf 3 Ziele"),          S("No passive",                         "Kein Passiv")                            },
         /* C2 Overclocker  */ { S("Ultra rapid single fire",        "Ultraschneller Einzelschuss"),         S("Nearby allies shoot 15% faster",     "Nahe Verb. schiessen 15% schneller")     },
         /* C3 Tesla Coil   */ { S("Lightning chains to 2 nearby",   "Blitz springt auf 2 Nahe ueber"),      S("No passive",                         "Kein Passiv")                            },
-        /* C4 Signal Jammer*/ { S("Erases enemy shots",             "L\xF6scht Gegnerschuesse"),            S("Enemy debuffs last 10% longer",      "Gegner-Debuffs 10% laenger")             },
+        /* C4 Signal Jammer*/ { S("Erases enemy shots",             "Loescht Gegnerschuesse"),            S("Enemy debuffs last 10% longer",      "Gegner-Debuffs 10% laenger")             },
         /* C5 Circuit Hacker*/{ S("Long freeze bolt",               "Langer Eisbolzen"),                    S("No passive",                         "Kein Passiv")                            },
         /* C6 Mech Pilot   */ { S("Fires a heavy cannon blast",     "Feuert schweren Kanonenschuss"),       S("All allies deal +15% damage",        "Alle Verbuendeten +15% Schaden")         },
     },

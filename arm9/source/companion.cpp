@@ -21,7 +21,7 @@ const ClassDef kClassDefs[36] = {
 
     // BLUE (indices 6-11)
     { 25,  3, 1,  0, 0,          0, 0, 0 },  // B1 Warden: Common
-    { 35,  2, 1,  0, 0,          0, 0, 0 },  // B2 Channeler: Common
+    { 12,  2, 1,  0, 0,          0, 0, 0 },  // B2 Channeler: Common (fast focused shot)
     { 35,  3, 1,  0, BFLAG_SLOW, 0, 60, 1},  // B3 Frost Archer: Uncommon
     { 20,  2, 2,  0, 0,          0, 0, 1 },  // B4 Orbiter: Uncommon
     { 75,  5, 1,  0, BFLAG_FREEZE,0,45, 2 }, // B5 Chronomancer: Rare

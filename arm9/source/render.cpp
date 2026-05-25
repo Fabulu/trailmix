@@ -1120,7 +1120,7 @@ void renderMenu() {
 
     // Title text
     renderText(128 - renderTextWidth("TRAIL MIX") / 2, 66, "TRAIL MIX", RGB15(31, 31, 31));
-    renderText(128 - renderTextWidth("PRESS START") / 2, 90, "PRESS START", RGB15(20, 20, 31));
+    renderText(128 - renderTextWidth(str(kUI[22])) / 2, 90, str(kUI[22]), RGB15(20, 20, 31));
 
     // Hide OAM sprites on menu
     for (int i = 0; i < 8; i++) {
@@ -1135,8 +1135,8 @@ void renderGameOver() {
     renderClearParticleLayer();
     renderFilledRect(40, 65, 176, 50, RGB15(4, 4, 16));
     renderFilledRect(50, 75, 156, 30, RGB15(28, 4, 4));
-    renderText(128 - renderTextWidth("GAME OVER") / 2, 72, "GAME OVER", RGB15(31, 10, 10));
-    renderText(128 - renderTextWidth("PRESS START") / 2, 92, "PRESS START", RGB15(20, 20, 20));
+    renderText(128 - renderTextWidth(str(kUI[23])) / 2, 72, str(kUI[23]), RGB15(31, 10, 10));
+    renderText(128 - renderTextWidth(str(kUI[22])) / 2, 92, str(kUI[22]), RGB15(20, 20, 20));
     oamUpdate(&oamMain);
 }
 
@@ -1151,12 +1151,12 @@ void renderVictory() {
     renderFilledRect(0, 0, 256, 192, RGB15(1, 1, 4));
     renderFilledRect(20, 40, 216, 100, RGB15(4, 8, 20));
 
-    renderText(128 - renderTextWidth("VICTORY!") / 2, 50, "VICTORY!", RGB15(31, 28, 0));
-    renderText(128 - renderTextWidth("THE APOTHECARY") / 2, 68, "THE APOTHECARY", RGB15(20, 20, 28));
-    renderText(128 - renderTextWidth("HAS BEEN DEFEATED") / 2, 78, "HAS BEEN DEFEATED", RGB15(20, 20, 28));
+    renderText(128 - renderTextWidth(str(kUI[24])) / 2, 50, str(kUI[24]), RGB15(31, 28, 0));
+    renderText(128 - renderTextWidth(str(kUI[25])) / 2, 68, str(kUI[25]), RGB15(20, 20, 28));
+    renderText(128 - renderTextWidth(str(kUI[26])) / 2, 78, str(kUI[26]), RGB15(20, 20, 28));
 
-    renderText(128 - renderTextWidth("START: ENDLESS MODE") / 2, 104, "START: ENDLESS MODE", RGB15(10, 31, 10));
-    renderText(128 - renderTextWidth("A: RETURN TO MENU") / 2, 118, "A: RETURN TO MENU", RGB15(20, 20, 20));
+    renderText(128 - renderTextWidth(str(kUI[27])) / 2, 104, str(kUI[27]), RGB15(10, 31, 10));
+    renderText(128 - renderTextWidth(str(kUI[28])) / 2, 118, str(kUI[28]), RGB15(20, 20, 20));
 }
 
 // ---------------------------------------------------------------------------
@@ -1750,12 +1750,12 @@ void renderShopDetail(int selectedCard) {
     renderText(128 - nameW / 2, 4, name, RGB15(31, 31, 31));
 
     // Shot pattern
-    renderText(8, 90, "SHOT:", RGB15(20, 20, 31));
+    renderText(8, 90, str(kUI[29]), RGB15(20, 20, 31));
     const char* shotDesc = str(kClassAbility[colorIdx][card.classId].shot);
     renderText(8, 100, shotDesc, RGB15(28, 28, 31));
 
     // Passive
-    renderText(8, 115, "PASSIVE:", RGB15(20, 31, 20));
+    renderText(8, 115, str(kUI[30]), RGB15(20, 31, 20));
     const char* passiveDesc = str(kClassAbility[colorIdx][card.classId].passive);
     renderText(8, 125, passiveDesc, RGB15(28, 31, 28));
 
@@ -1976,12 +1976,12 @@ void renderCompanionDetail(int companionSlot) {
     renderFilledRect(4, 76, 248, 1, RGB15(18, 18, 18));
 
     // ── Shot description (y=82) ─────────────────────────────────────────────
-    renderText(8, 82, "SHOT:", RGB15(20, 20, 31));
+    renderText(8, 82, str(kUI[29]), RGB15(20, 20, 31));
     const char* shotDesc = str(kClassAbility[colorIdx][classId].shot);
     renderText(8, 92, shotDesc, RGB15(28, 28, 31));
 
     // ── Passive description (y=107) ─────────────────────────────────────────
-    renderText(8, 107, "PASSIVE:", RGB15(20, 31, 20));
+    renderText(8, 107, str(kUI[30]), RGB15(20, 31, 20));
     const char* passiveDesc = str(kClassAbility[colorIdx][classId].passive);
     renderText(8, 117, passiveDesc, RGB15(28, 31, 28));
 

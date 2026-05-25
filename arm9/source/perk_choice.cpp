@@ -215,7 +215,7 @@ static void renderBottomScreen() {
     }
 
     // Footer hint
-    renderTextSub(24, 178, "TAP ONCE TO SELECT  TAP AGAIN TO CONFIRM", RGB15(10, 10, 14));
+    renderTextSub(24, 178, str(kUI[35]), RGB15(10, 10, 14));
 }
 
 // ---------------------------------------------------------------------------
@@ -255,7 +255,7 @@ static void renderTopScreen() {
 
         if (id < 0) {
             // No perk available — draw a greyed-out placeholder
-            renderText(cx - 10, PC_COL_TOP + 30, "N/A", RGB15(10, 10, 10));
+            renderText(cx - 10, PC_COL_TOP + 30, str(kUI[34]), RGB15(10, 10, 10));
             continue;
         }
 
