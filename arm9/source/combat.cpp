@@ -1104,7 +1104,7 @@ static void checkEnemyCompanionCollisions() {
             if (!er.overlaps(cr)) continue;
 
             c.hp -= 3;
-            c.iframes = 90;  // generous invincibility
+            c.iframes = 180;  // same generous invuln as player (3 seconds)
             spawnParticleBurst(c.pos, 4, 6, 3);
 
             // Thorns perk: companions deal 5 damage back when hit
