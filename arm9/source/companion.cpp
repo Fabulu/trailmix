@@ -444,9 +444,9 @@ void companionUpdate() {
                             Vec2 spos = c.pos;
                             spos.x += static_cast<Fixed>(perpX * t * 10);
                             spos.y += static_cast<Fixed>(perpY * t * 10);
-                            Vec2 thornVel = {static_cast<Fixed>(baseVel.x / 2), static_cast<Fixed>(baseVel.y / 2)};
+                            Vec2 thornVel = {static_cast<Fixed>(baseVel.x / 3), static_cast<Fixed>(baseVel.y / 3)};
                             spawnCompanionBullet(spos, thornVel, c.color, dmg,
-                                                thornFlags, 0, (c.tier >= 2 ? 90 : 0), 60, c.tier);
+                                                thornFlags, 0, (c.tier >= 2 ? 90 : 0), 20, c.tier);
                         }
                         c.shootTimer = cooldown;
                         handled = true;

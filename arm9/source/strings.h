@@ -390,16 +390,16 @@ constexpr StrEntry kClassNames[PILL_COLOR_COUNT][CLASS_TIERS][3] = {
 struct ClassAbilityEntry { StrEntry shot; StrEntry passive; };
 constexpr ClassAbilityEntry kClassAbility[PILL_COLOR_COUNT][6] = {
     /* Red */ {
-        /* R1 Gunner       */ { S("Fires fast single shots",        "Feuert schnelle Einzelschuesse"),      S("All allies deal +8% damage",         "Alle Verbuendeten +8% Schaden")          },
+        /* R1 Gunner       */ { S("Every 5th shot is a 3x tracer",  "Jeder 5. Schuss ist 3x Leuchtsp."),    S("All allies deal +8% damage",         "Alle Verbuendeten +8% Schaden")          },
         /* R2 Pyromaniac   */ { S("Lobs a fireball that explodes",  "Wirft einen explodierenden Feuerball"),S("Burns nearby enemies slowly",        "Verbrennt nahe Gegner langsam")          },
         /* R3 Shotgunner   */ { S("Blasts 3 bullets in a cone",     "Feuert 3 Kugeln im Kegel"),            S("+10% damage to close enemies",       "+10% Schaden auf nahe Gegner")           },
         /* R4 Berserker    */ { S("Attacks faster at low HP",       "Greift bei wenig LP schneller an"),    S("All allies +15% damage below half HP","Alle Verb. +15% Sch unter halben LP")   },
         /* R5 Detonator    */ { S("Fires a bomb with big blast",    "Feuert Bombe mit grosser Explosion"),  S("No passive",                         "Kein Passiv")                            },
-        /* R6 Executioner  */ { S("Fires a piercing bolt",          "Feuert durchbohrenden Bolzen"),        S("No passive",                         "Kein Passiv")                            },
+        /* R6 Executioner  */ { S("Heavy slow pierce bolt at 2x dmg","Schwerer langsamer 2x Bolzen"),       S("No passive",                         "Kein Passiv")                            },
     },
     /* Blue */ {
         /* B1 Warden       */ { S("Damages all nearby enemies",     "Schadet allen nahen Gegnern"),         S("Slows nearby enemies by 10%",        "Verlangsamt nahe Gegner um 10%")         },
-        /* B2 Channeler    */ { S("Fast focused shot",              "Schneller Zielschuss"),                S("All allies shoot 5% faster",         "Alle Verbuendeten 5% schneller")         },
+        /* B2 Channeler    */ { S("Rapid 3-round burst",            "Schnelle 3er-Salve"),                  S("All allies shoot 5% faster",         "Alle Verbuendeten 5% schneller")         },
         /* B3 Frost Archer */ { S("Shoots ice arrows that slow",    "Schiesst verlangsamende Eispfeile"),   S("Slowed enemies take +10% damage",    "Verlangsamte Gegner +10% Schaden")       },
         /* B4 Orbiter      */ { S("Double shot volley",             "Doppelschuss-Salve"),                  S("No passive",                         "Kein Passiv")                            },
         /* B5 Chronomancer */ { S("Freezes a target in time",       "Friert ein Ziel in der Zeit ein"),     S("No passive",                         "Kein Passiv")                            },
@@ -422,16 +422,16 @@ constexpr ClassAbilityEntry kClassAbility[PILL_COLOR_COUNT][6] = {
         /* Y6 Trickster    */ { S("Fires bullets in all 8 dirs",    "Feuert in alle 8 Richtungen"),         S("Enemies drop 15% more gold",         "Gegner lassen 15% mehr Gold fallen")     },
     },
     /* Purple */ {
-        /* P1 Hexer        */ { S("Fires a cursed bolt that slows", "Feuert verlangsamenden Fluchbolzen"),  S("All debuffs last 25% longer",        "Alle Debuffs dauern 25% laenger")        },
+        /* P1 Hexer        */ { S("Curse bolt + 2 spreading hexes", "Fluchbolzen + 2 Splitterflueche"),     S("All debuffs last 25% longer",        "Alle Debuffs dauern 25% laenger")        },
         /* P2 Blightling   */ { S("Shoots 3 poison darts",          "Schiesst 3 Giftpfeile"),               S("Earn 10% more gold",                 "Verdiene 10% mehr Gold")                 },
         /* P3 Plague Doctor */ { S("Launches a toxic cloud",         "Startet eine Giftwolke"),              S("All allies deal +8% damage",         "Alle Verbuendeten +8% Schaden")          },
-        /* P4 Wraith       */ { S("Fires a ghost bolt that pierces","Feuert durchdringenden Geistbolzen"),  S("No passive",                         "Kein Passiv")                            },
+        /* P4 Wraith       */ { S("Pierce bolt forward + backward", "Durchbohrend vor + zurueck"),          S("No passive",                         "Kein Passiv")                            },
         /* P5 Voidcaller   */ { S("Deep freeze bolt",               "Tiefkuehlbolzen"),                   S("No passive",                         "Kein Passiv")                            },
         /* P6 Nightmare    */ { S("Emits a fear pulse around self", "Sendet Furchtpuls um sich"),            S("All debuffs last 25% longer",        "Alle Debuffs dauern 25% laenger")        },
     },
     /* Cyan */ {
         /* C1 Drone Pilot  */ { S("Sends drones at 3 targets",     "Sendet Drohnen auf 3 Ziele"),          S("No passive",                         "Kein Passiv")                            },
-        /* C2 Overclocker  */ { S("Ultra rapid single fire",        "Ultraschneller Einzelschuss"),         S("Nearby allies shoot 15% faster",     "Nahe Verb. schiessen 15% schneller")     },
+        /* C2 Overclocker  */ { S("Fires faster until AoE overheat","Immer schneller bis AoE-Explosion"),   S("Nearby allies shoot 15% faster",     "Nahe Verb. schiessen 15% schneller")     },
         /* C3 Tesla Coil   */ { S("Lightning chains to 2 nearby",   "Blitz springt auf 2 Nahe ueber"),      S("No passive",                         "Kein Passiv")                            },
         /* C4 Signal Jammer*/ { S("Erases enemy shots",             "Loescht Gegnerschuesse"),            S("Enemy debuffs last 10% longer",      "Gegner-Debuffs 10% laenger")             },
         /* C5 Circuit Hacker*/{ S("Long freeze bolt",               "Langer Eisbolzen"),                    S("No passive",                         "Kein Passiv")                            },
