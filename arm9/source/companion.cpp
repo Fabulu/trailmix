@@ -13,7 +13,7 @@ int gCompanionCount = 0;
 const ClassDef kClassDefs[36] = {
     // RED (indices 0-5)                                              rarity
     { 15,  3, 1,  0, 0,          0, 0, 0 },  // R1 Gunner: Common
-    { 40,  4, 1,  0, BFLAG_EXPLODE, 16, 0, 0 }, // R2 Pyromaniac: Common
+    { 40,  4, 1,  0, BFLAG_EXPLODE, 32, 0, 0 }, // R2 Pyromaniac: Common (big boom)
     { 35,  3, 3, 30, 0,          0, 0, 1 },  // R3 Shotgunner: Uncommon
     { 25,  4, 1,  0, 0,          0, 0, 1 },  // R4 Berserker: Uncommon
     { 50,  6, 1,  0, BFLAG_EXPLODE, 24, 0, 2 }, // R5 Detonator: Rare

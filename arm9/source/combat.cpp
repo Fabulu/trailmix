@@ -874,8 +874,16 @@ static void applyAoe(const Bullet& b) {
             if (e.hp <= 0) killEnemy(e, b.color);
         }
     }
-    // Add visible explosion at bullet impact point
-    spawnParticleBurst({toFixed(bx), toFixed(by)}, 8, 12, b.color);
+    // Visible explosion proportional to radius
+    int particleCount = 4 + r / 4;  // bigger radius = more particles
+    if (particleCount > 12) particleCount = 12;
+    spawnParticleBurst({toFixed(bx), toFixed(by)}, particleCount, 14, b.color);
+    // Extra ring of particles at the blast edge for visual punch
+    for (int p = 0; p < 4; p++) {
+        int ox = (p < 2 ? r : -r) * (p & 1 ? 1 : -1);
+        int oy = (p < 2 ? -r : r) * (p & 1 ? -1 : 1);
+        spawnParticle({toFixed(bx + ox/2), toFixed(by + oy/2)}, {0, 0}, 8, b.color);
+    }
 }
 
 // Check bullet-enemy collisions
