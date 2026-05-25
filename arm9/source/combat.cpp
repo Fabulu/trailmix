@@ -743,12 +743,18 @@ static void killEnemy(Enemy& e, u8 bulletColor) {
                 if (other.hp <= 0) other.active = false;
             }
         }
-        // Damage player if in blast radius
-        int dpx = gPlayer.pos.pixelX() - bx;
-        int dpy = gPlayer.pos.pixelY() - by;
-        if (dpx * dpx + dpy * dpy <= 32 * 32) {
-            s16 dmg = synergyOnPlayerHit(4);
-            if (dmg > 0) { gPlayer.hp -= dmg; perkOnPlayerHit(); }
+        // Damage player if in blast radius (respects iframes)
+        if (gPlayer.iframes == 0 && !gPlayer.dashInvincible) {
+            int dpx = gPlayer.pos.pixelX() - bx;
+            int dpy = gPlayer.pos.pixelY() - by;
+            if (dpx * dpx + dpy * dpy <= 32 * 32) {
+                s16 dmg = synergyOnPlayerHit(4);
+                if (dmg > 0) {
+                    gPlayer.hp -= dmg;
+                    gPlayer.iframes = 90;
+                    perkOnPlayerHit();
+                }
+            }
         }
         spawnParticleBurst(e.pos, 8, 12, 1); // red burst
         audioPlaySfx(GSFX_EXPLODE);
@@ -1036,9 +1042,8 @@ static void checkEnemyCompanionCollisions() {
             if (!er.overlaps(cr)) continue;
 
             c.hp -= 3;
-            c.iframes = 60;
-            spawnParticleBurst(c.pos, 6, 8, 3);
-            audioPlaySfx(GSFX_HIT);
+            c.iframes = 90;  // generous invincibility
+            spawnParticleBurst(c.pos, 4, 6, 3);
 
             if (c.hp <= 0) {
                 spawnParticleBurst(c.pos, 12, 15, static_cast<u8>(c.color));
@@ -1064,18 +1069,21 @@ static void checkEnemyPlayerCollisions() {
         };
 
         if (pr.overlaps(er)) {
-            if (gPlayer.dashInvincible) continue; // BUG-7: dash should not kill enemies
+            if (gPlayer.dashInvincible) continue;
+            if (gPlayer.iframes > 0) continue;  // invincible after recent hit
             // Route damage through synergy (shield absorption, damage reduction)
             u8 rawDmg = (e.type == ETYPE_BOMBER) ? 6 : 3;
             s16 dmg = synergyOnPlayerHit(rawDmg);
             if (dmg > 0) {
                 gPlayer.hp -= dmg;
+                gPlayer.iframes = 90;  // 1.5 seconds of mercy
                 perkOnPlayerHit();
                 spawnParticleBurst(gPlayer.pos, 8, 10, 3);
+                audioPlaySfx(GSFX_PLAYER_HIT);
             }
-            audioPlaySfx(GSFX_HIT);
             // Bombers trigger their AoE explosion on contact via killEnemy
             killEnemy(e, 0);
+            break;  // only take damage from one enemy per frame
         }
     }
 }

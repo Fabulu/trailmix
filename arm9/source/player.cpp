@@ -22,6 +22,7 @@ void playerInit() {
     gPlayer.dashTimer = 0;
     gPlayer.dashCooldown = 0;
     gPlayer.dashDir = {0, 0};
+    gPlayer.iframes = 0;
     gPlayer.facing = {toFixed(1), 0}; // default facing right
 }
 
@@ -132,6 +133,9 @@ void playerDash() {
 }
 
 void playerUpdate(u32 held, u32 down) {
+    // Tick invincibility frames
+    if (gPlayer.iframes > 0) gPlayer.iframes--;
+
     // Save previous position for afterimage rendering
     gPlayer.prevPos = gPlayer.pos;
 

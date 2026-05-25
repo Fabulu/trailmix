@@ -83,25 +83,25 @@ static const u8* wavFindData(const u8* wav, size_t fileSize, size_t& outLen) {
 // Per-SFX volume tuning — original sample rates preserved, just quiet
 struct SfxTuning { u8 volume; u16 rate; };
 static const SfxTuning sfxTuning[GSFX_COUNT] = {
-    { 10, 22050},  // SHOOT
-    {  8, 22050},  // EXPLODE
-    { 20, 22050},  // GOLD
-    { 25, 22050},  // MERGE
-    { 12, 22050},  // HIT
-    { 18, 22050},  // SELECT
-    { 15, 22050},  // DASH
-    { 20, 22050},  // BUY
-    { 18, 22050},  // SELL
-    { 15, 22050},  // REROLL
-    { 12, 22050},  // WAVE_CLEAR
-    { 10, 22050},  // WAVE_START
-    { 15, 22050},  // PLAYER_HIT
-    { 22, 22050},  // PERK
-    { 25, 22050},  // BOSS
-    { 18, 22050},  // TIMESTOP
-    { 18, 22050},  // HEAL
-    { 20, 22050},  // SYNERGY
-    {  8, 22050},  // ENEMY_SHOOT
+    {  3, 22050},  // SHOOT — barely there
+    {  6, 22050},  // EXPLODE
+    { 12, 22050},  // GOLD
+    { 18, 22050},  // MERGE
+    {  2, 22050},  // HIT — near silent
+    { 10, 22050},  // SELECT
+    {  5, 22050},  // DASH
+    { 10, 22050},  // BUY
+    { 10, 22050},  // SELL
+    {  8, 22050},  // REROLL
+    {  8, 22050},  // WAVE_CLEAR
+    {  6, 22050},  // WAVE_START
+    {  6, 22050},  // PLAYER_HIT — not jarring
+    { 14, 22050},  // PERK
+    { 15, 22050},  // BOSS
+    { 10, 22050},  // TIMESTOP
+    { 10, 22050},  // HEAL
+    { 12, 22050},  // SYNERGY
+    {  4, 22050},  // ENEMY_SHOOT
     { 15, 22050},  // MINE_PLACE
     { 22, 22050},  // BOSS_PHASE
     { 25, 22050},  // VICTORY
@@ -129,9 +129,6 @@ static int currentMusic = -1;
 static int musicSoundId = -1;
 
 void audioPlayMusic(int id) {
-    // Music disabled — WAV loops sound too compressed at 8-bit.
-    // Waiting for tracker format (MOD/XM) replacements.
-    return;
     if (id == currentMusic) return;
     if (id < 0 || id > 4) return;
 
@@ -146,8 +143,8 @@ void audioPlayMusic(int id) {
     const u8* pcm = wavFindData(m.data, m.size, pcmLen);
     if (!pcm || pcmLen < 64) { currentMusic = -1; return; }
 
-    // Loop the music sample at low volume
-    musicSoundId = soundPlaySample(pcm, SoundFormat_8Bit, pcmLen, 22050, 16, 64, true, 0);
+    // 16-bit 11025Hz looping music, low volume
+    musicSoundId = soundPlaySample(pcm, SoundFormat_16Bit, pcmLen, 11025, 20, 64, true, 0);
     currentMusic = id;
 }
 

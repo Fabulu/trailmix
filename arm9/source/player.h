@@ -23,6 +23,7 @@ struct Player {
     Vec2 dashDir;
     Vec2 facing;        // last-faced direction for dash fallback
     Vec2 prevPos;       // previous frame position (for afterimage rendering)
+    u8 iframes;         // invincibility frames after taking damage
 };
 
 extern Player gPlayer;
