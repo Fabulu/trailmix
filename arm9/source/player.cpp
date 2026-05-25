@@ -271,6 +271,8 @@ void playerUpdate(u32 held, u32 down) {
         if (gPlayer.dashTimer == 0) {
             gPlayer.isDashing = false;
             gPlayer.dashInvincible = false;
+            // Brief iframes after dash ends so you don't get hit immediately
+            if (gPlayer.iframes < 20) gPlayer.iframes = 20;
         }
     } else {
         // Normal movement

@@ -642,6 +642,90 @@ void companionUpdate() {
                         handled = true;
                         break;
                     }
+                    case 0: { // R1 Gunner — tracer rounds: every 5th shot does 3x damage
+                        static u8 tracerCount = 0;
+                        tracerCount++;
+                        bool isTracer = (tracerCount % 5 == 0);
+                        u8 tracerDmg = isTracer ? static_cast<u8>(dmgInt * 3 > 255 ? 255 : dmg * 3) : dmg;
+                        spawnCompanionBullet(c.pos, baseVel, c.color, tracerDmg, shotFlags, 0, 0, 0, c.tier);
+                        if (isTracer) {
+                            spawnParticleBurst(c.pos, 3, 6, static_cast<u8>(c.color));
+                        }
+                        c.shootTimer = cooldown;
+                        handled = true;
+                        break;
+                    }
+                    case 5: { // R6 Executioner — heavy execute bolt: slow piercing devastation
+                        Vec2 slowVel = {static_cast<Fixed>(baseVel.x * 2 / 3), static_cast<Fixed>(baseVel.y * 2 / 3)};
+                        u8 execFlags = shotFlags | BFLAG_PIERCE;
+                        u8 execDmg = static_cast<u8>(dmgInt * 2 > 255 ? 255 : dmg * 2);
+                        spawnCompanionBullet(c.pos, slowVel, c.color, execDmg, execFlags, 0, 0, 120, c.tier);
+                        spawnParticle(c.pos, slowVel, 8, static_cast<u8>(c.color));
+                        c.shootTimer = cooldown;
+                        handled = true;
+                        break;
+                    }
+                    case 7: { // B2 Channeler — 3-round burst with slight spread
+                        spawnCompanionBullet(c.pos, baseVel, c.color, dmg, shotFlags, 0, 0, 0, c.tier);
+                        Vec2 v2 = {static_cast<Fixed>(baseVel.x + rngRange(8) - 4),
+                                   static_cast<Fixed>(baseVel.y + rngRange(8) - 4)};
+                        Vec2 v3 = {static_cast<Fixed>(baseVel.x + rngRange(8) - 4),
+                                   static_cast<Fixed>(baseVel.y + rngRange(8) - 4)};
+                        spawnCompanionBullet(c.pos, v2, c.color, dmg, shotFlags, 0, 0, 0, c.tier);
+                        spawnCompanionBullet(c.pos, v3, c.color, dmg, shotFlags, 0, 0, 0, c.tier);
+                        c.shootTimer = cooldown;
+                        handled = true;
+                        break;
+                    }
+                    case 24: { // P1 Hexer — spreading curse: main slow bolt + 2 curse splinters
+                        spawnCompanionBullet(c.pos, baseVel, c.color, dmg, shotFlags | BFLAG_SLOW, 0, 45, 0, c.tier);
+                        for (int s = 0; s < 2; s++) {
+                            Vec2 sv = {
+                                static_cast<Fixed>(baseVel.x + (s ? baseVel.y/3 : -baseVel.y/3)),
+                                static_cast<Fixed>(baseVel.y + (s ? -baseVel.x/3 : baseVel.x/3))
+                            };
+                            spawnCompanionBullet(c.pos, sv, c.color, static_cast<u8>(dmg/2), BFLAG_SLOW, 0, 30, 60, c.tier);
+                        }
+                        c.shootTimer = cooldown;
+                        handled = true;
+                        break;
+                    }
+                    case 27: { // P4 Wraith — bidirectional ghost bolt: pierces forward and backward
+                        spawnCompanionBullet(c.pos, baseVel, c.color, dmg, shotFlags | BFLAG_PIERCE, 0, 0, 90, c.tier);
+                        Vec2 backVel = {static_cast<Fixed>(-baseVel.x * 2 / 3), static_cast<Fixed>(-baseVel.y * 2 / 3)};
+                        spawnCompanionBullet(c.pos, backVel, c.color, static_cast<u8>(dmg * 3 / 4), BFLAG_PIERCE, 0, 0, 60, c.tier);
+                        spawnParticle(c.pos, backVel, 10, 4);
+                        c.shootTimer = cooldown;
+                        handled = true;
+                        break;
+                    }
+                    case 31: { // C2 Overclocker — overheat cycle: fires faster, then AoE burst
+                        static u8 heatCounter = 0;
+                        spawnCompanionBullet(c.pos, baseVel, c.color, dmg, shotFlags, 0, 0, 0, c.tier);
+                        heatCounter++;
+                        if (heatCounter >= 8) {
+                            // OVERHEAT: AoE burst + forced cooldown
+                            heatCounter = 0;
+                            spawnParticleBurst(c.pos, 6, 10, 5);
+                            for (auto& e : gEnemies) {
+                                if (!e.active) continue;
+                                Vec2 d = e.pos - c.pos;
+                                s32 dist = static_cast<s32>(d.x) * d.x + static_cast<s32>(d.y) * d.y;
+                                if (dist < static_cast<s32>(toFixed(32)) * toFixed(32)) {
+                                    e.hp -= dmg;
+                                    e.hurtTimer = 4;
+                                    if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 6, 10, 5); }
+                                }
+                            }
+                            c.shootTimer = 30; // forced overheat cooldown
+                        } else {
+                            // Each shot reduces next cooldown
+                            c.shootTimer = static_cast<u8>(cooldown * (8 - heatCounter) / 8);
+                            if (c.shootTimer < 3) c.shootTimer = 3;
+                        }
+                        handled = true;
+                        break;
+                    }
                     default: break;
                 }
 
