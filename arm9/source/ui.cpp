@@ -114,16 +114,16 @@ void uiRenderHUD() {
 
     // Dash indicator — bar + text
     if (gPlayer.isDashing) {
-        renderTextSub(4, 46, "DASH", RGB15(20, 31, 20));
+        renderTextSub(4, 46, str(kUI[51]), RGB15(20, 31, 20));
     } else if (gPlayer.dashCooldown > 0) {
-        renderTextSub(4, 46, "DASH", RGB15(14, 14, 14));
+        renderTextSub(4, 46, str(kUI[51]), RGB15(14, 14, 14));
         // Cooldown bar: fills left to right as cooldown expires
         int barW = 40;
         int filled = barW * (90 - gPlayer.dashCooldown) / 90;
         renderFilledRectSub(36, 47, barW, 4, RGB15(6, 6, 6));
         if (filled > 0) renderFilledRectSub(36, 47, filled, 4, RGB15(14, 14, 20));
     } else {
-        renderTextSub(4, 46, "DASH", RGB15(10, 31, 10));
+        renderTextSub(4, 46, str(kUI[51]), RGB15(10, 31, 10));
         renderFilledRectSub(36, 47, 40, 4, RGB15(10, 31, 10));
     }
 
@@ -230,7 +230,7 @@ void uiRenderHUD() {
         renderFilledRectSub(222,      80,  2,   32, gold);
         renderTextSub(128 - bdw / 2, 88, bd, RGB15(31, 28, 4));
         // Sub-line: "PERK INCOMING..."
-        const char* sub = "PERK INCOMING...";
+        const char* sub = str(kUI[52]);
         int sw = renderTextWidth(sub);
         renderTextSub(128 - sw / 2, 100, sub, RGB15(20, 18, 4));
     }

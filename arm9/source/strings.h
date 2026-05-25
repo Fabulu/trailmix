@@ -81,6 +81,23 @@ constexpr StrEntry kUI[] = {
     /* STR_UI_PLUS1SHOT   [41]  */ S("+1 shot", "+1 Schuss"),
     /* STR_UI_PLUS2SHOTS  [42]  */ S("+2 shots", "+2 Schuesse"),
     /* STR_UI_PIERCEALL   [43]  */ S("pierce all", "durchbohrt alle"),
+    /* STR_UI_SOLD        [44]  */ S("SOLD", "VERK."),
+    /* STR_UI_LOCK2       [45]  */ S("LOCK", "SPERR."),
+    /* STR_UI_UNLOCK2     [46]  */ S("UNLOCK", "ENTSPR."),
+    /* STR_UI_GOLD_COLON  [47]  */ S("GOLD:", "GOLD:"),
+    /* STR_UI_INT_ABBR    [48]  */ S("INT", "ZIN"),
+    /* STR_UI_BUY2        [49]  */ S("BUY", "KAUF"),
+    /* STR_UI_SELL3       [50]  */ S("SELL", "VERK"),
+    /* STR_UI_DASH2       [51]  */ S("DASH", "DASH"),
+    /* STR_UI_PERK_INC    [52]  */ S("PERK INCOMING...", "TALENT KOMMT..."),
+    /* STR_UI_MERGE       [53]  */ S("MERGE!", "FUSION!"),
+    /* STR_UI_PERK2       [54]  */ S("PERK", "TALENT"),
+    /* STR_UI_PERMANENT2  [55]  */ S("PERMANENT", "DAUERHAFT"),
+    /* STR_UI_SELECT_UNIT [56]  */ S("SELECT A UNIT", "WAEHLE EINHEIT"),
+    /* STR_UI_COMPANIONS  [57]  */ S("COMPANIONS:", "BEGLEITER:"),
+    /* STR_UI_ACTIVE      [58]  */ S("active", "aktiv"),
+    /* STR_UI_UNLOCKS     [59]  */ S("unlocks!", "freigeschaltet!"),
+    /* STR_UI_HP_COLON    [60]  */ S("HP:", "LP:"),
 };
 
 // Color abbreviations for HUD (indexed by PillColor)

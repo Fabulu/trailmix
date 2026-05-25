@@ -1066,7 +1066,7 @@ void renderGameplay() {
     if (gMergeFlashTimer > 0) {
         bool bright = (gMergeFlashTimer & 4) != 0;  // strobe every 4 frames
         if (bright) {
-            const char* mergeStr = "MERGE!";
+            const char* mergeStr = str(kUI[53]);
             int mw = renderTextWidth(mergeStr);
             // Draw drop-shadow for readability
             renderText(128 - mw/2 + 1, 101, mergeStr, RGB15(8, 4, 0));
@@ -1214,12 +1214,12 @@ void renderVictory() {
 
     // Stats display — show wave count and gold
     char statBuf[24];
-    snprintf(statBuf, sizeof(statBuf), "%s 30  GOLD: %d", str(kUI[37]), gPlayer.gold);
+    snprintf(statBuf, sizeof(statBuf), "%s 30  %s %d", str(kUI[37]), str(kUI[47]), gPlayer.gold);
     int sw = renderTextWidth(statBuf);
     renderText(128 - sw / 2, 108, statBuf, RGB15(20, 20, 20));
 
     // Companion roster — show how many survived
-    snprintf(statBuf, sizeof(statBuf), "COMPANIONS: %d", gCompanionCount);
+    snprintf(statBuf, sizeof(statBuf), "%s %d", str(kUI[57]), gCompanionCount);
     sw = renderTextWidth(statBuf);
     renderText(128 - sw / 2, 120, statBuf, RGB15(14, 24, 14));
 
@@ -1753,7 +1753,7 @@ void renderShopDetail(int selectedCard) {
         renderFilledRect(0, 0, 256, 192, RGB15(8, 6, 2) | BIT(15));
 
         // "PERK" label
-        renderText(128 - renderTextWidth("PERK") / 2, 10, "PERK", RGB15(31, 31, 31));
+        renderText(128 - renderTextWidth(str(kUI[54])) / 2, 10, str(kUI[54]), RGB15(31, 31, 31));
 
         // Perk name large centered
         const char* perkName = str(kPerks[card.perkId].name);
@@ -1769,7 +1769,7 @@ void renderShopDetail(int selectedCard) {
         renderText(128 - renderTextWidth(priceBuf) / 2, 140, priceBuf, RGB15(31, 28, 0));
 
         // "PERMANENT" label
-        renderText(128 - renderTextWidth("PERMANENT") / 2, 160, "PERMANENT", RGB15(20, 20, 20));
+        renderText(128 - renderTextWidth(str(kUI[55])) / 2, 160, str(kUI[55]), RGB15(20, 20, 20));
 
         // Hide OAM sprites during detail view
         for (int i = 0; i < 8; i++) {
@@ -1854,7 +1854,7 @@ void renderShopDetail(int selectedCard) {
         int ti = synTierFor(ownedCount);
         if (ti >= 0) {
             const char* tname = str(kSynergyNames[colorIdx][ti]);
-            snprintf(synBuf, sizeof(synBuf), "%s: %d -> %s active", colorAbbr, ownedCount, tname);
+            snprintf(synBuf, sizeof(synBuf), "%s: %d -> %s %s", colorAbbr, ownedCount, tname, str(kUI[58]));
         } else {
             snprintf(synBuf, sizeof(synBuf), "%s: %d -", colorAbbr, ownedCount);
         }
@@ -1869,7 +1869,7 @@ void renderShopDetail(int selectedCard) {
             const char* tname = str(kSynergyNames[colorIdx][ti]);
             int prevTi = synTierFor(ownedCount);
             if (ti > prevTi) {
-                snprintf(buyBuf, sizeof(buyBuf), "->%d -> %s unlocks!", afterCount, tname);
+                snprintf(buyBuf, sizeof(buyBuf), "->%d -> %s %s", afterCount, tname, str(kUI[59]));
             } else {
                 snprintf(buyBuf, sizeof(buyBuf), "->%d -> %s", afterCount, tname);
             }
@@ -1923,7 +1923,7 @@ void renderArmySummary() {
     renderFilledRect(0, 0, 256, 192, RGB15(2, 2, 4) | BIT(15));
 
     // Title
-    const char* title = "SELECT A UNIT";
+    const char* title = str(kUI[56]);
     int tw = renderTextWidth(title);
     renderText(128 - tw / 2, 4, title, RGB15(20, 20, 31));
 
@@ -1942,12 +1942,12 @@ void renderArmySummary() {
 
     // Gold
     char goldBuf[16];
-    snprintf(goldBuf, sizeof(goldBuf), "GOLD: %d", gPlayer.gold);
+    snprintf(goldBuf, sizeof(goldBuf), "%s %d", str(kUI[47]), gPlayer.gold);
     renderText(8, 150, goldBuf, RGB15(31, 28, 0));
 
     // Wave
     char waveBuf[16];
-    snprintf(waveBuf, sizeof(waveBuf), "WAVE: %d", gameGetWave());
+    snprintf(waveBuf, sizeof(waveBuf), "%s: %d", str(kUI[37]), gameGetWave());
     renderText(8, 165, waveBuf, RGB15(20, 20, 31));
 
     // Synergy counts per color (new threshold: activates at 2 companions)
@@ -2037,7 +2037,7 @@ void renderCompanionDetail(int companionSlot) {
         }
         // HP numbers "HP: X/Y"
         char hpBuf[20];
-        snprintf(hpBuf, sizeof(hpBuf), "HP: %d/%d", (int)c.hp, (int)c.maxHp);
+        snprintf(hpBuf, sizeof(hpBuf), "%s %d/%d", str(kUI[60]), (int)c.hp, (int)c.maxHp);
         renderText(BAR_X, BAR_Y + BAR_H + 2, hpBuf, RGB15(28, 28, 28));
     }
 
@@ -2079,7 +2079,7 @@ void renderCompanionDetail(int companionSlot) {
         const char* abbr = str(kColorAbbr[colorIdx]);
         if (ti >= 0) {
             const char* tname = str(kSynergyNames[colorIdx][ti]);
-            snprintf(synBuf, sizeof(synBuf), "%s: %d -> %s active", abbr, ownedColor, tname);
+            snprintf(synBuf, sizeof(synBuf), "%s: %d -> %s %s", abbr, ownedColor, tname, str(kUI[58]));
         } else {
             snprintf(synBuf, sizeof(synBuf), "%s: %d -", abbr, ownedColor);
         }

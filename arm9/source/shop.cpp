@@ -641,8 +641,8 @@ static void drawCompanionCard(int cardIdx) {
     renderFilledRectSub(bx, by, CARD_W, CARD_H, bgColor);
 
     if (card.sold) {
-        int tw = renderTextWidth("SOLD");
-        renderTextSub(bx + (CARD_W - tw) / 2, by + 16, "SOLD", RGB15(14, 14, 14));
+        int tw = renderTextWidth(str(kUI[44]));
+        renderTextSub(bx + (CARD_W - tw) / 2, by + 16, str(kUI[44]), RGB15(14, 14, 14));
         return;
     }
 
@@ -704,8 +704,8 @@ static void drawPerkCard() {
     renderFilledRectSub(PERK_X, PERK_Y, PERK_W, PERK_H, bgColor);
 
     if (card.sold) {
-        int tw = renderTextWidth("SOLD");
-        renderTextSub(PERK_X + (PERK_W - tw) / 2, PERK_Y + 12, "SOLD", RGB15(14, 14, 14));
+        int tw = renderTextWidth(str(kUI[44]));
+        renderTextSub(PERK_X + (PERK_W - tw) / 2, PERK_Y + 12, str(kUI[44]), RGB15(14, 14, 14));
         return;
     }
 
@@ -756,7 +756,7 @@ void shopRender() {
         bool isLocked = gShop.cards[gShop.selectedCard].locked;
         u16 lbBg = isLocked ? RGB15(14, 12, 0) : RGB15(6, 6, 6);
         renderFilledRectSub(LOCK_BTN_X, PERK_Y, LOCK_BTN_W, PERK_H, lbBg);
-        const char* lockText = isLocked ? "UNLOCK" : "LOCK";
+        const char* lockText = isLocked ? str(kUI[46]) : str(kUI[45]);
         int ltw = renderTextWidth(lockText);
         u16 lockColor = isLocked ? RGB15(31, 28, 0) : RGB15(20, 20, 20);
         renderTextSub(LOCK_BTN_X + (LOCK_BTN_W - ltw) / 2, PERK_Y + (PERK_H - 8) / 2, lockText, lockColor);
@@ -790,11 +790,11 @@ void shopRender() {
 
     // ── Gold display + Interest ──────────────────────────────────
     char goldBuf[16];
-    snprintf(goldBuf, sizeof(goldBuf), "GOLD: %d", gPlayer.gold);
+    snprintf(goldBuf, sizeof(goldBuf), "%s %d", str(kUI[47]), gPlayer.gold);
     renderTextSub(140, COMP_Y + 2, goldBuf, RGB15(31, 28, 0));
 
     char intBuf[12];
-    snprintf(intBuf, sizeof(intBuf), "+%d INT", gameGetShopInterest());
+    snprintf(intBuf, sizeof(intBuf), "+%d %s", gameGetShopInterest(), str(kUI[48]));
     renderTextSub(210, COMP_Y + 2, intBuf, RGB15(20, 28, 20));
 
     // ── Companion inventory bar (y=128) ──────────────────────────
@@ -839,7 +839,7 @@ void shopRender() {
         u16 buyBg = canBuy ? RGB15(2, 16, 2) : RGB15(6, 4, 4);
         renderFilledRectSub(START_X, START_Y, START_W, START_H, buyBg);
         char buyBuf[20];
-        snprintf(buyBuf, sizeof(buyBuf), "BUY %dG", selCard.price);
+        snprintf(buyBuf, sizeof(buyBuf), "%s %dG", str(kUI[49]), selCard.price);
         int btw = renderTextWidth(buyBuf);
         renderTextSub(START_X + (START_W - btw) / 2, START_Y + 8, buyBuf, RGB15(31, 31, 31));
     } else if (gShop.selectedCard == 6) {
@@ -849,7 +849,7 @@ void shopRender() {
         u16 buyBg = canBuy ? RGB15(2, 16, 2) : RGB15(6, 4, 4);
         renderFilledRectSub(START_X, START_Y, START_W, START_H, buyBg);
         char buyBuf[20];
-        snprintf(buyBuf, sizeof(buyBuf), "BUY %dG", pc.price);
+        snprintf(buyBuf, sizeof(buyBuf), "%s %dG", str(kUI[49]), pc.price);
         int btw = renderTextWidth(buyBuf);
         renderTextSub(START_X + (START_W - btw) / 2, START_Y + 8, buyBuf, RGB15(31, 31, 31));
     } else if (gShop.selectedCompanion >= 0) {
@@ -863,7 +863,7 @@ void shopRender() {
         }
         renderFilledRectSub(START_X, START_Y, START_W, START_H, RGB15(16, 2, 2));
         char sellBuf[20];
-        snprintf(sellBuf, sizeof(sellBuf), "SELL %dG", sellPrice);
+        snprintf(sellBuf, sizeof(sellBuf), "%s %dG", str(kUI[50]), sellPrice);
         int stw = renderTextWidth(sellBuf);
         renderTextSub(START_X + (START_W - stw) / 2, START_Y + 8, sellBuf, RGB15(31, 31, 31));
     } else {
