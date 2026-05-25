@@ -874,16 +874,13 @@ static void applyAoe(const Bullet& b) {
             if (e.hp <= 0) killEnemy(e, b.color);
         }
     }
-    // Visible explosion proportional to radius
-    int particleCount = 4 + r / 4;  // bigger radius = more particles
-    if (particleCount > 12) particleCount = 12;
-    spawnParticleBurst({toFixed(bx), toFixed(by)}, particleCount, 14, b.color);
-    // Extra ring of particles at the blast edge for visual punch
-    for (int p = 0; p < 4; p++) {
-        int ox = (p < 2 ? r : -r) * (p & 1 ? 1 : -1);
-        int oy = (p < 2 ? -r : r) * (p & 1 ? -1 : 1);
-        spawnParticle({toFixed(bx + ox/2), toFixed(by + oy/2)}, {0, 0}, 8, b.color);
-    }
+    // Spawn a brief BURN zone at impact — renders as a visible filled circle
+    // like poison clouds, but only lasts 30 frames (0.5s) with no damage ticks
+    spawnZone({toFixed(bx), toFixed(by)}, static_cast<u8>(r > 48 ? 48 : r),
+              0, 255, 30, 0, ZONE_BURN);
+    // Particle burst for extra flair
+    spawnParticleBurst({toFixed(bx), toFixed(by)}, 6, 20, b.color);
+    cameraShake(2, 4);
 }
 
 // Check bullet-enemy collisions
