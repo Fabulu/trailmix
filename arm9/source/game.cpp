@@ -130,6 +130,12 @@ static void startNextWave() {
     waveAnnouncementStart(waveNumber);
     waveActive = true;
     state = GameState::Play;
+
+    // Wave-start grace period: player + companions get 90 iframes
+    gPlayer.iframes = 90;
+    for (auto& c : gCompanions) {
+        if (c.active) c.iframes = 90;
+    }
 }
 
 static void enterGameOver() {
