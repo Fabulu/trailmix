@@ -935,4 +935,8 @@ void shopRender() {
         int htw = renderTextWidth(healBuf);
         renderTextSub(HEAL_X + (HEAL_W - htw) / 2, HEAL_Y + 4, healBuf, healTxt);
     }
+
+    // ── Control hints at bottom ──────────────────────────────────────
+    u16 hintCol = RGB15(10, 10, 14);
+    renderTextSub(4, 184, "A:OK  B:BACK  L:LOCK  R:SELL", hintCol);
 }
