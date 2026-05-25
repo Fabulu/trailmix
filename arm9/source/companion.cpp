@@ -306,13 +306,15 @@ void companionUpdate() {
                 int fci = companionFullClassId(c);
                 const ClassDef& cd = kClassDefs[fci];
 
-                // Tier-scaled damage
-                u8 baseDmg = cd.damage;
-                u8 dmg = static_cast<u8>(baseDmg * (c.tier == 0 ? 1 : c.tier == 1 ? 2 : 5));
+                // Tier-scaled damage (use int to avoid u8 overflow on high-damage classes)
+                int baseDmg = cd.damage;
+                int dmgInt = baseDmg * (c.tier == 0 ? 1 : c.tier == 1 ? 2 : 5);
                 // Glass Cannon: +5 flat damage
-                if (perkIsActive(PERK_GLASS_CANNON)) dmg += 5;
+                if (perkIsActive(PERK_GLASS_CANNON)) dmgInt += 5;
                 // Lifeshaper buff: +20% damage
-                if (c.dmgBuffTimer > 0) dmg = static_cast<u8>(dmg * 12 / 10);
+                if (c.dmgBuffTimer > 0) dmgInt = dmgInt * 12 / 10;
+                // Cap at 255 for u8 bullet damage field
+                u8 dmg = static_cast<u8>(dmgInt > 255 ? 255 : dmgInt);
 
                 // Tier-scaled bullet count and pierce (universal, all classes)
                 u8 bulletCount = cd.bulletCount + (c.tier >= 1 ? 1 : 0) + (c.tier >= 2 ? 1 : 0);
