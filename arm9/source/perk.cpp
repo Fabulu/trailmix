@@ -66,8 +66,8 @@ int perkGetRandom() {
 
     for (int i = 0; i < PERK_COUNT; i++) {
         if (!gPerks.active[i]) {
-            // Wildcard is ultra-rare: only 20% chance to appear in the pool
-            if (i == PERK_WILDCARD && rngRange(5) != 0) continue;
+            // Wildcard is ultra-rare: 10% chance to appear in the pool
+            if (i == PERK_WILDCARD && rngRange(10) != 0) continue;
             candidates[count++] = i;
         }
     }
