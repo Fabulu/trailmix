@@ -84,18 +84,18 @@ static const u8* wavFindData(const u8* wav, size_t fileSize, size_t& outLen) {
 struct SfxTuning { u8 volume; u16 rate; };
 static const SfxTuning sfxTuning[GSFX_COUNT] = {
     {  3, 22050},  // SHOOT — barely there
-    {  6, 22050},  // EXPLODE
+    {  1, 22050},  // EXPLODE
     { 12, 22050},  // GOLD
     { 18, 22050},  // MERGE
-    {  2, 22050},  // HIT — near silent
+    {  1, 22050},  // HIT — absolute minimum
     { 10, 22050},  // SELECT
     {  5, 22050},  // DASH
     { 10, 22050},  // BUY
     { 10, 22050},  // SELL
     {  8, 22050},  // REROLL
-    {  8, 22050},  // WAVE_CLEAR
-    {  6, 22050},  // WAVE_START
-    {  6, 22050},  // PLAYER_HIT — not jarring
+    {  1, 22050},  // WAVE_CLEAR
+    {  1, 22050},  // WAVE_START
+    {  2, 22050},  // PLAYER_HIT
     { 14, 22050},  // PERK
     { 15, 22050},  // BOSS
     { 10, 22050},  // TIMESTOP

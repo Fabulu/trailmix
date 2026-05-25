@@ -95,6 +95,8 @@ static const u8 FONT_5X7[][7] = {
     {0x00,0x00,0x00,0x00,0x00,0x00,0x04},
     // % (index 45)
     {0x19,0x1A,0x02,0x04,0x0B,0x13,0x13},
+    // ' (index 46) — apostrophe
+    {0x04,0x04,0x08,0x00,0x00,0x00,0x00},
 };
 
 static const int CHAR_W = 5;   // glyph pixel width
@@ -115,6 +117,7 @@ static int charToFontIdx(char c) {
     if (c == '-') return 43;
     if (c == '.') return 44;
     if (c == '%') return 45;
+    if (c == '\'') return 46;
     return 0; // space for unknown
 }
 
@@ -1560,11 +1563,10 @@ static void renderShotPreview(int frame, int fci, u16 bulletColor, int tier) {
 static void renderUpgradePath(int panelX, int panelY,
                               int colorIdx, int classId, int currentTier)
 {
-    // Column geometry: three equal slots inside the panel (168 px wide, x=80..248)
-    // Each slot is 56 px wide.
-    constexpr int COL_W   = 54;   // name + details width
-    constexpr int ARROW_W = 6;    // " >" separator
-    // Total = 3*54 + 2*6 = 174, fits in 80..248 (168px)
+    // Column geometry: three slots, fit within 256 - panelX
+    int availW = 256 - panelX - 4;  // leave 4px margin
+    constexpr int ARROW_W = 6;
+    int COL_W = (availW - 2 * ARROW_W) / 3;
 
     static const u16 kBright = RGB15(31, 31, 31);
     static const u16 kDim    = RGB15(12, 12, 12);
@@ -1594,12 +1596,14 @@ static void renderUpgradePath(int panelX, int panelY,
         u16 nameCol   = (t == currentTier) ? kBright : kDim;
         u16 detailCol = (t == currentTier) ? kGold   : kDim;
 
-        // ── Tier name (truncated to fit COL_W) ──────────────────────────
+        // ── Tier name (truncated to fit column width) ──────────────────
         const char* fullName = str(kClassNames[colorIdx][classId][t]);
-        // Copy up to 8 characters to avoid overflowing the column
-        char nameBuf[10];
+        // Truncate name to fit column: each char is 6px (5+1 gap)
+        int maxChars = COL_W / 6;
+        if (maxChars > 12) maxChars = 12;
+        char nameBuf[14];
         int ni = 0;
-        while (fullName[ni] && ni < 8) { nameBuf[ni] = fullName[ni]; ni++; }
+        while (fullName[ni] && ni < maxChars) { nameBuf[ni] = fullName[ni]; ni++; }
         nameBuf[ni] = '\0';
 
         int nameW = renderTextWidth(nameBuf);

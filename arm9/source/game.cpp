@@ -112,14 +112,12 @@ static void enterShop() {
     }
 
     shopGenerate(waveNumber);
-    audioPlaySfx(GSFX_WAVE_CLEAR);
     audioPlayMusic(4); // MOD_SHOP
 }
 
 static void startNextWave() {
     renderClearSub();
     uiForceRedraw();
-    audioPlaySfx(GSFX_WAVE_START);
     audioPlayMusic(1); // MOD_BATTLE
     perkOnWaveStart();
     entitiesClear();
