@@ -444,20 +444,46 @@ bool shopUpdate() {
         } else if (kd & KEY_RIGHT) {
             if (cur < 5) cur++;
             else if (cur == 6) cur = 7;  // perk → reroll
+            else if (cur >= 9) cur++;     // next companion
         } else if (kd & KEY_LEFT) {
             if (cur > 0 && cur <= 5) cur--;
             else if (cur == 7) cur = 6;  // reroll → perk
+            else if (cur > 9) cur--;      // prev companion
         } else if (kd & KEY_DOWN) {
             if (cur <= 2) cur += 3;       // row 0 → row 1
             else if (cur <= 5) cur = 6;   // row 1 → perk
-            else if (cur <= 7) cur = 8;   // perk/reroll → start
+            else if (cur <= 7) cur = 9;   // perk/reroll → companions
+            else if (cur == 8) cur = 6;   // start → perk (wrap)
+            else if (cur >= 9) cur = 8;   // companions → start
         } else if (kd & KEY_UP) {
             if (cur >= 3 && cur <= 5) cur -= 3; // row 1 → row 0
             else if (cur == 6 || cur == 7) cur = 3; // perk/reroll → row 1
-            else if (cur == 8) cur = 6;   // start → perk
+            else if (cur == 8) cur = 9;   // start → companions
+            else if (cur >= 9) cur = 6;   // companions → perk
         }
 
-        if (cur >= 0 && cur <= 7) {
+        // Companion row: cur 9+ means companion slot (9=first active, 10=second, etc)
+        if (cur >= 9) {
+            // Find the Nth active companion
+            int target = cur - 9;
+            int found = -1;
+            int count = 0;
+            for (int i = 0; i < MAX_COMPANIONS; i++) {
+                if (gCompanions[i].active) {
+                    if (count == target) { found = i; break; }
+                    count++;
+                }
+            }
+            if (found >= 0) {
+                gShop.selectedCompanion = static_cast<s8>(found);
+                gShop.selectedCard = -1;
+            } else {
+                // No companion at that index — clamp to last
+                cur = 8; // fall to start
+                gShop.selectedCard = -1;
+                gShop.selectedCompanion = -1;
+            }
+        } else if (cur >= 0 && cur <= 7) {
             gShop.selectedCard = static_cast<s8>(cur);
             gShop.selectedCompanion = -1;
         } else if (cur == 8) {
@@ -539,6 +565,20 @@ bool shopUpdate() {
                 audioPlaySfx(GSFX_BUY);
             }
             gShop.selectedCard = -1;
+            shopDirty = true;
+        }
+        // Companion selected → sell
+        else if (gShop.selectedCompanion >= 0) {
+            int slot = gShop.selectedCompanion;
+            if (slot >= 0 && slot < MAX_COMPANIONS && gCompanions[slot].active) {
+                static const u16 sellByRarity[] = {3, 5, 12};
+                int fci = companionFullClassId(gCompanions[slot]);
+                u16 sellValue = sellByRarity[kClassDefs[fci].rarity];
+                gPlayer.gold = static_cast<u16>(gPlayer.gold + sellValue);
+                companionRemove(slot);
+                audioPlaySfx(GSFX_SELL);
+            }
+            gShop.selectedCompanion = -1;
             shopDirty = true;
         }
     }
