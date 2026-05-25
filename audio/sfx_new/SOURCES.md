@@ -17,8 +17,8 @@ Pack source pages:
 | --- | --- | --- |
 | `shoot.wav` | `pepSound3.ogg` | Digital Audio |
 | `hit.wav` | `click_002.ogg` | Interface Sounds |
-| `explode.wav` | `spaceTrash3.ogg` | Digital Audio |
-| `pickup_gold.wav` | `bong_001.ogg` | Interface Sounds |
+| `explode.wav` | `drop_004.ogg` | Interface Sounds |
+| `pickup_gold.wav` | `threeTone1.ogg` | Digital Audio |
 | `merge.wav` | `powerUp4.ogg` | Digital Audio |
 | `select.wav` | `click_001.ogg` | Interface Sounds |
 | `buy.wav` | `confirmation_001.ogg` | Interface Sounds |

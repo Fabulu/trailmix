@@ -87,7 +87,7 @@ static const SfxTuning sfxTuning[GSFX_COUNT] = {
     {  1, 22050},  // EXPLODE
     { 12, 22050},  // GOLD
     { 18, 22050},  // MERGE
-    {  1, 22050},  // HIT — absolute minimum
+    {  6, 22050},  // HIT — audible tick on enemy damage
     { 10, 22050},  // SELECT
     {  5, 22050},  // DASH
     { 10, 22050},  // BUY
