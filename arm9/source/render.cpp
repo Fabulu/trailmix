@@ -1140,23 +1140,97 @@ void renderGameOver() {
     oamUpdate(&oamMain);
 }
 
+static int victoryFrame = 0;
+
 void renderVictory() {
     renderClearParticleLayer();
+    victoryFrame++;
+
     // Hide OAM sprites
     for (int i = 0; i < 128; i++)
         oamSet(&oamMain, i, 0, 0, 0, 0, SpriteSize_16x16,
                SpriteColorFormat_16Color, nullptr, -1, false, true, false, false, false);
     oamUpdate(&oamMain);
 
+    // Deep dark background
     renderFilledRect(0, 0, 256, 192, RGB15(1, 1, 4));
-    renderFilledRect(20, 40, 216, 100, RGB15(4, 8, 20));
 
-    renderText(128 - renderTextWidth(str(kUI[24])) / 2, 50, str(kUI[24]), RGB15(31, 28, 0));
-    renderText(128 - renderTextWidth(str(kUI[25])) / 2, 68, str(kUI[25]), RGB15(20, 20, 28));
-    renderText(128 - renderTextWidth(str(kUI[26])) / 2, 78, str(kUI[26]), RGB15(20, 20, 28));
+    // Firework particles — 6 colors cycling, burst from random positions
+    static const u16 kFireColors[] = {
+        RGB15(31, 6, 6), RGB15(6, 10, 31), RGB15(6, 28, 6),
+        RGB15(31, 28, 0), RGB15(20, 0, 31), RGB15(0, 28, 28)
+    };
+    // Spawn firework bursts every 20 frames
+    if ((victoryFrame % 20) == 0) {
+        int fx = 30 + rngRange(196);
+        int fy = 20 + rngRange(100);
+        u16 col = kFireColors[rngRange(6)];
+        for (int p = 0; p < 8; p++) {
+            Vec2 pvel = {static_cast<Fixed>(rngRange(40) - 20), static_cast<Fixed>(rngRange(40) - 20)};
+            Vec2 ppos = {toFixed(fx), toFixed(fy)};
+            spawnParticle(ppos, pvel, 20, static_cast<u8>(rngRange(6)));
+        }
+    }
 
-    renderText(128 - renderTextWidth(str(kUI[27])) / 2, 104, str(kUI[27]), RGB15(10, 31, 10));
-    renderText(128 - renderTextWidth(str(kUI[28])) / 2, 118, str(kUI[28]), RGB15(20, 20, 20));
+    // Render active particles as colored dots
+    for (int pi = 0; pi < MAX_PARTICLES; pi++) {
+        Particle& p = gParticles[pi];
+        if (!p.active) continue;
+        p.pos += p.vel;
+        p.vel.y = static_cast<Fixed>(p.vel.y + 1); // gravity
+        p.life--;
+        if (p.life == 0) { p.active = false; continue; }
+        int px = p.pos.pixelX();
+        int py = p.pos.pixelY();
+        u16 col = kFireColors[p.color % 6];
+        // Fade with life
+        int bright = p.life * 31 / p.maxLife;
+        if (bright < 1) bright = 1;
+        int r = ((col & 0x1F) * bright) >> 5;
+        int g = (((col >> 5) & 0x1F) * bright) >> 5;
+        int b = (((col >> 10) & 0x1F) * bright) >> 5;
+        renderPixel(px, py, RGB15(r, g, b));
+        renderPixel(px+1, py, RGB15(r, g, b));
+    }
+
+    // Glowing banner background — pulsing gold
+    int pulse = 4 + ((victoryFrame >> 2) & 3);
+    renderFilledRect(16, 40, 224, 24, RGB15(pulse, pulse - 2, 0));
+    renderFilledRect(18, 42, 220, 20, RGB15(2, 2, 8));
+
+    // "VICTORY!" — large, gold, centered, pulsing brightness
+    int vBright = 24 + ((victoryFrame >> 1) & 7);
+    if (vBright > 31) vBright = 62 - vBright; // ping-pong
+    const char* victoryStr = str(kUI[24]);
+    int vw = renderTextWidth(victoryStr);
+    renderText(128 - vw / 2, 47, victoryStr, RGB15(vBright, vBright - 4, 0));
+
+    // Boss name
+    renderFilledRect(30, 70, 196, 28, RGB15(3, 3, 12));
+    const char* bossName = str(kUI[25]);
+    const char* defeated = str(kUI[26]);
+    renderText(128 - renderTextWidth(bossName) / 2, 73, bossName, RGB15(20, 16, 28));
+    renderText(128 - renderTextWidth(defeated) / 2, 84, defeated, RGB15(16, 12, 24));
+
+    // Stats display — show wave count and gold
+    char statBuf[24];
+    snprintf(statBuf, sizeof(statBuf), "%s 30  GOLD: %d", str(kUI[37]), gPlayer.gold);
+    int sw = renderTextWidth(statBuf);
+    renderText(128 - sw / 2, 108, statBuf, RGB15(20, 20, 20));
+
+    // Companion roster — show how many survived
+    snprintf(statBuf, sizeof(statBuf), "COMPANIONS: %d", gCompanionCount);
+    sw = renderTextWidth(statBuf);
+    renderText(128 - sw / 2, 120, statBuf, RGB15(14, 24, 14));
+
+    // Options
+    renderFilledRect(24, 145, 208, 14, RGB15(2, 10, 2));
+    const char* endless = str(kUI[27]);
+    renderText(128 - renderTextWidth(endless) / 2, 148, endless, RGB15(10, 31, 10));
+
+    renderFilledRect(24, 164, 208, 14, RGB15(6, 6, 6));
+    const char* menu = str(kUI[28]);
+    renderText(128 - renderTextWidth(menu) / 2, 167, menu, RGB15(18, 18, 18));
 }
 
 // ---------------------------------------------------------------------------
