@@ -348,15 +348,19 @@ static void updateEnemies() {
                     e.vel.x += fixMul(dir.x, FP_ONE / 3);
                     e.vel.y += fixMul(dir.y, FP_ONE / 3);
                 } else {
-                    // Orbit player, reverse direction every 3 seconds
-                    bool clockwise = ((e.frame / 180) & 1);
+                    // Orbit player slowly, reverse direction every 4 seconds
+                    bool clockwise = ((e.frame / 240) & 1);
+                    // Slower orbit — hittable but still mobile
                     if (clockwise) {
-                        e.vel.x += fixMul(-dir.y, FP_ONE / 4) + fixMul(dir.x, FP_ONE / 8);
-                        e.vel.y += fixMul(dir.x, FP_ONE / 4) + fixMul(dir.y, FP_ONE / 8);
+                        e.vel.x += fixMul(-dir.y, FP_ONE / 8) + fixMul(dir.x, FP_ONE / 6);
+                        e.vel.y += fixMul(dir.x, FP_ONE / 8) + fixMul(dir.y, FP_ONE / 6);
                     } else {
-                        e.vel.x += fixMul(dir.y, FP_ONE / 4) + fixMul(dir.x, FP_ONE / 8);
-                        e.vel.y += fixMul(-dir.x, FP_ONE / 4) + fixMul(dir.y, FP_ONE / 8);
+                        e.vel.x += fixMul(dir.y, FP_ONE / 8) + fixMul(dir.x, FP_ONE / 6);
+                        e.vel.y += fixMul(-dir.x, FP_ONE / 8) + fixMul(dir.y, FP_ONE / 6);
                     }
+                    // Add friction so it doesn't accelerate forever
+                    e.vel.x = static_cast<Fixed>(e.vel.x * 14 / 16);
+                    e.vel.y = static_cast<Fixed>(e.vel.y * 14 / 16);
                 }
 
                 // Constant slow rotation fire — 1 bullet every 20 frames in a spiral
@@ -647,7 +651,7 @@ static void updateEnemies() {
             toFixed(1),                           // 14 Trapper
             static_cast<Fixed>(FP_ONE * 3 / 4),  // 15 Hexer
             static_cast<Fixed>(FP_ONE / 2),      // 16 Hive (stationary)
-            toFixed(2),                           // 17 Boss: Sentinel — needs orbit speed
+            static_cast<Fixed>(FP_ONE * 3 / 2),  // 17 Boss: Sentinel — slower orbit, hittable
             toFixed(5),                           // 18 Boss: Dreadnought — needs slam dash
             static_cast<Fixed>(FP_ONE * 3 / 2),  // 19 Boss: Leviathan
             static_cast<Fixed>(FP_ONE * 3 / 2),  // 20 Boss: Nightmare

@@ -421,11 +421,118 @@ bool shopUpdate() {
         }
     }
 
-    // D-pad can also deselect: press B to clear selection
-    if (keysDown() & KEY_B) {
+    // D-pad navigation: cursor through shop items
+    // Layout: row 0 = cards 0-2, row 1 = cards 3-5, row 2 = perk/reroll, row 3 = start
+    u32 kd = keysDown();
+
+    if (kd & KEY_B) {
+        // B deselects
         if (gShop.selectedCard >= 0 || gShop.selectedCompanion >= 0) {
             gShop.selectedCard = -1;
             gShop.selectedCompanion = -1;
+            shopDirty = true;
+        }
+    }
+
+    if (kd & (KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN)) {
+        int cur = gShop.selectedCard; // -1=none, 0-5=cards, 6=perk, 7=reroll, 8=start
+        if (gShop.selectedCompanion >= 0) cur = -1; // companion selection uses touch only
+
+        if (cur < 0) {
+            // Nothing selected — start at card 0
+            cur = 0;
+        } else if (kd & KEY_RIGHT) {
+            if (cur < 5) cur++;
+            else if (cur == 6) cur = 7;  // perk → reroll
+        } else if (kd & KEY_LEFT) {
+            if (cur > 0 && cur <= 5) cur--;
+            else if (cur == 7) cur = 6;  // reroll → perk
+        } else if (kd & KEY_DOWN) {
+            if (cur <= 2) cur += 3;       // row 0 → row 1
+            else if (cur <= 5) cur = 6;   // row 1 → perk
+            else if (cur <= 7) cur = 8;   // perk/reroll → start
+        } else if (kd & KEY_UP) {
+            if (cur >= 3 && cur <= 5) cur -= 3; // row 1 → row 0
+            else if (cur == 6 || cur == 7) cur = 3; // perk/reroll → row 1
+            else if (cur == 8) cur = 6;   // start → perk
+        }
+
+        if (cur >= 0 && cur <= 7) {
+            gShop.selectedCard = static_cast<s8>(cur);
+            gShop.selectedCompanion = -1;
+        } else if (cur == 8) {
+            gShop.selectedCard = -1;
+            gShop.selectedCompanion = -1;
+        }
+        shopDirty = true;
+    }
+
+    // A button = confirm current selection
+    if (kd & KEY_A) {
+        // "Start" selected or nothing selected → start wave
+        if (gShop.selectedCard == 8 || (gShop.selectedCard < 0 && gShop.selectedCompanion < 0)) {
+            return true;
+        }
+        // Reroll selected
+        if (gShop.selectedCard == 7) {
+            int cost = 3 + gShop.rerollCount;
+            cost -= gPassive.rerollDiscount;
+            if (cost < 0) cost = 0;
+            bool freeRR = synergyFreeReroll();
+            if (freeRR) cost = 0;
+            if (gPlayer.gold >= static_cast<u16>(cost)) {
+                gPlayer.gold = static_cast<u16>(gPlayer.gold - cost);
+                u8 savedRerolls = static_cast<u8>(gShop.rerollCount + 1);
+                if (freeRR) synergyMarkFreeRerollUsed();
+                gShop.selectedCard = -1;
+                gShop.selectedCompanion = -1;
+                audioPlaySfx(GSFX_REROLL);
+                shopGenerate(gameGetWave());
+                gShop.rerollCount = savedRerolls;
+            }
+            shopDirty = true;
+        }
+        // Card 0-5 selected → buy companion
+        else if (gShop.selectedCard >= 0 && gShop.selectedCard < SHOP_CARDS) {
+            ShopCard& c = gShop.cards[gShop.selectedCard];
+            if (!c.sold && gPlayer.gold >= c.price) {
+                bool canAdd = (gCompanionCount < perkMaxCompanions());
+                if (!canAdd) {
+                    int fci = static_cast<int>(c.color) * 6 + c.classId;
+                    int countT0 = 0;
+                    for (int j = 0; j < MAX_COMPANIONS; j++) {
+                        if (gCompanions[j].active && companionFullClassId(gCompanions[j]) == fci && gCompanions[j].tier == 0)
+                            countT0++;
+                    }
+                    canAdd = (countT0 >= 2);
+                }
+                if (canAdd) {
+                    gPlayer.gold = static_cast<u16>(gPlayer.gold - c.price);
+                    Companion* spawned = companionBuy(c.classId, c.color);
+                    if (spawned) {
+                        while (companionCheckMerge()) {}
+                        c.sold = true;
+                        audioPlaySfx(GSFX_BUY);
+                    }
+                } else {
+                    audioPlaySfx(GSFX_HIT);
+                    gShop.errorCard = gShop.selectedCard;
+                    gShop.errorTimer = 30;
+                }
+            }
+            gShop.selectedCard = -1;
+            shopDirty = true;
+        }
+        // Perk card selected → buy perk
+        else if (gShop.selectedCard == 6) {
+            ShopCard& pc = gShop.perkCard;
+            if (!pc.sold && gPlayer.gold >= pc.price) {
+                gPlayer.gold = static_cast<u16>(gPlayer.gold - pc.price);
+                perkApplyOnBuy(static_cast<PerkId>(pc.perkId));
+                pc.sold = true;
+                audioPlaySfx(GSFX_BUY);
+            }
+            gShop.selectedCard = -1;
             shopDirty = true;
         }
     }
@@ -597,8 +704,13 @@ void shopRender() {
     if (rerollCost < 0) rerollCost = 0;
     bool freeRR = synergyFreeReroll();
     bool canReroll = freeRR || (gPlayer.gold >= static_cast<u16>(rerollCost));
-    u16 rerollBg = freeRR ? RGB15(10, 16, 0) : canReroll ? RGB15(6, 10, 6) : RGB15(4, 4, 4);
+    bool rerollSel = (gShop.selectedCard == 7);
+    u16 rerollBg = rerollSel ? RGB15(10, 14, 10) : freeRR ? RGB15(10, 16, 0) : canReroll ? RGB15(6, 10, 6) : RGB15(4, 4, 4);
     renderFilledRectSub(REROLL_X, REROLL_Y, REROLL_W, REROLL_H, rerollBg);
+    if (rerollSel) {
+        renderFilledRectSub(REROLL_X, REROLL_Y, REROLL_W, 1, RGB15(31,31,31));
+        renderFilledRectSub(REROLL_X, REROLL_Y+REROLL_H-1, REROLL_W, 1, RGB15(31,31,31));
+    }
     char rerollBuf[12];
     if (freeRR)
         snprintf(rerollBuf, sizeof(rerollBuf), "%s", str(kUI[32]));
