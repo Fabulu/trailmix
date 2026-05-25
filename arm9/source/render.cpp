@@ -831,6 +831,22 @@ void renderGameplay() {
         enemySpriteBlitMain(e.type, e.sizeClass, animFrame,
                             drawX, drawY, tintMode, alpha);
 
+        // Boss attack telegraph: pulsing red border when shootTimer is low
+        if (e.type >= ETYPE_BOSS_SENTINEL && e.shootTimer > 0 && e.shootTimer < 20) {
+            u16 warnCol = (renderFrame & 4) ? RGB15(31, 0, 0) : RGB15(22, 0, 0);
+            // Expanding ring: radius grows as shootTimer decreases (closer to attack = larger)
+            int ringPad = 2 + (20 - e.shootTimer) / 4; // 2..6px outside sprite edge
+            int rx = ex - half - ringPad;
+            int ry = ey - half - ringPad;
+            int rw = e.spriteSize + ringPad * 2;
+            int rh = e.spriteSize + ringPad * 2;
+            // Draw 4-edge border (top, bottom, left, right)
+            renderFilledRect(rx, ry, rw, 1, warnCol);           // top
+            renderFilledRect(rx, ry + rh - 1, rw, 1, warnCol);  // bottom
+            renderFilledRect(rx, ry, 1, rh, warnCol);            // left
+            renderFilledRect(rx + rw - 1, ry, 1, rh, warnCol);  // right
+        }
+
         // Fear indicator: purple flicker above head
         if (e.fearTimer > 0 && (renderFrame & 4)) {
             renderPixel(ex, ey - half - 3, RGB15(20, 0, 31));
@@ -903,10 +919,21 @@ void renderGameplay() {
                 renderFilledRect(bx - 2, by - 2, 5, 5, RGB15(31, 31, 26));
                 renderPixel(bx - (b.vel.x > 0 ? 3 : -3), by, RGB15(31, 28, 8));
                 break;
+            case BVIS_ENEMY: {   // 4x4 bright red with red trailing pixel — enemy projectile
+                renderFilledRect(bx - 2, by - 2, 4, 4, RGB15(31, 4, 4));
+                // Dark red core pixel for contrast
+                renderPixel(bx, by, RGB15(20, 0, 0));
+                // Trailing red pixel behind travel direction
+                int etx = bx - (b.vel.x > 0 ? 3 : (b.vel.x < 0 ? -3 : 0));
+                int ety = by - (b.vel.y > 0 ? 3 : (b.vel.y < 0 ? -3 : 0));
+                renderPixel(etx, ety, RGB15(24, 0, 0));
+                break;
+            }
         }
-        // ── Red T0 synergy: orange fire trail on every bullet ──────────────
+        // ── Red T0 synergy: orange fire trail on every friendly bullet ─────
         // Draws a 1px ember dot at the bullet's trailing edge (behind travel dir).
-        if (synergyFireTrails()) {
+        // Skip enemy bullets — they have their own red trail via BVIS_ENEMY.
+        if (synergyFireTrails() && b.visualType != BVIS_ENEMY) {
             int trailX = bx - (b.vel.x > 0 ? 3 : (b.vel.x < 0 ? -3 : 0));
             int trailY = by - (b.vel.y > 0 ? 3 : (b.vel.y < 0 ? -3 : 0));
             renderPixel(trailX, trailY, RGB15(20, 8, 0));  // dim orange ember

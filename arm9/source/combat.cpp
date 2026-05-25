@@ -402,8 +402,9 @@ static void updateEnemies() {
                     // Fire aimed shot every 60 frames while stalking
                     if ((e.frame % 60) == 0) {
                         Fixed spd = static_cast<Fixed>(FP_ONE * 3 / 2);
-                        spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)),
-                                            static_cast<Fixed>(fixMul(dir.y, spd))}, 1, 4);
+                        Bullet* db = spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)),
+                                            static_cast<Fixed>(fixMul(dir.y, spd))}, BULLET_COLOR_ENEMY, 4);
+                        if (db) db->visualType = BVIS_ENEMY;
                     }
                     // After stalking for 120 frames, start telegraph
                     if (e.shootTimer == 0) {
@@ -428,8 +429,8 @@ static void updateEnemies() {
                         static const Fixed sin8[] = { 0,-11,-16,-11,0,11,16,11 };
                         for (int a = 0; a < 8; a++) {
                             Vec2 bv = {static_cast<Fixed>(cos8[a]*2), static_cast<Fixed>(sin8[a]*2)};
-                            Bullet* sb = spawnBullet(e.pos, bv, 1, 5, BFLAG_EXPLODE, 16);
-                            if (sb) sb->lifetime = 40;
+                            Bullet* sb = spawnBullet(e.pos, bv, BULLET_COLOR_ENEMY, 5, BFLAG_EXPLODE, 16);
+                            if (sb) { sb->lifetime = 40; sb->visualType = BVIS_ENEMY; }
                         }
                         cameraShake(8, 15);
                         spawnParticleBurst(e.pos, 8, 12, 1);
@@ -474,11 +475,11 @@ static void updateEnemies() {
                         e.shootTimer = 80;
                         Fixed spd = static_cast<Fixed>(FP_ONE * 3 / 2);
                         Vec2 aimed = {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))};
-                        spawnBullet(e.pos, aimed, 2, 4);
+                        { Bullet* lb = spawnBullet(e.pos, aimed, BULLET_COLOR_ENEMY, 4); if (lb) lb->visualType = BVIS_ENEMY; }
                         Vec2 left = {static_cast<Fixed>(aimed.x - aimed.y/3), static_cast<Fixed>(aimed.y + aimed.x/3)};
                         Vec2 right = {static_cast<Fixed>(aimed.x + aimed.y/3), static_cast<Fixed>(aimed.y - aimed.x/3)};
-                        spawnBullet(e.pos, left, 2, 3);
-                        spawnBullet(e.pos, right, 2, 3);
+                        { Bullet* lb = spawnBullet(e.pos, left, BULLET_COLOR_ENEMY, 3); if (lb) lb->visualType = BVIS_ENEMY; }
+                        { Bullet* lb = spawnBullet(e.pos, right, BULLET_COLOR_ENEMY, 3); if (lb) lb->visualType = BVIS_ENEMY; }
                         e.aiState = 0;
                     }
                 }
@@ -505,8 +506,8 @@ static void updateEnemies() {
                         static const Fixed sin6[] = { 0, -14, -14, 0, 14, 14 };
                         for (int a = 0; a < 6; a++) {
                             Vec2 bv = {cos6[a], sin6[a]};
-                            Bullet* sb = spawnBullet(e.pos, bv, 4, 3, BFLAG_SLOW, 0, 60);
-                            if (sb) sb->lifetime = 90;
+                            Bullet* sb = spawnBullet(e.pos, bv, BULLET_COLOR_ENEMY, 3, BFLAG_SLOW, 0, 60);
+                            if (sb) { sb->lifetime = 90; sb->visualType = BVIS_ENEMY; }
                         }
                         spawnParticleBurst(e.pos, 8, 15, 4);
                         cameraShake(4, 8);
@@ -572,11 +573,11 @@ static void updateEnemies() {
                         e.shootTimer = 90;
                         Fixed spd = toFixed(2);
                         Vec2 aimed = {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))};
-                        spawnBullet(e.pos, aimed, 5, 6);
-                        spawnBullet(e.pos, {spd, 0}, 5, 4);
-                        spawnBullet(e.pos, {static_cast<Fixed>(-spd), 0}, 5, 4);
-                        spawnBullet(e.pos, {0, spd}, 5, 4);
-                        spawnBullet(e.pos, {0, static_cast<Fixed>(-spd)}, 5, 4);
+                        { Bullet* eb = spawnBullet(e.pos, aimed, BULLET_COLOR_ENEMY, 6); if (eb) eb->visualType = BVIS_ENEMY; }
+                        { Bullet* eb = spawnBullet(e.pos, {spd, 0}, BULLET_COLOR_ENEMY, 4); if (eb) eb->visualType = BVIS_ENEMY; }
+                        { Bullet* eb = spawnBullet(e.pos, {static_cast<Fixed>(-spd), 0}, BULLET_COLOR_ENEMY, 4); if (eb) eb->visualType = BVIS_ENEMY; }
+                        { Bullet* eb = spawnBullet(e.pos, {0, spd}, BULLET_COLOR_ENEMY, 4); if (eb) eb->visualType = BVIS_ENEMY; }
+                        { Bullet* eb = spawnBullet(e.pos, {0, static_cast<Fixed>(-spd)}, BULLET_COLOR_ENEMY, 4); if (eb) eb->visualType = BVIS_ENEMY; }
                         cameraShake(4, 8);
                     } else if (phase == 1) {
                         // Phase 2: alternating — spawn adds or grinding zones
@@ -610,12 +611,12 @@ static void updateEnemies() {
                         static const Fixed sin6[] = { 0, -14, -14, 0, 14, 14 };
                         for (int a = 0; a < 6; a++) {
                             Vec2 bv = {static_cast<Fixed>(cos6[a] * 2), static_cast<Fixed>(sin6[a] * 2)};
-                            Bullet* sb = spawnBullet(e.pos, bv, 5, 5);
-                            if (sb) sb->lifetime = 50;
+                            Bullet* sb = spawnBullet(e.pos, bv, BULLET_COLOR_ENEMY, 5);
+                            if (sb) { sb->lifetime = 50; sb->visualType = BVIS_ENEMY; }
                         }
                         // Also fire aimed shot
                         Fixed spd = toFixed(3);
-                        spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))}, 5, 7);
+                        { Bullet* eb = spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))}, BULLET_COLOR_ENEMY, 7); if (eb) eb->visualType = BVIS_ENEMY; }
                         cameraShake(2, 4);
                         // Spawn dangerous adds periodically
                         if ((e.aiState & 3) == 0) {
@@ -1118,7 +1119,7 @@ static void checkEnemyCompanionCollisions() {
                 spawnParticleBurst(c.pos, 12, 15, static_cast<u8>(c.color));
                 companionRemove(i);
             }
-            // Enemy survives contact with a companion
+            break;  // one enemy hit per companion per frame — prevents stacking
         }
     }
 }

@@ -178,6 +178,57 @@ constexpr StrEntry kSynergyNames[PILL_COLOR_COUNT][SYN_TIERS] = {
 };
 
 // ─────────────────────────────────────────────────────────────────
+// 2b. SYNERGY TIER DESCRIPTIONS  (kSynergyDesc[color][tier])
+//     Short effect descriptions for the synergy info panel.
+//     Max 35 chars each.  Indexed same as kSynergyNames.
+// ─────────────────────────────────────────────────────────────────
+
+constexpr StrEntry kSynergyDesc[PILL_COLOR_COUNT][SYN_TIERS] = {
+    /* Red — WRATH */
+    {
+        S("Bullets leave fire trails",       "Kugeln hinterlassen Feuerspur"),
+        S("Explosion every 5 kills",         "Explosion alle 5 Kills"),
+        S("All bullets pierce enemies",      "Alle Kugeln durchbohren"),
+        S("Fire aura damages nearby foes",   "Feueraura schadet nahen Gegnern"),
+    },
+    /* Blue — ARCANE */
+    {
+        S("Bullets slow enemies on hit",     "Kugeln verlangsamen bei Treffer"),
+        S("All enemies freeze on player hit","Alle Gegner frieren bei Treffer"),
+        S("Bullets ricochet off walls",      "Kugeln prallen von Waenden ab"),
+        S("Enemy speed reduced by 25%",      "Gegnergeschw. -25%"),
+    },
+    /* Green — NATURE */
+    {
+        S("Regen 1 HP every 5 seconds",      "Regen 1 LP alle 5 Sekunden"),
+        S("Enemies drop heal orbs on death",  "Gegner lassen Heilkugeln fallen"),
+        S("Shield absorbs one hit",           "Schild absorbiert einen Treffer"),
+        S("Companions slowly regenerate",     "Begleiter regenerieren langsam"),
+    },
+    /* Yellow — FORTUNE */
+    {
+        S("+20% gold from all sources",       "+20% Gold aus allen Quellen"),
+        S("One free reroll per shop",         "Ein Gratiswurf pro Laden"),
+        S("Interest cap raised by 3",         "Zinsobergrenze +3"),
+        S("Mega coin every 10 kills",         "Megamuenze alle 10 Kills"),
+    },
+    /* Purple — HEX */
+    {
+        S("Hits slow enemies briefly",        "Treffer verlangsamen kurz"),
+        S("Poison zone on enemy death",       "Giftzone bei Gegnertod"),
+        S("-30% incoming damage",             "-30% erlittener Schaden"),
+        S("Enemies take +25% damage",         "Gegner erleiden +25% Schaden"),
+    },
+    /* Cyan — VOLT */
+    {
+        S("15% faster companion cooldown",    "15% schnellere Abklingzeit"),
+        S("Chain lightning on kill",           "Kettenblitz bei Kill"),
+        S("EMP stuns nearest enemy",           "EMP betaeubt naechsten Gegner"),
+        S("Chain lightning on every hit",      "Kettenblitz bei jedem Treffer"),
+    },
+};
+
+// ─────────────────────────────────────────────────────────────────
 // 3. PERK NAMES + DESCRIPTIONS  (15 perks, name + desc each)
 // ─────────────────────────────────────────────────────────────────
 // ── OFFENSE (4) ──
