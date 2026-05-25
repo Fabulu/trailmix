@@ -1051,11 +1051,11 @@ void renderGameplay() {
     // Wave announcement overlay
     u8 ann = gameGetAnnounceTimer();
     if (ann > 0) {
-        renderFilledRect(48, 76, 160, 40, RGB15(2, 2, 8));
+        renderFilledRect(48, 145, 160, 30, RGB15(2, 2, 8));
         char buf[16];
         snprintf(buf, sizeof(buf), "%s %d", str(kUI[37]), gameGetWave());
         int textW = strlen(buf) * 6;
-        renderText(128 - textW/2, 88, buf, RGB15(31, 31, 31));
+        renderText(128 - textW/2, 155, buf, RGB15(31, 31, 31));
     }
 
     // Decrement merge flash timer
@@ -1241,10 +1241,10 @@ void waveAnnouncementRender() {
     // Scale brightness into R, G, B channels (white → dim white)
     u16 color = RGB15(bright, bright, bright);
 
-    // Center text horizontally; vertically near the middle (y = 88 = (192-7)/2 - 4)
+    // Center text horizontally; lower third of screen to avoid player
     int tw = renderTextWidth(annText);
     int tx = (SCREEN_W - tw) / 2;
-    int ty = (SCREEN_H - CHAR_H) / 2 - 4;
+    int ty = 155;
 
     // Dark shadow one pixel down-right for readability
     renderText(tx + 1, ty + 1, annText, RGB15(0, 0, 0));
