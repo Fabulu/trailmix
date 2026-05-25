@@ -1133,11 +1133,21 @@ void renderMenu() {
 
 void renderGameOver() {
     renderClearParticleLayer();
-    renderFilledRect(40, 65, 176, 50, RGB15(4, 4, 16));
-    renderFilledRect(50, 75, 156, 30, RGB15(28, 4, 4));
-    renderText(128 - renderTextWidth(str(kUI[23])) / 2, 72, str(kUI[23]), RGB15(31, 10, 10));
-    renderText(128 - renderTextWidth(str(kUI[22])) / 2, 92, str(kUI[22]), RGB15(20, 20, 20));
+    // Hide OAM sprites
+    for (int i = 0; i < 128; i++)
+        oamSet(&oamMain, i, 0, 0, 0, 0, SpriteSize_16x16,
+               SpriteColorFormat_16Color, nullptr, -1, false, true, false, false, false);
     oamUpdate(&oamMain);
+
+    renderFilledRect(0, 0, 256, 192, RGB15(2, 2, 4));
+    renderFilledRect(28, 60, 200, 60, RGB15(4, 4, 16));
+    renderFilledRect(32, 64, 192, 52, RGB15(28, 4, 4));
+
+    const char* go = str(kUI[23]);
+    renderText(128 - renderTextWidth(go) / 2, 78, go, RGB15(31, 10, 10));
+
+    const char* ps = str(kUI[22]);
+    renderText(128 - renderTextWidth(ps) / 2, 100, ps, RGB15(20, 20, 20));
 }
 
 static int victoryFrame = 0;
