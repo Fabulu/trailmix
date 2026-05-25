@@ -14,13 +14,20 @@ enum PerkId : u8 {
     PERK_PHOENIX_DOWN, PERK_FORTRESS, PERK_SHIELD_BASH, PERK_SECOND_WIND,
     PERK_GOLD_FEVER, PERK_WAR_CHEST, PERK_JACKPOT, PERK_WHOLESALE,
     PERK_PACK_RAT, PERK_WARP_DRIVE, PERK_SOUL_SURGE,
+    // Trail Mix
+    PERK_RICOCHET, PERK_BLOODLUST, PERK_ECHO_CHAMBER,
+    PERK_THORNS, PERK_LAST_STAND, PERK_JUGGERNAUT,
+    PERK_DOUBLE_OR_NOTHING, PERK_SHORTCUT, PERK_BLACK_MARKET,
+    PERK_MAGNET, PERK_PENSION, PERK_LOAN_SHARK,
+    PERK_REWIND, PERK_BOUNTY_BOARD, PERK_WILDCARD,
 };
 bool perkIsActive(PerkId id);
 int perkGetRandom();
 void perkApplyOnBuy(PerkId id);
 int perkMaxCompanions();
-static const u16 kPerkPriceShop[15] = {
-    60,70,75,65,60,65,55,70,50,65,60,80,55,65,70
+static const u16 kPerkPriceShop[30] = {
+    60,70,75,65,60,65,55,70,50,65,60,80,55,65,70,
+    70,60,85,60,75,90,50,90,65,55,80,50,75,70,100
 };
 #include <nds.h>
 #include <cstdio>
@@ -79,9 +86,15 @@ void shopGenerate(int wave) {
         // Roll class using weighted rarity
         // Base: Common=60%, Uncommon=30%, Rare=10%
         // PASSIVE_EXTRA_SHOP shifts to: Common=50%, Uncommon=35%, Rare=15%
+        // Black Market: Common=30%, Uncommon=45%, Rare=25%
         int roll = rngRange(20);
         u8 targetRarity;
-        if (gPassive.extraShopCards > 0) {
+        if (perkIsActive(PERK_BLACK_MARKET)) {
+            // Black Market: 6/20=30% Common, 9/20=45% Uncommon, 5/20=25% Rare
+            if (roll < 6)       targetRarity = 0;
+            else if (roll < 15) targetRarity = 1;
+            else                targetRarity = 2;
+        } else if (gPassive.extraShopCards > 0) {
             // Improved odds: 10/20=50% Common, 7/20=35% Uncommon, 3/20=15% Rare
             if (roll < 10)      targetRarity = 0;
             else if (roll < 17) targetRarity = 1;
@@ -321,9 +334,10 @@ bool shopUpdate() {
                                 else if (gCompanions[j].tier == 1) countT1++;
                             }
                         }
-                        // 2+ T0 = direct merge (3→1, frees 2 slots)
-                        // 2 T0 + 1 T1 = cascade merge (3 T0→T1, then 2 T1→T2, frees 4 slots)
-                        canAdd = (countT0 >= 2);
+                        // With Shortcut perk: merge needs only 2 (1 existing + 1 new)
+                        // Without: merge needs 3 (2 existing + 1 new)
+                        int mergeThreshold = perkIsActive(PERK_SHORTCUT) ? 1 : 2;
+                        canAdd = (countT0 >= mergeThreshold);
                     }
                     if (!canAdd) {
                         audioPlaySfx(GSFX_HIT);
@@ -536,7 +550,8 @@ bool shopUpdate() {
                         if (gCompanions[j].active && companionFullClassId(gCompanions[j]) == fci && gCompanions[j].tier == 0)
                             countT0++;
                     }
-                    canAdd = (countT0 >= 2);
+                    int mergeThreshold = perkIsActive(PERK_SHORTCUT) ? 1 : 2;
+                    canAdd = (countT0 >= mergeThreshold);
                 }
                 if (canAdd) {
                     gPlayer.gold = static_cast<u16>(gPlayer.gold - c.price);

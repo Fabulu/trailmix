@@ -1053,7 +1053,7 @@ void renderGameplay() {
     if (ann > 0) {
         renderFilledRect(48, 76, 160, 40, RGB15(2, 2, 8));
         char buf[16];
-        snprintf(buf, sizeof(buf), "WAVE %d", gameGetWave());
+        snprintf(buf, sizeof(buf), "%s %d", str(kUI[37]), gameGetWave());
         int textW = strlen(buf) * 6;
         renderText(128 - textW/2, 88, buf, RGB15(31, 31, 31));
     }
@@ -1207,7 +1207,7 @@ void waveAnnouncementStart(int waveNum) {
 }
 
 void waveAnnouncementClear() {
-    const char* msg = "WAVE CLEAR!";
+    const char* msg = str(kGameplay[0]);
     int i = 0;
     while (msg[i]) { annText[i] = msg[i]; i++; }
     annText[i]  = '\0';

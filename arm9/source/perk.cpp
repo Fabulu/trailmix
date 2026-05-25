@@ -2,6 +2,7 @@
 #include "player.h"
 #include "companion.h"
 #include "synergy.h"
+#include "entities.h"
 #include "rng.h"
 #include <string.h>
 
@@ -45,6 +46,10 @@ void perkApplyOnBuy(PerkId id) {
     case PERK_WAR_CHEST:
         gPlayer.gold += 15;
         gPerks.warChestActive = true;
+        break;
+    case PERK_LOAN_SHARK:
+        gPlayer.gold += 80;
+        gPerks.loanWavesLeft = 10;
         break;
     default:
         break;
@@ -91,6 +96,43 @@ void perkOnWaveStart() {
     if (gPerks.warChestActive) {
         gPlayer.gold += 3;
     }
+
+    // Bloodlust: reset kill count each wave
+    gPerks.killCount = 0;
+
+    // Loan Shark: deduct 10g per wave
+    if (gPerks.loanWavesLeft > 0) {
+        if (gPlayer.gold >= 10)
+            gPlayer.gold -= 10;
+        else
+            gPlayer.gold = 0;
+        gPerks.loanWavesLeft--;
+    }
+
+    // Double or Nothing: coin flip for the wave
+    gPerks.doubleGoldWave = false;
+    gPerks.zeroGoldWave = false;
+    if (gPerks.active[PERK_DOUBLE_OR_NOTHING]) {
+        if (rngRange(2) == 0)
+            gPerks.doubleGoldWave = true;
+        else
+            gPerks.zeroGoldWave = true;
+    }
+
+    // Bounty Board: pick a random active enemy
+    gPerks.bountyEnemyIdx = -1;
+    if (gPerks.active[PERK_BOUNTY_BOARD]) {
+        // Will be assigned on first frame when enemies exist
+        // (enemies may not be spawned yet at wave start call)
+        gPerks.bountyEnemyIdx = -2; // sentinel: needs assignment
+    }
+
+    // Rewind: set fearTimer on all active enemies
+    if (gPerks.active[PERK_REWIND]) {
+        for (auto& e : gEnemies) {
+            if (e.active) e.fearTimer = 120; // 2 seconds at 60fps
+        }
+    }
 }
 
 void perkOnWaveClear() {
@@ -120,4 +162,19 @@ void perkOnPlayerHit() {
             gPerks.secondWindUsed = 1;
         }
     }
+}
+
+void perkOnEnemyKill(int enemyIdx) {
+    // Bloodlust: track kills this wave
+    if (gPerks.active[PERK_BLOODLUST]) {
+        if (gPerks.killCount < 30) gPerks.killCount++;
+    }
+}
+
+int perkBloodlustCooldownPct() {
+    // Returns the cooldown percentage to apply (100 = normal, lower = faster)
+    if (!gPerks.active[PERK_BLOODLUST]) return 100;
+    int reduction = gPerks.killCount * 3; // 3% per kill
+    if (reduction > 90) reduction = 90;
+    return 100 - reduction;
 }

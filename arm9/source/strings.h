@@ -74,6 +74,7 @@ constexpr StrEntry kUI[] = {
     /* STR_UI_NA          [34]  */ S("N/A",             "K.A."),
     /* STR_UI_TAP_HINT    [35]  */ S("TAP ONCE TO SELECT  TAP AGAIN TO CONFIRM", "ANTIPPEN ZUM WAEHLEN  NOCHMAL ZUM BESTAETIGEN"),
     /* STR_UI_UPGRADE     [36]  */ S("UPGRADE PATH:", "AUFWERTUNGSPFAD:"),
+    /* STR_UI_WAVE        [37]  */ S("WAVE", "WELLE"),
 };
 
 // Color abbreviations for HUD (indexed by PillColor)

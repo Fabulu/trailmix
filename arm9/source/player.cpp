@@ -95,6 +95,22 @@ static void autoShoot() {
     spawnBullet(gPlayer.pos, vel, 255, gPlayer.bulletDamage);
     audioPlaySfx(GSFX_SHOOT);
 
+    // Echo Chamber: every 5th shot fires a bonus ghost bullet
+    if (perkIsActive(PERK_ECHO_CHAMBER)) {
+        gPerks.shotCounter++;
+        if (gPerks.shotCounter >= 5) {
+            gPerks.shotCounter = 0;
+            // Bonus bullet in a slightly offset direction at 50% damage
+            Vec2 bonusVel = {
+                static_cast<Fixed>(vel.x + rngRange(32) - 16),
+                static_cast<Fixed>(vel.y + rngRange(32) - 16)
+            };
+            u8 bonusDmg = gPlayer.bulletDamage / 2;
+            if (bonusDmg < 1) bonusDmg = 1;
+            spawnBullet(gPlayer.pos, bonusVel, 255, bonusDmg);
+        }
+    }
+
     // Bullet Hell: fire in all 4 cardinal directions
     if (perkIsActive(PERK_BULLET_HELL)) {
         Fixed spd = toFixed(3);
@@ -109,6 +125,14 @@ static void autoShoot() {
     if (perkIsActive(PERK_OVERCHARGE)) {
         cd = cd / 2;
         if (cd < 4) cd = 4;
+    }
+    // Bloodlust: fire rate bonus from kills this wave
+    {
+        int blPct = perkBloodlustCooldownPct();
+        if (blPct < 100) {
+            cd = static_cast<u8>(cd * blPct / 100);
+            if (cd < 4) cd = 4;
+        }
     }
     gPlayer.shootTimer = cd;
 }

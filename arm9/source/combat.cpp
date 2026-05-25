@@ -9,9 +9,9 @@
 #include "synergy.h"
 #include "game.h"
 
-// Update bullets: move, wall ricochet (Blue T2), remove out-of-arena
+// Update bullets: move, wall ricochet (Blue T2 / Ricochet perk), remove out-of-arena
 static void updateBullets() {
-    bool ricochet = synergyBulletsRicochet();
+    bool ricochet = synergyBulletsRicochet() || perkIsActive(PERK_RICOCHET);
 
     for (auto& b : gBullets) {
         if (!b.active) continue;
@@ -19,7 +19,7 @@ static void updateBullets() {
         int px = b.pos.pixelX();
         int py = b.pos.pixelY();
 
-        // Blue T2: player bullets ricochet once off arena walls
+        // Blue T2 / Ricochet perk: player bullets ricochet once off arena walls
         if (ricochet && b.color == 255 && b.lifetime == 0) {
             bool bounced = false;
             if (px <= WALL_THICK && b.vel.x < 0)      { b.vel.x = static_cast<Fixed>(-b.vel.x); bounced = true; }
@@ -732,9 +732,15 @@ static void updateParticles() {
 
 // Helper: kill or drop gold for an enemy that just reached 0 hp
 static void killEnemy(Enemy& e, u8 bulletColor) {
+    // Track enemy index for Bounty Board
+    int enemyIdx = static_cast<int>(&e - &gEnemies[0]);
+
     e.active = false;
     spawnParticleBurst(e.pos, 10, 14, bulletColor);
     audioPlaySfx(GSFX_EXPLODE);
+
+    // Bloodlust: track kills
+    perkOnEnemyKill(enemyIdx);
 
     // Splitter on-death: spawn 2 small Grunts at same position (if not already small)
     if (e.type == ETYPE_SPLITTER && e.sizeClass > SIZE_SMALL) {
@@ -764,6 +770,8 @@ static void killEnemy(Enemy& e, u8 bulletColor) {
             int dpy = gPlayer.pos.pixelY() - by;
             if (dpx * dpx + dpy * dpy <= 32 * 32) {
                 s16 dmg = synergyOnPlayerHit(4);
+                // Juggernaut: reduce all incoming damage by 1 (min 1)
+                if (perkIsActive(PERK_JUGGERNAUT) && dmg > 1) dmg--;
                 if (dmg > 0) {
                     gPlayer.hp -= dmg;
                     gPlayer.iframes = 90;
@@ -815,6 +823,18 @@ static void killEnemy(Enemy& e, u8 bulletColor) {
     {
         int goldPct = synergyGoldDropPct();
         if (goldPct != 100) goldValue = static_cast<u8>(goldValue * goldPct / 100);
+    }
+    // Double or Nothing: wave-wide gold modifier
+    if (gPerks.doubleGoldWave) {
+        goldValue = static_cast<u8>(goldValue * 2);
+    } else if (gPerks.zeroGoldWave) {
+        goldValue = 0;
+    }
+    // Bounty Board: marked enemy drops 3x gold
+    if (gPerks.bountyEnemyIdx >= 0 && enemyIdx == gPerks.bountyEnemyIdx) {
+        goldValue = static_cast<u8>(goldValue * 3);
+        gPerks.bountyEnemyIdx = -1; // bounty claimed
+        spawnParticleBurst(e.pos, 12, 16, 3); // gold burst
     }
     spawnGold(e.pos, goldValue);
 
@@ -1033,6 +1053,8 @@ static void checkPlayerGoldCollisions() {
     for (auto& g : gGold) {
         if (!g.active) continue;
         int bonus = gPassive.pickupRangeBonus;
+        // Magnet perk: double pickup range
+        if (perkIsActive(PERK_MAGNET)) bonus += 8 + bonus; // effectively doubles total range
         Rect gr = {
             static_cast<s16>(g.pos.pixelX() - 4 - bonus),
             static_cast<s16>(g.pos.pixelY() - 4 - bonus),
@@ -1077,6 +1099,14 @@ static void checkEnemyCompanionCollisions() {
             c.iframes = 90;  // generous invincibility
             spawnParticleBurst(c.pos, 4, 6, 3);
 
+            // Thorns perk: companions deal 5 damage back when hit
+            if (perkIsActive(PERK_THORNS) && e.active) {
+                e.hp -= 5;
+                e.hurtTimer = 4;
+                spawnParticleBurst(e.pos, 3, 6, 4); // purple thorn burst
+                if (e.hp <= 0) killEnemy(e, static_cast<u8>(c.color));
+            }
+
             if (c.hp <= 0) {
                 spawnParticleBurst(c.pos, 12, 15, static_cast<u8>(c.color));
                 companionRemove(i);
@@ -1106,6 +1136,10 @@ static void checkEnemyPlayerCollisions() {
             // Route damage through synergy (shield absorption, damage reduction)
             u8 rawDmg = (e.type == ETYPE_BOMBER) ? 6 : 3;
             s16 dmg = synergyOnPlayerHit(rawDmg);
+            // Juggernaut: reduce all incoming damage by 1 (min 1)
+            if (perkIsActive(PERK_JUGGERNAUT) && dmg > 1) {
+                dmg--;
+            }
             if (dmg > 0) {
                 gPlayer.hp -= dmg;
                 gPlayer.iframes = 90;  // 1.5 seconds of mercy
@@ -1164,6 +1198,21 @@ static void updateZones() {
 }
 
 void combatUpdate() {
+    // Bounty Board: assign bounty target on first frame enemies exist
+    if (gPerks.bountyEnemyIdx == -2) {
+        int count = 0;
+        for (auto& e : gEnemies) { if (e.active) count++; }
+        if (count > 0) {
+            int pick = rngRange(count);
+            int idx = 0;
+            for (int i = 0; i < MAX_ENEMIES; i++) {
+                if (!gEnemies[i].active) continue;
+                if (idx == pick) { gPerks.bountyEnemyIdx = static_cast<s8>(i); break; }
+                idx++;
+            }
+        }
+    }
+
     synergyUpdate();          // per-frame timers (EMP, heal tick, shield regen, arcs)
     updateBullets();
     updateEnemies();

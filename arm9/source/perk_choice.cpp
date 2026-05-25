@@ -4,11 +4,18 @@
 // perk.h forward declarations (avoid PERK_COUNT redefinition with strings.h)
 enum PerkId : u8;
 struct PerkState {
-    bool active[15];
+    bool active[30];
     u8 phoenixUsedThisWave;
     u8 secondWindUsed;
     u8 goldFeverWaves;
-    // (reserved padding byte)
+    bool warChestActive;
+    // Trail Mix state
+    u8 killCount;
+    u8 loanWavesLeft;
+    bool doubleGoldWave;
+    bool zeroGoldWave;
+    s8 bountyEnemyIdx;
+    u8 shotCounter;
 };
 extern PerkState gPerks;
 bool perkIsActive(PerkId id);

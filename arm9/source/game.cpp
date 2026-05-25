@@ -101,6 +101,11 @@ static void enterShop() {
     renderClearSub();
     applyInterest();
 
+    // Pension: +2g per living companion at wave end
+    if (perkIsActive(PERK_PENSION)) {
+        gPlayer.gold = static_cast<u16>(gPlayer.gold + companionCount() * 2);
+    }
+
     // Soul Surge: heal all units 20% maxHP on wave clear
     perkOnWaveClear();
 

@@ -313,6 +313,8 @@ void companionUpdate() {
                 if (perkIsActive(PERK_GLASS_CANNON)) dmgInt += 5;
                 // Lifeshaper buff: +20% damage
                 if (c.dmgBuffTimer > 0) dmgInt = dmgInt * 12 / 10;
+                // Last Stand: 3x damage when only 1 companion alive
+                if (perkIsActive(PERK_LAST_STAND) && gCompanionCount == 1) dmgInt *= 3;
                 // Cap at 255 for u8 bullet damage field
                 u8 dmg = static_cast<u8>(dmgInt > 255 ? 255 : dmgInt);
 
@@ -331,6 +333,14 @@ void companionUpdate() {
                 if (perkIsActive(PERK_OVERCHARGE)) {
                     cooldown = cooldown / 2;
                     if (cooldown < 3) cooldown = 3;
+                }
+                // Bloodlust: fire rate bonus from kills this wave
+                {
+                    int blPct = perkBloodlustCooldownPct();
+                    if (blPct < 100) {
+                        cooldown = static_cast<u8>(cooldown * blPct / 100);
+                        if (cooldown < 3) cooldown = 3;
+                    }
                 }
                 // Cyan T0 (Volt): companion fire rate +15%
                 {
@@ -754,24 +764,38 @@ int companionCount() {
 }
 
 bool companionCheckMerge() {
-    // Scan for companions with same fullClassId and tier: T1→T2 needs 3, T2→T3 needs 2
+    // Scan for companions with same fullClassId and tier: T1->T2 needs 3, T2->T3 needs 2
+    // Wildcard: match on classId only (ignore color)
+    // Shortcut: T0->T1 also needs only 2
+    bool wildcard = perkIsActive(PERK_WILDCARD);
+    bool shortcut = perkIsActive(PERK_SHORTCUT);
+
     for (int i = 0; i < MAX_COMPANIONS; ++i) {
         if (!gCompanions[i].active) continue;
         int matchCount = 1;
         int matches[3] = {i, -1, -1};
         int fci = companionFullClassId(gCompanions[i]);
         u8 tier = gCompanions[i].tier;
+        u8 classIdI = gCompanions[i].classId;
 
         for (int j = i + 1; j < MAX_COMPANIONS; ++j) {
             if (!gCompanions[j].active) continue;
-            if (companionFullClassId(gCompanions[j]) == fci && gCompanions[j].tier == tier) {
+            if (gCompanions[j].tier != tier) continue;
+            bool match;
+            if (wildcard) {
+                // Wildcard: same classId regardless of color
+                match = (gCompanions[j].classId == classIdI);
+            } else {
+                match = (companionFullClassId(gCompanions[j]) == fci);
+            }
+            if (match) {
                 matches[matchCount] = j;
                 matchCount++;
                 if (matchCount >= 3) break;
             }
         }
 
-        int required = (tier == 0) ? 3 : 2;  // T1→T2 needs 3, T2→T3 needs 2
+        int required = (shortcut || tier > 0) ? 2 : 3;  // Shortcut: always 2; otherwise T0->T1 needs 3, T1->T2 needs 2
         if (matchCount >= required && tier < 2) {  // cap at T3 (tier 2)
             // Upgrade first match, remove the rest
             gCompanions[matches[0]].tier = tier + 1;
