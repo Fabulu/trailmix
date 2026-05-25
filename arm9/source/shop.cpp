@@ -473,13 +473,13 @@ bool shopUpdate() {
         } else if (kd & KEY_DOWN) {
             if (cur <= 2) cur += 3;       // row 0 → row 1
             else if (cur <= 5) cur = 6;   // row 1 → perk
-            else if (cur <= 7) cur = 9;   // perk/reroll → companions
-            else if (cur == 8) cur = 6;   // start → perk (wrap)
+            else if (cur <= 7) cur = 8;   // perk/reroll → START (skip companions)
+            else if (cur == 8) cur = 0;   // start → wrap to top
             else if (cur >= 9) cur = 8;   // companions → start
         } else if (kd & KEY_UP) {
             if (cur >= 3 && cur <= 5) cur -= 3; // row 1 → row 0
             else if (cur == 6 || cur == 7) cur = 3; // perk/reroll → row 1
-            else if (cur == 8) cur = 9;   // start → companions
+            else if (cur == 8) cur = 6;   // start → perk
             else if (cur >= 9) cur = 6;   // companions → perk
         }
 
@@ -511,6 +511,26 @@ bool shopUpdate() {
             gShop.selectedCard = -1;
             gShop.selectedCompanion = -1;
         }
+        shopDirty = true;
+    }
+
+    // R button = cycle through owned companions (separate from main D-pad flow)
+    if (kd & KEY_R) {
+        if (gShop.selectedCompanion < 0) {
+            // Enter companion selection — find first active
+            for (int i = 0; i < MAX_COMPANIONS; i++) {
+                if (gCompanions[i].active) { gShop.selectedCompanion = static_cast<s8>(i); break; }
+            }
+        } else {
+            // Cycle to next active companion
+            int start = gShop.selectedCompanion + 1;
+            gShop.selectedCompanion = -1;
+            for (int i = start; i < start + MAX_COMPANIONS; i++) {
+                int idx = i % MAX_COMPANIONS;
+                if (gCompanions[idx].active) { gShop.selectedCompanion = static_cast<s8>(idx); break; }
+            }
+        }
+        if (gShop.selectedCompanion >= 0) gShop.selectedCard = -1;
         shopDirty = true;
     }
 

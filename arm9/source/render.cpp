@@ -2070,25 +2070,24 @@ void renderCompanionDetail(int companionSlot) {
         renderText(BAR_X, BAR_Y + BAR_H + 2, hpBuf, RGB15(28, 28, 28));
     }
 
-    // ── Upgrade path (x=80, y=40..72) ──────────────────────────────────────
-    // Three columns (T1/T2/T3) showing name, merge cost, and tier bonus.
-    // Current tier is bright; others dim.
-    renderUpgradePath(80, 40, colorIdx, classId, tier);
+    // ── Shot description + preview (y=40, right of sprite area) ───────────
+    renderText(80, 40, str(kUI[29]), RGB15(20, 20, 31));
+    const char* shotDesc = str(kClassAbility[colorIdx][classId].shot);
+    renderText(80, 50, shotDesc, RGB15(28, 28, 31));
+
+    // ── Passive description (y=64, right of sprite) ─────────────────────────
+    renderText(80, 64, str(kUI[30]), RGB15(20, 31, 20));
+    const char* passiveDesc = str(kClassAbility[colorIdx][classId].passive);
+    renderText(80, 74, passiveDesc, RGB15(28, 31, 28));
 
     // ── Divider ─────────────────────────────────────────────────────────────
-    renderFilledRect(4, 76, 248, 1, RGB15(18, 18, 18));
+    renderFilledRect(4, 88, 248, 1, RGB15(18, 18, 18));
 
-    // ── Shot description (y=82) ─────────────────────────────────────────────
-    renderText(8, 82, str(kUI[29]), RGB15(20, 20, 31));
-    const char* shotDesc = str(kClassAbility[colorIdx][classId].shot);
-    renderText(8, 92, shotDesc, RGB15(28, 28, 31));
+    // ── Upgrade path (full width, y=92) ─────────────────────────────────────
+    renderText(8, 92, str(kUI[36]), RGB15(18, 18, 18));
+    renderUpgradePath(8, 102, colorIdx, classId, tier);
 
-    // ── Passive description (y=107) ─────────────────────────────────────────
-    renderText(8, 107, str(kUI[30]), RGB15(20, 31, 20));
-    const char* passiveDesc = str(kClassAbility[colorIdx][classId].passive);
-    renderText(8, 117, passiveDesc, RGB15(28, 31, 28));
-
-    // ── Shot pattern animation (right column, x=168..248, y=82..135) ────────
+    // ── Shot pattern animation (right side, y=92..135) ──────────────────────
     static int cdShotFrame = 0;
     cdShotFrame = (cdShotFrame + 1) % 120;
     int fci = companionFullClassId(c);
