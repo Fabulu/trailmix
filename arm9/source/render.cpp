@@ -1689,20 +1689,49 @@ static void renderUpgradePath(int panelX, int panelY,
         u16 nameCol   = (t == currentTier) ? kBright : kDim;
         u16 detailCol = (t == currentTier) ? kGold   : kDim;
 
-        // ── Tier name (truncated to fit column width) ──────────────────
+        // ── Tier name (word-wrap to 2 lines if needed) ─────────────────
         const char* fullName = str(kClassNames[colorIdx][classId][t]);
-        // Truncate name to fit column: each char is 6px (5+1 gap)
         int maxChars = COL_W / 6;
         if (maxChars > 12) maxChars = 12;
-        char nameBuf[14];
-        int ni = 0;
-        while (fullName[ni] && ni < maxChars) { nameBuf[ni] = fullName[ni]; ni++; }
-        nameBuf[ni] = '\0';
+        int nameLen = 0;
+        while (fullName[nameLen]) nameLen++;
 
-        int nameW = renderTextWidth(nameBuf);
-        int nameX = colX + (COL_W - nameW) / 2;
-        if (nameX < colX) nameX = colX;
-        renderText(nameX, panelY, nameBuf, nameCol);
+        if (nameLen <= maxChars) {
+            int nameW = renderTextWidth(fullName);
+            int nameX = colX + (COL_W - nameW) / 2;
+            if (nameX < colX) nameX = colX;
+            renderText(nameX, panelY, fullName, nameCol);
+        } else {
+            // Word-wrap: find last space within maxChars
+            int split = -1;
+            for (int si = maxChars - 1; si >= 0; --si) {
+                if (fullName[si] == ' ') { split = si; break; }
+            }
+            char l1[16], l2[16];
+            if (split > 0) {
+                for (int i = 0; i < split; i++) l1[i] = fullName[i];
+                l1[split] = '\0';
+                int li = 0;
+                for (int i = split + 1; fullName[i] && li < maxChars; i++, li++)
+                    l2[li] = fullName[i];
+                l2[li] = '\0';
+            } else {
+                for (int i = 0; i < maxChars - 1; i++) l1[i] = fullName[i];
+                l1[maxChars - 1] = '.';
+                l1[maxChars] = '\0';
+                l2[0] = '\0';
+            }
+            int w1 = renderTextWidth(l1);
+            int x1 = colX + (COL_W - w1) / 2;
+            if (x1 < colX) x1 = colX;
+            renderText(x1, panelY, l1, nameCol);
+            if (l2[0]) {
+                int w2 = renderTextWidth(l2);
+                int x2 = colX + (COL_W - w2) / 2;
+                if (x2 < colX) x2 = colX;
+                renderText(x2, panelY + 8, l2, nameCol);
+            }
+        }
 
         // ── Merge requirement (row 1, +11 px) ───────────────────────────
         const char* mergeStr = kMergeReq[t];

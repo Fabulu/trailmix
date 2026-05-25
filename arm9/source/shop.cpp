@@ -670,16 +670,45 @@ static void drawCompanionCard(int cardIdx) {
     if (card.rarity >= 2)
         renderFilledRectSub(bx + CARD_W - 9, by + 2, 3, 3, RGB15(31, 28, 0));
 
-    // Class name (centered)
+    // Class name (centered, word-wrap to 2 lines if needed)
     const char* name = str(kClassNames[colorIdx][card.classId][0]);
-    char nameBuf[12];
-    int ni = 0;
-    while (name[ni] && ni < 11) { nameBuf[ni] = name[ni]; ni++; }
-    nameBuf[ni] = '\0';
-
-    int tw = renderTextWidth(nameBuf);
     u16 textColor = canAfford ? RGB15(31, 31, 31) : RGB15(16, 16, 16);
-    renderTextSub(bx + (CARD_W - tw) / 2, by + 6, nameBuf, textColor);
+    constexpr int NAME_MAX = 13; // CARD_W(78) / 6px per char
+    int nameLen = 0;
+    while (name[nameLen]) nameLen++;
+
+    if (nameLen <= NAME_MAX) {
+        // Single line
+        int tw = renderTextWidth(name);
+        renderTextSub(bx + (CARD_W - tw) / 2, by + 6, name, textColor);
+    } else {
+        // Word-wrap: find last space within NAME_MAX chars
+        int split = -1;
+        for (int si = NAME_MAX - 1; si >= 0; --si) {
+            if (name[si] == ' ') { split = si; break; }
+        }
+        char line1[16], line2[16];
+        if (split > 0) {
+            for (int i = 0; i < split; i++) line1[i] = name[i];
+            line1[split] = '\0';
+            int li = 0;
+            for (int i = split + 1; name[i] && li < NAME_MAX; i++, li++)
+                line2[li] = name[i];
+            line2[li] = '\0';
+        } else {
+            // No space — truncate with "."
+            for (int i = 0; i < NAME_MAX - 1; i++) line1[i] = name[i];
+            line1[NAME_MAX - 1] = '.';
+            line1[NAME_MAX] = '\0';
+            line2[0] = '\0';
+        }
+        int tw1 = renderTextWidth(line1);
+        renderTextSub(bx + (CARD_W - tw1) / 2, by + 6, line1, textColor);
+        if (line2[0]) {
+            int tw2 = renderTextWidth(line2);
+            renderTextSub(bx + (CARD_W - tw2) / 2, by + 14, line2, textColor);
+        }
+    }
 
     // Cost (bottom, centered)
     char costBuf[8];

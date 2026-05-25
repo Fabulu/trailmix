@@ -207,10 +207,10 @@ static void renderBottomScreen() {
 
         // Description (smaller/dimmer, y+26)
         const char* desc = str(kPerks[id].desc);
-        // Truncate description to ~30 chars so it fits in 240px (each char ≈6px)
-        char descBuf[31];
+        // Truncate description to ~38 chars so it fits in 240px (each char ≈6px)
+        char descBuf[39];
         int di = 0;
-        while (desc[di] && di < 30) { descBuf[di] = desc[di]; di++; }
+        while (desc[di] && di < 38) { descBuf[di] = desc[di]; di++; }
         descBuf[di] = '\0';
         u16 descCol = sel ? RGB15(20, 20, 24) : RGB15(14, 14, 18);
         renderTextSub(bx + 12, by + 26, descBuf, descCol);
