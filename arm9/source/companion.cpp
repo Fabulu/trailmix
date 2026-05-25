@@ -16,7 +16,7 @@ const ClassDef kClassDefs[36] = {
     { 40,  4, 1,  0, BFLAG_EXPLODE, 32, 0, 0 }, // R2 Pyromaniac: Common (big boom)
     { 35,  3, 3, 30, 0,          0, 0, 1 },  // R3 Shotgunner: Uncommon
     { 25,  4, 1,  0, 0,          0, 0, 1 },  // R4 Berserker: Uncommon
-    { 50,  6, 1,  0, BFLAG_EXPLODE, 24, 0, 2 }, // R5 Detonator: Rare
+    { 50,  6, 1,  0, BFLAG_EXPLODE, 48, 0, 2 }, // R5 Detonator: Rare (massive blast)
     { 60,  8, 1,  0, BFLAG_PIERCE, 0, 0, 2 }, // R6 Executioner: Rare
 
     // BLUE (indices 6-11)
@@ -894,9 +894,7 @@ int companionCount() {
 
 bool companionCheckMerge() {
     // Scan for companions with same fullClassId and tier: T1->T2 needs 3, T2->T3 needs 2
-    // Wildcard: match on classId only (ignore color)
     // Shortcut: T0->T1 also needs only 2
-    bool wildcard = perkIsActive(PERK_WILDCARD);
     bool shortcut = perkIsActive(PERK_SHORTCUT);
 
     for (int i = 0; i < MAX_COMPANIONS; ++i) {
@@ -905,19 +903,11 @@ bool companionCheckMerge() {
         int matches[3] = {i, -1, -1};
         int fci = companionFullClassId(gCompanions[i]);
         u8 tier = gCompanions[i].tier;
-        u8 classIdI = gCompanions[i].classId;
 
         for (int j = i + 1; j < MAX_COMPANIONS; ++j) {
             if (!gCompanions[j].active) continue;
             if (gCompanions[j].tier != tier) continue;
-            bool match;
-            if (wildcard) {
-                // Wildcard: same classId regardless of color
-                match = (gCompanions[j].classId == classIdI);
-            } else {
-                match = (companionFullClassId(gCompanions[j]) == fci);
-            }
-            if (match) {
+            if (companionFullClassId(gCompanions[j]) == fci) {
                 matches[matchCount] = j;
                 matchCount++;
                 if (matchCount >= 3) break;

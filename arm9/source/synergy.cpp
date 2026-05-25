@@ -6,6 +6,7 @@
 #include "companion.h"
 #include "player.h"
 #include "audio.h"
+#include "perk.h"
 #include "rng.h"
 
 SynergyState gSynergy;
@@ -57,6 +58,13 @@ void synergyRecalc() {
 // ---------------------------------------------------------------------------
 
 int synergyColorCount(int colorIndex) {
+    // Wildcard: every companion counts for ALL colors
+    if (perkIsActive(PERK_WILDCARD)) {
+        int n = 0;
+        for (int i = 0; i < MAX_COMPANIONS; ++i)
+            if (gCompanions[i].active) n++;
+        return n;
+    }
     int n = 0;
     for (int i = 0; i < MAX_COMPANIONS; ++i)
         if (gCompanions[i].active &&

@@ -243,10 +243,10 @@ struct WaveTemplate {
     bool isBossWave;
 };
 
-// HP scaling: base * (100 + (wave-1)*50) / 100
-// 50% per wave — more enemies means more gold, so HP must outpace income
+// HP scaling: base * (100 + (wave-1)*65) / 100
+// 65% per wave — late game enemies must be genuinely threatening
 static s16 scaledHp(int baseHp, int wave) {
-    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 50) / 100);
+    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 65) / 100);
     return (hp < 1) ? 1 : hp;
 }
 

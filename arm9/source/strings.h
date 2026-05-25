@@ -256,7 +256,7 @@ constexpr PerkEntry kPerks[PERK_COUNT] = {
     // ── TRAIL MIX: UTILITY ──
     /* [27] REWIND          */ { S("Rewind",          "Rueckspulen"),       S("Enemies flee for 2s at wave start","Feinde fliehen 2s bei Wellenstart") },
     /* [28] BOUNTY_BOARD    */ { S("Bounty Board",    "Kopfgeldtafel"),     S("One marked enemy drops 3x gold",  "Ein markierter Feind gibt 3x Gold") },
-    /* [29] WILDCARD        */ { S("Wildcard",        "Joker"),             S("Merge any color together!",        "Verschmelze beliebige Farben!") },
+    /* [29] WILDCARD        */ { S("Wildcard",        "Joker"),             S("All companions count for all synergies!","Alle Begl. zaehlen fuer alle Synergien!") },
 };
 
 // ─────────────────────────────────────────────────────────────────
