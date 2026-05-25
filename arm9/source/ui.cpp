@@ -176,6 +176,37 @@ void uiRenderHUD() {
 
             if (sx >= 250) break; // no room for more
         }
+
+        // Active synergy effect descriptions — compact line below badges
+        // Format: "R:2 PIERCE ALL  B:1 SLOW FIELD" etc.
+        const int DESC_Y = 78;
+        int dx = 4;
+        for (int ci = 0; ci < PILL_COLOR_COUNT; ci++) {
+            int cnt = colorCount[ci];
+            if (cnt < 2) continue;
+
+            int tier = cnt - 2;
+            if (tier >= SYN_TIERS) tier = SYN_TIERS - 1;
+
+            u16 col = pillColorToRGB(static_cast<PillColor>(ci));
+            const char* synName = str(kSynergyNames[ci][tier]);
+
+            // "R2:" prefix
+            static const char kLabel[PILL_COLOR_COUNT] = { 'R', 'B', 'G', 'Y', 'P', 'C' };
+            char prefix[4] = { kLabel[ci], static_cast<char>('1' + tier), ':', '\0' };
+            renderTextSub(dx, DESC_Y, prefix, col);
+            dx += 3 * 6; // 3 chars × 6px
+
+            // Synergy name, truncated to 10 chars to fit
+            char dBuf[11];
+            int nc = 0;
+            while (synName[nc] && nc < 10) { dBuf[nc] = synName[nc]; nc++; }
+            dBuf[nc] = '\0';
+            renderTextSub(dx, DESC_Y, dBuf, RGB15(22, 22, 22));
+            dx += nc * 6 + 6; // text width + gap
+
+            if (dx >= 250) break;
+        }
     }
 
     // -------------------------------------------------------------------------

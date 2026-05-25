@@ -31,6 +31,10 @@ constexpr u8 BVIS_ELECTRIC  = 6;
 constexpr u8 BVIS_HEAVY     = 7;
 constexpr u8 BVIS_NORMAL_T2 = 8;  // 4x4 white-yellow, T2 companion bullets
 constexpr u8 BVIS_NORMAL_T3 = 9;  // 5x5 white-yellow + trailing glow pixel, T3 companion bullets
+constexpr u8 BVIS_ENEMY     = 10; // 4x4 bright red with trailing red pixel, enemy projectiles
+
+// Dedicated color value for enemy-fired bullets (distinct from player=255 and pill colors 0-5)
+constexpr u8 BULLET_COLOR_ENEMY = 200;
 
 struct Bullet {
     Vec2 pos;

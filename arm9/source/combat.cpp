@@ -121,8 +121,8 @@ static void updateEnemies() {
                         static_cast<Fixed>(fixMul(dir.x, toFixed(2))),
                         static_cast<Fixed>(fixMul(dir.y, toFixed(2)))
                     };
-                    Bullet* sb = spawnBullet(e.pos, shotVel, 3, 2);
-                    if (sb) sb->lifetime = 90;
+                    Bullet* sb = spawnBullet(e.pos, shotVel, BULLET_COLOR_ENEMY, 2);
+                    if (sb) { sb->lifetime = 90; sb->visualType = BVIS_ENEMY; }
                 }
                 break;
             }
@@ -143,8 +143,8 @@ static void updateEnemies() {
                         static_cast<Fixed>(fixMul(dir.x, toFixed(3))),
                         static_cast<Fixed>(fixMul(dir.y, toFixed(3)))
                     };
-                    Bullet* sb = spawnBullet(e.pos, shotVel, 3, 4);
-                    if (sb) { sb->lifetime = 80; sb->flags = BFLAG_PIERCE; }
+                    Bullet* sb = spawnBullet(e.pos, shotVel, BULLET_COLOR_ENEMY, 4);
+                    if (sb) { sb->lifetime = 80; sb->flags = BFLAG_PIERCE; sb->visualType = BVIS_ENEMY; }
                 }
                 break;
             }
@@ -178,8 +178,8 @@ static void updateEnemies() {
                         static_cast<Fixed>(fixMul(dir.x, toFixed(2))),
                         static_cast<Fixed>(fixMul(dir.y, toFixed(2)))
                     };
-                    Bullet* sb = spawnBullet(e.pos, shotVel, 4, 5);
-                    if (sb) { sb->flags = BFLAG_EXPLODE; sb->aoeRadius = 24; sb->lifetime = 70; }
+                    Bullet* sb = spawnBullet(e.pos, shotVel, BULLET_COLOR_ENEMY, 5);
+                    if (sb) { sb->flags = BFLAG_EXPLODE; sb->aoeRadius = 24; sb->lifetime = 70; sb->visualType = BVIS_ENEMY; }
                 }
                 // Barely moves
                 e.vel.x = static_cast<Fixed>(e.vel.x * 12 / 16);
@@ -311,7 +311,8 @@ static void updateEnemies() {
                         static_cast<Fixed>(fixMul(dir.x, FP_ONE)),
                         static_cast<Fixed>(fixMul(dir.y, FP_ONE))
                     };
-                    Bullet* sb = spawnBullet(e.pos, shotVel, 4, 2, BFLAG_SLOW, 0, 120, 180);
+                    Bullet* sb = spawnBullet(e.pos, shotVel, BULLET_COLOR_ENEMY, 2, BFLAG_SLOW, 0, 120, 180);
+                    if (sb) sb->visualType = BVIS_ENEMY;
                     (void)sb;
                     audioPlaySfx(GSFX_ENEMY_SHOOT);
                 }
@@ -372,13 +373,14 @@ static void updateEnemies() {
                     static const Fixed sin8[] = { 0,-11,-16,-11,0,11,16,11 };
                     int angle = (e.frame / 20) & 7;
                     Vec2 bv = {static_cast<Fixed>(cos8[angle] * 2), static_cast<Fixed>(sin8[angle] * 2)};
-                    Bullet* b = spawnBullet(e.pos, bv, 3, 4);
-                    if (b) b->lifetime = 80;
+                    Bullet* b = spawnBullet(e.pos, bv, BULLET_COLOR_ENEMY, 4);
+                    if (b) { b->lifetime = 80; b->visualType = BVIS_ENEMY; }
                     // Every 3rd shot also fires aimed at player
                     if ((e.aiState & 3) == 0) {
                         Fixed spd = toFixed(2);
-                        spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)),
-                                            static_cast<Fixed>(fixMul(dir.y, spd))}, 3, 5);
+                        Bullet* ab = spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)),
+                                            static_cast<Fixed>(fixMul(dir.y, spd))}, BULLET_COLOR_ENEMY, 5);
+                        if (ab) ab->visualType = BVIS_ENEMY;
                     }
                     e.aiState++;
                     // Telegraph particle on the bullet origin
