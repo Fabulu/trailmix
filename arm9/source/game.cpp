@@ -261,7 +261,7 @@ static int baseHpForSize(u8 sc, int /*wave*/) {
         case SIZE_SMALL:  return 4;
         case SIZE_MEDIUM: return 8;
         case SIZE_LARGE:  return 14;
-        default:          return 800;  // boss base HP — must survive long enough to use abilities
+        default:          return 480;  // boss base HP
     }
 }
 
@@ -658,7 +658,7 @@ static const WaveTemplate kWaveTable[TOTAL_WAVES][WAVE_VARIANTS] = {
 // Spawn wave 30 final boss (Apothecary) — called from spawnWave()
 static void spawnApothecaryBoss(int wave) {
     Vec2 pos = farthestEdgeFromPlayer();
-    s16 bossHp = scaledHp(3000, wave);  // final boss — must survive full 3-phase fight
+    s16 bossHp = scaledHp(1800, wave);  // final boss
     spawnEnemy(pos, {0,0}, bossHp, ETYPE_BOSS_APOTHECARY, SIZE_LARGE, SPRITE_SIZE_BOSS_LARGE);
 }
 

@@ -341,91 +341,88 @@ static void updateEnemies() {
             }
             // ============ BOSSES — real behavior, not just charge+shoot ============
 
-            case ETYPE_BOSS_SENTINEL: { // Sentinel — orbiting turret, rotates around arena center
-                // Orbit the center of the arena, gradually closing distance to player
-                Fixed cx = toFixed(ARENA_W / 2), cy = toFixed(ARENA_H / 2);
-                Vec2 toCenter = {static_cast<Fixed>(cx - e.pos.x), static_cast<Fixed>(cy - e.pos.y)};
-                // Perpendicular orbit + slight pull toward player
-                e.vel.x += fixMul(-toCenter.y, FP_ONE / 16) + fixMul(dir.x, FP_ONE / 8);
-                e.vel.y += fixMul(toCenter.x, FP_ONE / 16) + fixMul(dir.y, FP_ONE / 8);
-
+            case ETYPE_BOSS_SENTINEL: { // Sentinel — orbiting turret with rotating bullet spiral
                 e.frame++;
+                // Orbit player at medium distance, reverse direction every 3 seconds
+                Fixed orbitDir = ((e.frame / 180) & 1) ? FP_ONE : static_cast<Fixed>(-FP_ONE);
+                e.vel.x += fixMul(fixMul(-dir.y, orbitDir), FP_ONE / 12) + fixMul(dir.x, FP_ONE / 16);
+                e.vel.y += fixMul(fixMul(dir.x, orbitDir), FP_ONE / 12) + fixMul(dir.y, FP_ONE / 16);
+
+                // Constant slow rotation fire — 1 bullet every 20 frames in a spiral
                 if (e.shootTimer > 0) { e.shootTimer--; }
                 else {
-                    // Alternating attack patterns using aiState
-                    if (e.aiState == 0) {
-                        // 4-way cardinal burst
-                        e.shootTimer = 50;
-                        const Fixed spd = toFixed(2);
-                        Bullet* b;
-                        b = spawnBullet(e.pos, {spd, 0}, 3, 5); if(b) b->lifetime=60;
-                        b = spawnBullet(e.pos, {static_cast<Fixed>(-spd), 0}, 3, 5); if(b) b->lifetime=60;
-                        b = spawnBullet(e.pos, {0, spd}, 3, 5); if(b) b->lifetime=60;
-                        b = spawnBullet(e.pos, {0, static_cast<Fixed>(-spd)}, 3, 5); if(b) b->lifetime=60;
-                        e.aiState = 1;
-                    } else if (e.aiState == 1) {
-                        // 4-way diagonal burst
-                        e.shootTimer = 50;
-                        const Fixed d = toFixed(1) + FP_ONE/2;
-                        Bullet* b;
-                        b = spawnBullet(e.pos, {d, d}, 3, 5); if(b) b->lifetime=60;
-                        b = spawnBullet(e.pos, {static_cast<Fixed>(-d), d}, 3, 5); if(b) b->lifetime=60;
-                        b = spawnBullet(e.pos, {d, static_cast<Fixed>(-d)}, 3, 5); if(b) b->lifetime=60;
-                        b = spawnBullet(e.pos, {static_cast<Fixed>(-d), static_cast<Fixed>(-d)}, 3, 5); if(b) b->lifetime=60;
-                        e.aiState = 2;
-                    } else {
-                        // Aimed 3-shot volley at player
-                        e.shootTimer = 70;
+                    e.shootTimer = 20;
+                    // Rotating angle based on frame counter
+                    static const Fixed cos8[] = { 16,11,0,-11,-16,-11,0,11 };
+                    static const Fixed sin8[] = { 0,-11,-16,-11,0,11,16,11 };
+                    int angle = (e.frame / 20) & 7;
+                    Vec2 bv = {static_cast<Fixed>(cos8[angle] * 2), static_cast<Fixed>(sin8[angle] * 2)};
+                    Bullet* b = spawnBullet(e.pos, bv, 3, 4);
+                    if (b) b->lifetime = 80;
+                    // Every 3rd shot also fires aimed at player
+                    if ((e.aiState & 3) == 0) {
                         Fixed spd = toFixed(2);
-                        Vec2 aimed = {static_cast<Fixed>(fixMul(dir.x, spd)), static_cast<Fixed>(fixMul(dir.y, spd))};
-                        spawnBullet(e.pos, aimed, 3, 6);
-                        // Spread shots
-                        Vec2 left = {static_cast<Fixed>(aimed.x - aimed.y/4), static_cast<Fixed>(aimed.y + aimed.x/4)};
-                        Vec2 right = {static_cast<Fixed>(aimed.x + aimed.y/4), static_cast<Fixed>(aimed.y - aimed.x/4)};
-                        spawnBullet(e.pos, left, 3, 4);
-                        spawnBullet(e.pos, right, 3, 4);
-                        e.aiState = 0;
+                        spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)),
+                                            static_cast<Fixed>(fixMul(dir.y, spd))}, 3, 5);
                     }
-                    cameraShake(3, 6);
+                    e.aiState++;
+                    // Telegraph particle on the bullet origin
+                    spawnParticle(e.pos, bv, 8, 5);
                 }
                 break;
             }
 
-            case ETYPE_BOSS_DREADNOUGHT: { // Dreadnought — charges then slams, alternating
+            case ETYPE_BOSS_DREADNOUGHT: { // Dreadnought — 3-state: stalk, telegraph, SLAM
                 e.frame++;
                 if (e.shootTimer > 0) { e.shootTimer--; }
 
                 if (e.aiState == 0) {
-                    // Phase: charging toward player fast
-                    e.vel.x += fixMul(dir.x, FP_ONE / 2);
-                    e.vel.y += fixMul(dir.y, FP_ONE / 2);
-                    // Check if close enough to slam
-                    s32 distSq = static_cast<s32>(toPlayer.x) * toPlayer.x + static_cast<s32>(toPlayer.y) * toPlayer.y;
-                    if (distSq < static_cast<s32>(toFixed(50)) * toFixed(50) || e.shootTimer == 0) {
-                        // SLAM! 8-way shockwave
+                    // STALK: slow menacing approach, firing aimed shots
+                    e.vel.x += fixMul(dir.x, FP_ONE / 6);
+                    e.vel.y += fixMul(dir.y, FP_ONE / 6);
+                    // Fire aimed shot every 60 frames while stalking
+                    if ((e.frame % 60) == 0) {
+                        Fixed spd = static_cast<Fixed>(FP_ONE * 3 / 2);
+                        spawnBullet(e.pos, {static_cast<Fixed>(fixMul(dir.x, spd)),
+                                            static_cast<Fixed>(fixMul(dir.y, spd))}, 1, 4);
+                    }
+                    // After stalking for 120 frames, start telegraph
+                    if (e.shootTimer == 0) {
+                        e.shootTimer = 40; // telegraph duration
+                        e.aiState = 1;
+                        // Telegraph: stop moving, pulse particles inward
+                        e.vel = {0, 0};
+                    }
+                } else if (e.aiState == 1) {
+                    // TELEGRAPH: frozen, sucking particles inward (visual warning)
+                    e.vel = {0, 0};
+                    if ((e.frame & 3) == 0) {
+                        Vec2 pv = {static_cast<Fixed>(rngRange(20) - 10), static_cast<Fixed>(rngRange(20) - 10)};
+                        spawnParticle(e.pos, pv, 6, 1);
+                    }
+                    if (e.shootTimer == 0) {
+                        // SLAM! Dash to player position + 8-way explosive burst
+                        e.vel.x = fixMul(dir.x, toFixed(6));
+                        e.vel.y = fixMul(dir.y, toFixed(6));
                         static const Fixed cos8[] = { 16,11,0,-11,-16,-11,0,11 };
                         static const Fixed sin8[] = { 0,-11,-16,-11,0,11,16,11 };
                         for (int a = 0; a < 8; a++) {
                             Vec2 bv = {static_cast<Fixed>(cos8[a]*2), static_cast<Fixed>(sin8[a]*2)};
-                            Bullet* sb = spawnBullet(e.pos, bv, 3, 5, BFLAG_EXPLODE, 16);
+                            Bullet* sb = spawnBullet(e.pos, bv, 1, 5, BFLAG_EXPLODE, 16);
                             if (sb) sb->lifetime = 40;
                         }
-                        cameraShake(6, 12);
+                        cameraShake(8, 15);
                         spawnParticleBurst(e.pos, 8, 12, 1);
-                        // Stun self briefly (stop moving)
-                        e.vel = {0, 0};
-                        e.shootTimer = 60;
-                        e.aiState = 1;
-                    } else if (e.shootTimer == 0) {
-                        e.shootTimer = 90;
+                        e.shootTimer = 50; // recovery
+                        e.aiState = 2;
                     }
                 } else {
-                    // Phase: stunned after slam, recovering
-                    e.vel.x = static_cast<Fixed>(e.vel.x * 6 / 16);
-                    e.vel.y = static_cast<Fixed>(e.vel.y * 6 / 16);
+                    // RECOVER: skidding to a stop after slam
+                    e.vel.x = static_cast<Fixed>(e.vel.x * 12 / 16);
+                    e.vel.y = static_cast<Fixed>(e.vel.y * 12 / 16);
                     if (e.shootTimer == 0) {
                         e.aiState = 0;
-                        e.shootTimer = 30; // brief pause before next charge
+                        e.shootTimer = 120; // stalk duration before next cycle
                     }
                 }
                 break;
@@ -1081,8 +1078,10 @@ static void checkEnemyPlayerCollisions() {
                 spawnParticleBurst(gPlayer.pos, 8, 10, 3);
                 audioPlaySfx(GSFX_PLAYER_HIT);
             }
-            // Bombers trigger their AoE explosion on contact via killEnemy
-            killEnemy(e, 0);
+            // Only bombers die on contact — other enemies bounce off
+            if (e.type == ETYPE_BOMBER) {
+                killEnemy(e, 0);
+            }
             break;  // only take damage from one enemy per frame
         }
     }
