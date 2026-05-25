@@ -749,6 +749,49 @@ void companionUpdate() {
 
                     c.shootTimer = cooldown;
                 }
+
+                // Visual juice particles on shoot — per class
+                switch (fci) {
+                    case 2: // R3 Shotgunner: muzzle flash
+                        spawnParticle(c.pos, baseVel, 4, static_cast<u8>(c.color));
+                        break;
+                    case 3: // R4 Berserker: rage sparks when player HP < 50%
+                        if (gPlayer.hp < gPlayer.maxHp / 2)
+                            spawnParticle(c.pos, {0, static_cast<Fixed>(-4)}, 8, 0);
+                        break;
+                    case 8: // B3 Frost Archer: frost particle trail
+                        spawnParticle(c.pos, {static_cast<Fixed>(rngRange(6)-3), static_cast<Fixed>(rngRange(6)-3)}, 6, 1);
+                        break;
+                    case 9: { // B4 Orbiter: orbiting sparkle
+                        Vec2 op = {static_cast<Fixed>(c.pos.x + toFixed(rngRange(8)-4)),
+                                   static_cast<Fixed>(c.pos.y + toFixed(rngRange(8)-4))};
+                        spawnParticle(op, {0, 0}, 3, 1);
+                        break;
+                    }
+                    case 11: // B6 Nullifier: erase flash
+                        spawnParticle(c.pos, baseVel, 6, 1);
+                        break;
+                    case 16: // G5 Sporewitch: green spore puff
+                        for (int p = 0; p < 2; p++)
+                            spawnParticle(c.pos, {static_cast<Fixed>(rngRange(10)-5), static_cast<Fixed>(rngRange(10)-5)}, 10, 2);
+                        break;
+                    case 22: // Y5 Alchemist: gold sparkle
+                        spawnParticleBurst(c.pos, 3, 6, 3);
+                        break;
+                    case 25: // P2 Blightling: poison trail
+                        spawnParticle(c.pos, baseVel, 8, 4);
+                        break;
+                    case 33: // C4 Signal Jammer: static burst
+                        spawnParticle(c.pos, {0, 0}, 5, 5);
+                        break;
+                    case 34: // C5 Circuit Hacker: tech trail
+                        spawnParticle(c.pos, baseVel, 8, 1);
+                        break;
+                    case 35: // C6 Mech Pilot: blast recoil
+                        spawnParticleBurst(c.pos, 2, 4, 5);
+                        break;
+                    default: break;
+                }
             }
         }
 
