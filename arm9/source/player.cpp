@@ -146,6 +146,25 @@ void playerUpdate(u32 held, u32 down) {
     if (held & KEY_LEFT)  move.x = static_cast<Fixed>(-gPlayer.speed);
     if (held & KEY_RIGHT) move.x = gPlayer.speed;
 
+    // Touch screen movement: touch position relative to center (128,96) = direction
+    if ((held & KEY_TOUCH) && move.x == 0 && move.y == 0) {
+        touchPosition tp;
+        touchRead(&tp);
+        int dx = static_cast<int>(tp.px) - 128;
+        int dy = static_cast<int>(tp.py) - 96;
+        // Dead zone: ignore if within 12px of center
+        if (dx * dx + dy * dy > 12 * 12) {
+            // Normalize to speed using integer sqrt
+            int dist = (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy);
+            dist = (dist + (dx*dx + dy*dy) / dist) >> 1;
+            dist = (dist + (dx*dx + dy*dy) / dist) >> 1;
+            if (dist < 1) dist = 1;
+            int spd = static_cast<int>(gPlayer.speed);
+            move.x = static_cast<Fixed>(dx * spd / dist);
+            move.y = static_cast<Fixed>(dy * spd / dist);
+        }
+    }
+
     // Diagonal normalization: multiply by 11/16 ≈ 0.6875 (approx 1/√2)
     if (move.x != 0 && move.y != 0) {
         move.x = static_cast<Fixed>(static_cast<s32>(move.x) * 11 / 16);
