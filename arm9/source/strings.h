@@ -225,7 +225,7 @@ constexpr PerkEntry kPerks[PERK_COUNT] = {
     /* [2]  GLASS_CANNON    */ { S("Glass Cannon",    "Glaskanone"),        S("+5 damage, half max HP",           "+5 Schaden, halbe max. LP") },
     /* [3]  CHAIN_LIGHTNING */ { S("Chain Lightning", "Kettenblitz"),       S("Kills zap a nearby enemy",         "Kills treffen einen nahen Feind") },
     // ── DEFENSE ──
-    /* [4]  PHOENIX_DOWN    */ { S("Phoenix Down",    "Phoenixfeder"),      S("First fallen ally revives/wave",   "Erster Verbuendeter steht pro Welle auf") },
+    /* [4]  PHOENIX_DOWN    */ { S("Phoenix Down",    "Phoenixfeder"),      S("First fallen ally revives/wave",   "1 Begleiter lebt pro Welle wieder auf") },
     /* [5]  FORTRESS        */ { S("Fortress",        "Festung"),           S("+40 HP, allies +20 HP, 25% slow",  "+40 LP, Verb. +20 LP, 25% langsamer") },
     /* [6]  SHIELD_BASH     */ { S("Shield Bash",     "Schildstoss"),       S("Dash deals 8 damage to enemies",   "Ausweichen macht 8 Schaden") },
     /* [7]  SECOND_WIND     */ { S("Second Wind",     "Zweite Luft"),       S("Full heal once when near death",   "Volle Heilung bei Todesgefahr") },
@@ -251,7 +251,7 @@ constexpr PerkEntry kPerks[PERK_COUNT] = {
     /* [22] SHORTCUT        */ { S("Shortcut",        "Abkuerzung"),        S("Merge with only 2 copies!",       "Verschmelze mit nur 2 Kopien!") },
     /* [23] BLACK_MARKET    */ { S("Black Market",    "Schwarzmarkt"),      S("Better rarity in shop",            "Bessere Seltenheit im Laden") },
     /* [24] MAGNET          */ { S("Magnet",          "Magnet"),            S("Double gold pickup range",         "Doppelte Gold-Aufsammelweite") },
-    /* [25] PENSION         */ { S("Pension",         "Rente"),             S("+2g per companion at wave end",    "+2g pro Begleiter bei Wellenende") },
+    /* [25] PENSION         */ { S("Pension",         "Rente"),             S("+5g bonus at wave end",            "+5g Bonus bei Wellenende") },
     /* [26] LOAN_SHARK      */ { S("Loan Shark",      "Kredithai"),         S("Get 80g now, pay 10g/wave for 10","80g sofort, 10g/Welle fuer 10 Wellen") },
     // ── TRAIL MIX: UTILITY ──
     /* [27] REWIND          */ { S("Rewind",          "Rueckspulen"),       S("Enemies flee for 2s at wave start","Feinde fliehen 2s bei Wellenstart") },
