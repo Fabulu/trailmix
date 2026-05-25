@@ -297,14 +297,20 @@ bool shopUpdate() {
                 if (!c.sold && gPlayer.gold >= c.price) {
                     bool canAdd = (gCompanionCount < perkMaxCompanions());
                     if (!canAdd) {
-                        // Check if buying would trigger a merge (making room)
+                        // Check if buying would trigger a merge chain that frees a slot
+                        // Buying spawns at T0. Need 2 existing T0 of same class for direct merge.
+                        // Cascade: 3 T0 → 1 T1. If that T1 joins 1 existing T1 → 1 T2. Net -2 slots.
                         int fci = static_cast<int>(c.color) * 6 + c.classId;
-                        int sameCount = 0;
+                        int countT0 = 0, countT1 = 0;
                         for (int j = 0; j < MAX_COMPANIONS; j++) {
-                            if (gCompanions[j].active && companionFullClassId(gCompanions[j]) == fci && gCompanions[j].tier == 0)
-                                sameCount++;
+                            if (gCompanions[j].active && companionFullClassId(gCompanions[j]) == fci) {
+                                if (gCompanions[j].tier == 0) countT0++;
+                                else if (gCompanions[j].tier == 1) countT1++;
+                            }
                         }
-                        canAdd = (sameCount >= 2); // 2 existing + 1 new = 3, triggers T1->T2 merge
+                        // 2+ T0 = direct merge (3→1, frees 2 slots)
+                        // 2 T0 + 1 T1 = cascade merge (3 T0→T1, then 2 T1→T2, frees 4 slots)
+                        canAdd = (countT0 >= 2);
                     }
                     if (!canAdd) {
                         audioPlaySfx(GSFX_HIT);

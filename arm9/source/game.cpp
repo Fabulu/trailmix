@@ -238,9 +238,10 @@ struct WaveTemplate {
     bool isBossWave;
 };
 
-// HP scaling: base * (100 + (wave-1)*25) / 100
+// HP scaling: base * (100 + (wave-1)*35) / 100
+// 35% per wave keeps enemies threatening against exponential player DPS
 static s16 scaledHp(int baseHp, int wave) {
-    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 25) / 100);
+    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 35) / 100);
     return (hp < 1) ? 1 : hp;
 }
 
@@ -260,7 +261,7 @@ static int baseHpForSize(u8 sc, int /*wave*/) {
         case SIZE_SMALL:  return 4;
         case SIZE_MEDIUM: return 8;
         case SIZE_LARGE:  return 14;
-        default:          return 500;  // boss base HP
+        default:          return 800;  // boss base HP — must survive long enough to use abilities
     }
 }
 
@@ -419,7 +420,7 @@ static void spawnEndlessWave(int wave) {
     // Wave 30: final boss — no regular enemies
     if (wave == 30) {
         Vec2 pos = farthestEdgeFromPlayer();
-        s16 bossHp = scaledHp(1500, wave);  // 3x regular boss — final boss is a spectacle
+        s16 bossHp = scaledHp(3000, wave);  // final boss — must survive full 3-phase fight
         spawnEnemy(pos, {0,0}, bossHp, ETYPE_BOSS_APOTHECARY, SIZE_LARGE, SPRITE_SIZE_BOSS_LARGE);
         return;
     }
