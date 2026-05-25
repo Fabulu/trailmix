@@ -83,28 +83,28 @@ static const u8* wavFindData(const u8* wav, size_t fileSize, size_t& outLen) {
 // Per-SFX volume tuning — original sample rates preserved, just quiet
 struct SfxTuning { u8 volume; u16 rate; };
 static const SfxTuning sfxTuning[GSFX_COUNT] = {
-    {  3, 22050},  // SHOOT — barely there
-    {  1, 22050},  // EXPLODE
-    {  3, 22050},  // GOLD
-    { 18, 22050},  // MERGE
-    { 15, 22050},  // HIT
-    { 10, 22050},  // SELECT
-    {  5, 22050},  // DASH
-    { 10, 22050},  // BUY
-    { 10, 22050},  // SELL
-    {  8, 22050},  // REROLL
-    {  1, 22050},  // WAVE_CLEAR
-    {  1, 22050},  // WAVE_START
-    {  2, 22050},  // PLAYER_HIT
-    { 14, 22050},  // PERK
-    { 15, 22050},  // BOSS
-    { 10, 22050},  // TIMESTOP
-    { 10, 22050},  // HEAL
-    { 12, 22050},  // SYNERGY
-    {  4, 22050},  // ENEMY_SHOOT
-    { 15, 22050},  // MINE_PLACE
-    { 22, 22050},  // BOSS_PHASE
-    { 25, 22050},  // VICTORY
+    {  5, 22050},  // SHOOT — barely there
+    {  3, 22050},  // EXPLODE
+    {  5, 22050},  // GOLD
+    { 22, 22050},  // MERGE
+    { 18, 22050},  // HIT
+    { 13, 22050},  // SELECT
+    {  7, 22050},  // DASH
+    { 13, 22050},  // BUY
+    { 13, 22050},  // SELL
+    { 10, 22050},  // REROLL
+    {  3, 22050},  // WAVE_CLEAR
+    {  3, 22050},  // WAVE_START
+    {  4, 22050},  // PLAYER_HIT
+    { 17, 22050},  // PERK
+    { 18, 22050},  // BOSS
+    { 13, 22050},  // TIMESTOP
+    { 13, 22050},  // HEAL
+    { 15, 22050},  // SYNERGY
+    {  6, 22050},  // ENEMY_SHOOT
+    { 18, 22050},  // MINE_PLACE
+    { 26, 22050},  // BOSS_PHASE
+    { 30, 22050},  // VICTORY
 };
 
 void audioPlaySfx(SfxId id) {
@@ -145,8 +145,8 @@ void audioPlayMusic(int id) {
 
     // 16-bit 11025Hz looping music — per-track volume
     // Menu and shop are sparser/quieter tracks, need more volume on real hardware
-    static const u8 musicVol[] = { 40, 30, 30, 40, 40 }; // menu, battle, shop(unused), boss, shop
-    u8 vol = (id >= 0 && id <= 4) ? musicVol[id] : 20;
+    static const u8 musicVol[] = { 110, 70, 70, 80, 70 }; // menu(extra loud), battle, shop(unused), boss, shop
+    u8 vol = (id >= 0 && id <= 4) ? musicVol[id] : 60;
     musicSoundId = soundPlaySample(pcm, SoundFormat_16Bit, pcmLen, 11025, vol, 64, true, 0);
     currentMusic = id;
 }
