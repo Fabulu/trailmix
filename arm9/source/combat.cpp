@@ -343,15 +343,20 @@ static void updateEnemies() {
 
             case ETYPE_BOSS_SENTINEL: { // Sentinel — orbiting turret with rotating bullet spiral
                 e.frame++;
-                // Orbit player, reverse direction every 3 seconds
-                bool clockwise = ((e.frame / 180) & 1);
-                // Perpendicular orbit + approach
-                if (clockwise) {
-                    e.vel.x += fixMul(-dir.y, FP_ONE / 6) + fixMul(dir.x, FP_ONE / 10);
-                    e.vel.y += fixMul(dir.x, FP_ONE / 6) + fixMul(dir.y, FP_ONE / 10);
+                // First 60 frames: charge toward player to get into range
+                if (e.frame < 60) {
+                    e.vel.x += fixMul(dir.x, FP_ONE / 3);
+                    e.vel.y += fixMul(dir.y, FP_ONE / 3);
                 } else {
-                    e.vel.x += fixMul(dir.y, FP_ONE / 6) + fixMul(dir.x, FP_ONE / 10);
-                    e.vel.y += fixMul(-dir.x, FP_ONE / 6) + fixMul(dir.y, FP_ONE / 10);
+                    // Orbit player, reverse direction every 3 seconds
+                    bool clockwise = ((e.frame / 180) & 1);
+                    if (clockwise) {
+                        e.vel.x += fixMul(-dir.y, FP_ONE / 4) + fixMul(dir.x, FP_ONE / 8);
+                        e.vel.y += fixMul(dir.x, FP_ONE / 4) + fixMul(dir.y, FP_ONE / 8);
+                    } else {
+                        e.vel.x += fixMul(dir.y, FP_ONE / 4) + fixMul(dir.x, FP_ONE / 8);
+                        e.vel.y += fixMul(-dir.x, FP_ONE / 4) + fixMul(dir.y, FP_ONE / 8);
+                    }
                 }
 
                 // Constant slow rotation fire — 1 bullet every 20 frames in a spiral
@@ -381,11 +386,13 @@ static void updateEnemies() {
             case ETYPE_BOSS_DREADNOUGHT: { // Dreadnought — 3-state: stalk, telegraph, SLAM
                 e.frame++;
                 if (e.shootTimer > 0) { e.shootTimer--; }
+                // First spawn: start with a stalk timer so it approaches first
+                if (e.frame == 1 && e.shootTimer == 0) e.shootTimer = 90;
 
                 if (e.aiState == 0) {
-                    // STALK: slow menacing approach, firing aimed shots
-                    e.vel.x += fixMul(dir.x, FP_ONE / 6);
-                    e.vel.y += fixMul(dir.y, FP_ONE / 6);
+                    // STALK: menacing approach toward player
+                    e.vel.x += fixMul(dir.x, FP_ONE / 3);
+                    e.vel.y += fixMul(dir.y, FP_ONE / 3);
                     // Fire aimed shot every 60 frames while stalking
                     if ((e.frame % 60) == 0) {
                         Fixed spd = static_cast<Fixed>(FP_ONE * 3 / 2);
@@ -408,8 +415,9 @@ static void updateEnemies() {
                     }
                     if (e.shootTimer == 0) {
                         // SLAM! Dash to player position + 8-way explosive burst
-                        e.vel.x = fixMul(dir.x, toFixed(6));
-                        e.vel.y = fixMul(dir.y, toFixed(6));
+                        // Use frame as dash flag — slam velocity applied AFTER speed cap
+                        e.vel.x = fixMul(dir.x, toFixed(5));
+                        e.vel.y = fixMul(dir.y, toFixed(5));
                         static const Fixed cos8[] = { 16,11,0,-11,-16,-11,0,11 };
                         static const Fixed sin8[] = { 0,-11,-16,-11,0,11,16,11 };
                         for (int a = 0; a < 8; a++) {
@@ -639,11 +647,11 @@ static void updateEnemies() {
             toFixed(1),                           // 14 Trapper
             static_cast<Fixed>(FP_ONE * 3 / 4),  // 15 Hexer
             static_cast<Fixed>(FP_ONE / 2),      // 16 Hive (stationary)
-            static_cast<Fixed>(FP_ONE * 5 / 4),  // 17 Boss: Sentinel
-            static_cast<Fixed>(FP_ONE * 3 / 2),  // 18 Boss: Dreadnought
-            toFixed(1),                           // 19 Boss: Leviathan
-            toFixed(1),                           // 20 Boss: Nightmare
-            toFixed(1),                           // 21 Boss: Apothecary
+            toFixed(2),                           // 17 Boss: Sentinel — needs orbit speed
+            toFixed(5),                           // 18 Boss: Dreadnought — needs slam dash
+            static_cast<Fixed>(FP_ONE * 3 / 2),  // 19 Boss: Leviathan
+            static_cast<Fixed>(FP_ONE * 3 / 2),  // 20 Boss: Nightmare
+            toFixed(2),                           // 21 Boss: Apothecary
         };
         int typeIdx = (e.type < 22) ? e.type : 20;
         Fixed maxSpd = maxSpeedTable[typeIdx];
@@ -897,10 +905,17 @@ static void checkBulletEnemyCollisions() {
             if (!br.overlaps(er)) continue;
 
             // --- apply status effects before damage ---
-            if ((b.flags & BFLAG_FREEZE) && b.effectDuration > 0)
-                e.freezeTimer = b.effectDuration;
-            else if ((b.flags & BFLAG_SLOW) && b.effectDuration > 0)
-                e.slowTimer = b.effectDuration;
+            if ((b.flags & BFLAG_FREEZE) && b.effectDuration > 0) {
+                u16 dur = b.effectDuration;
+                if (gPassive.debuffExtendPct > 0)
+                    dur = static_cast<u16>(dur * (100 + gPassive.debuffExtendPct) / 100);
+                e.freezeTimer = static_cast<u8>(dur > 255 ? 255 : dur);
+            } else if ((b.flags & BFLAG_SLOW) && b.effectDuration > 0) {
+                u16 dur = b.effectDuration;
+                if (gPassive.debuffExtendPct > 0)
+                    dur = static_cast<u16>(dur * (100 + gPassive.debuffExtendPct) / 100);
+                e.slowTimer = static_cast<u8>(dur > 255 ? 255 : dur);
+            }
 
             // Purple T0 (Hex): all bullet hits slow enemies 30f
             if (synergyHitsSlow() && e.slowTimer < 30)
@@ -926,6 +941,16 @@ static void checkBulletEnemyCollisions() {
             {
                 int mult = synergyEnemyDamageTakenPct();
                 if (mult != 100) dmg = static_cast<u8>(dmg * mult / 100);
+            }
+
+            // PASSIVE_CLOSE_DAMAGE: boost damage if enemy is near the player
+            if (gPassive.closeDmgBoostPct > 0 && gPassive.closeDmgRange > 0) {
+                int dx = e.pos.pixelX() - gPlayer.pos.pixelX();
+                int dy = e.pos.pixelY() - gPlayer.pos.pixelY();
+                int range = gPassive.closeDmgRange;
+                if (dx * dx + dy * dy <= range * range) {
+                    dmg = static_cast<u8>(dmg * (100 + gPassive.closeDmgBoostPct) / 100);
+                }
             }
 
             // Anchor aura: enemies within 32px of an active Anchor take 30% less damage

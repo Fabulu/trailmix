@@ -133,8 +133,8 @@ void companionApplyPassives() {
             case PASSIVE_PICKUP_RANGE: gPassive.pickupRangeBonus += mag; break;
             case PASSIVE_REROLL_DISCOUNT: gPassive.rerollDiscount += mag; break;
             case PASSIVE_EXTRA_SHOP: gPassive.extraShopCards += mag; break;
-            case PASSIVE_DEBUFF_EXTEND: /* accumulated for use at debuff source */
-                // No runtime accumulator needed — checked per-companion at debuff site
+            case PASSIVE_DEBUFF_EXTEND:
+                gPassive.debuffExtendPct += mag;
                 break;
             case PASSIVE_FORMATION_TIGHT:
                 // Reduce follow spacing — applied in companionUpdate()
@@ -143,7 +143,9 @@ void companionApplyPassives() {
                 // One-shot on acquire — not accumulated per frame
                 break;
             case PASSIVE_CLOSE_DAMAGE:
-                // Close-range damage bonus — checked in combat per hit
+                gPassive.closeDmgBoostPct += mag;
+                if (pd.param2 > gPassive.closeDmgRange)
+                    gPassive.closeDmgRange = static_cast<u8>(pd.param2);
                 break;
             case PASSIVE_REGEN: {
                 u16 interval = pd.param2 > 0 ? pd.param2 : 300;
@@ -691,6 +693,19 @@ Companion* companionSpawn(PillColor color, u8 classId, u8 tier) {
 
         c.active = true;
         ++gCompanionCount;
+
+        // PASSIVE_MAX_HP: boost player max HP when companion with this passive is acquired
+        {
+            int fci = static_cast<int>(color) * 6 + classId;
+            const PassiveDef& pd = kPassiveDefs[fci];
+            if (pd.type == PASSIVE_MAX_HP) {
+                u8 tierMult = (tier == 0) ? 1 : (tier == 1) ? 2 : 5;
+                s16 bonus = static_cast<s16>(pd.param1 * tierMult);
+                gPlayer.maxHp += bonus;
+                gPlayer.hp += bonus;
+            }
+        }
+
         synergyRecalc();  // update synergy tiers after roster change
         return &c;
     }
@@ -700,6 +715,22 @@ Companion* companionSpawn(PillColor color, u8 classId, u8 tier) {
 
 void companionRemove(int index) {
     if (index < 0 || index >= MAX_COMPANIONS) return;
+
+    // PASSIVE_MAX_HP: remove player max HP bonus when companion is removed
+    {
+        const Companion& c = gCompanions[index];
+        int fci = companionFullClassId(c);
+        const PassiveDef& pd = kPassiveDefs[fci];
+        if (pd.type == PASSIVE_MAX_HP) {
+            u8 tierMult = (c.tier == 0) ? 1 : (c.tier == 1) ? 2 : 5;
+            s16 bonus = static_cast<s16>(pd.param1 * tierMult);
+            gPlayer.maxHp -= bonus;
+            if (gPlayer.maxHp < 1) gPlayer.maxHp = 1;
+            if (gPlayer.hp > gPlayer.maxHp) gPlayer.hp = gPlayer.maxHp;
+            if (gPlayer.hp < 1) gPlayer.hp = 1;
+        }
+    }
+
     gCompanions[index].active = false;
     // Compact array
     int write = 0;
@@ -806,6 +837,20 @@ void companionOnDeath(int index) {
         gPerks.phoenixUsedThisWave = true;
         audioPlaySfx(GSFX_HEAL);
         return; // don't actually die
+    }
+
+    // PASSIVE_MAX_HP: remove player max HP bonus on death
+    {
+        int fci = companionFullClassId(c);
+        const PassiveDef& pd = kPassiveDefs[fci];
+        if (pd.type == PASSIVE_MAX_HP) {
+            u8 tierMult = (c.tier == 0) ? 1 : (c.tier == 1) ? 2 : 5;
+            s16 bonus = static_cast<s16>(pd.param1 * tierMult);
+            gPlayer.maxHp -= bonus;
+            if (gPlayer.maxHp < 1) gPlayer.maxHp = 1;
+            if (gPlayer.hp > gPlayer.maxHp) gPlayer.hp = gPlayer.maxHp;
+            if (gPlayer.hp < 1) gPlayer.hp = 1;
+        }
     }
 
     spawnParticleBurst(c.pos, 12, 20, static_cast<u8>(c.color));

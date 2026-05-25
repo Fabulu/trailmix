@@ -74,6 +74,9 @@ struct PassiveState {
     u8 pickupRangeBonus;    // extra px for gold pickup
     u8 rerollDiscount;      // gold discount on reroll
     u8 extraShopCards;      // additional shop cards
+    u8 closeDmgBoostPct;    // +% damage when enemy within closeDmgRange px
+    u8 closeDmgRange;       // range in px for close damage bonus
+    u8 debuffExtendPct;     // +% duration on slow/freeze effects
 };
 
 extern PassiveState gPassive;

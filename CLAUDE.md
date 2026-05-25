@@ -152,6 +152,7 @@ Use subagents PROACTIVELY. The cost of spawning is low; the cost of context poll
 
 | Run ID | Description | Status | Working Directory |
 |--------|-------------|--------|-------------------|
+| RUN-20260525-0955 | 30x5 wave table implementation | READY FOR REVIEW | runs/CLAUDE-RUNS/RUN-20260525-0955-wave-table-30x5/ |
 | RUN-20260524-2229 | Wave 30 Final Boss Design ("The Apothecary") | READY FOR REVIEW | runs/CLAUDE-RUNS/RUN-20260524-2229-final-boss-design/ |
 
 ---

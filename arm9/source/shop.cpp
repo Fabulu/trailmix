@@ -76,12 +76,22 @@ void shopGenerate(int wave) {
         // Skip locked cards
         if (c.locked) continue;
 
-        // Roll class using weighted rarity: Common=60%, Uncommon=30%, Rare=10%
-        int roll = rngRange(10);
+        // Roll class using weighted rarity
+        // Base: Common=60%, Uncommon=30%, Rare=10%
+        // PASSIVE_EXTRA_SHOP shifts to: Common=50%, Uncommon=35%, Rare=15%
+        int roll = rngRange(20);
         u8 targetRarity;
-        if (roll < 6)       targetRarity = 0; // Common  (60%)
-        else if (roll < 9)  targetRarity = 1; // Uncommon (30%)
-        else                targetRarity = 2; // Rare    (10%)
+        if (gPassive.extraShopCards > 0) {
+            // Improved odds: 10/20=50% Common, 7/20=35% Uncommon, 3/20=15% Rare
+            if (roll < 10)      targetRarity = 0;
+            else if (roll < 17) targetRarity = 1;
+            else                targetRarity = 2;
+        } else {
+            // Normal odds: 12/20=60% Common, 6/20=30% Uncommon, 2/20=10% Rare
+            if (roll < 12)      targetRarity = 0;
+            else if (roll < 18) targetRarity = 1;
+            else                targetRarity = 2;
+        }
 
         // Pick a random color
         c.color = static_cast<PillColor>(rngRange(PILL_COLOR_COUNT));
@@ -260,6 +270,9 @@ bool shopUpdate() {
         // REROLL button: y=90..122, x >= 150 (only if lock/perk didn't handle it)
         else if (ty >= REROLL_Y && ty < REROLL_Y + REROLL_H && tx >= 150) {
             int cost = 3 + gShop.rerollCount;
+            // PASSIVE_REROLL_DISCOUNT: reduce reroll cost
+            cost -= gPassive.rerollDiscount;
+            if (cost < 0) cost = 0;
 
             // Yellow T1 (Fortune): free reroll once per shop visit
             bool freeRR = synergyFreeReroll();
@@ -579,6 +592,9 @@ void shopRender() {
 
     // ── Reroll button (row 3 right) ──────────────────────────────
     int rerollCost = 3 + gShop.rerollCount;
+    // PASSIVE_REROLL_DISCOUNT: reduce displayed reroll cost
+    rerollCost -= gPassive.rerollDiscount;
+    if (rerollCost < 0) rerollCost = 0;
     bool freeRR = synergyFreeReroll();
     bool canReroll = freeRR || (gPlayer.gold >= static_cast<u16>(rerollCost));
     u16 rerollBg = freeRR ? RGB15(10, 16, 0) : canReroll ? RGB15(6, 10, 6) : RGB15(4, 4, 4);
