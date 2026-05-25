@@ -938,5 +938,5 @@ void shopRender() {
 
     // ── Control hints at bottom ──────────────────────────────────────
     u16 hintCol = RGB15(10, 10, 14);
-    renderTextSub(4, 184, "A:OK  B:BACK  L:LOCK  R:SELL", hintCol);
+    renderTextSub(4, 184, str(kUI[61]), hintCol);
 }

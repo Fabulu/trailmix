@@ -98,6 +98,7 @@ constexpr StrEntry kUI[] = {
     /* STR_UI_ACTIVE      [58]  */ S("active", "aktiv"),
     /* STR_UI_UNLOCKS     [59]  */ S("unlocks!", "freigeschaltet!"),
     /* STR_UI_HP_COLON    [60]  */ S("HP:", "LP:"),
+    /* STR_UI_HINTS       [61]  */ S("A:OK  B:BACK  L:LOCK  R:SELL", "A:OK  B:ZUR.  L:SPERR  R:VERK"),
 };
 
 // Color abbreviations for HUD (indexed by PillColor)
