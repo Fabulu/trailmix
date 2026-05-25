@@ -464,23 +464,25 @@ bool shopUpdate() {
             cur = 0;
         } else if (kd & KEY_RIGHT) {
             if (cur < 5) cur++;
-            else if (cur == 6) cur = 7;  // perk → reroll
-            else if (cur >= 9) cur++;     // next companion
+            else if (cur == 6) cur = 7;    // perk → reroll
+            else if (cur == -2) cur = 8;   // heal → start
+            else if (cur >= 9) cur++;      // next companion
         } else if (kd & KEY_LEFT) {
             if (cur > 0 && cur <= 5) cur--;
-            else if (cur == 7) cur = 6;  // reroll → perk
-            else if (cur > 9) cur--;      // prev companion
+            else if (cur == 7) cur = 6;    // reroll → perk
+            else if (cur == 8) cur = -2;   // start → heal
+            else if (cur > 9) cur--;       // prev companion
         } else if (kd & KEY_DOWN) {
-            if (cur <= 2) cur += 3;       // row 0 → row 1
-            else if (cur <= 5) cur = 6;   // row 1 → perk
-            else if (cur <= 7) cur = 8;   // perk/reroll → START (skip companions)
-            else if (cur == 8) cur = 0;   // start → wrap to top
-            else if (cur >= 9) cur = 8;   // companions → start
+            if (cur <= 2) cur += 3;        // row 0 → row 1
+            else if (cur <= 5) cur = 6;    // row 1 → perk
+            else if (cur <= 7) cur = 8;    // perk/reroll → START
+            else if (cur == 8 || cur == -2) cur = 0; // bottom → wrap to top
+            else if (cur >= 9) cur = 8;    // companions → start
         } else if (kd & KEY_UP) {
-            if (cur >= 3 && cur <= 5) cur -= 3; // row 1 → row 0
-            else if (cur == 6 || cur == 7) cur = 3; // perk/reroll → row 1
-            else if (cur == 8) cur = 6;   // start → perk
-            else if (cur >= 9) cur = 6;   // companions → perk
+            if (cur >= 3 && cur <= 5) cur -= 3;
+            else if (cur == 6 || cur == 7) cur = 3;
+            else if (cur == 8 || cur == -2) cur = 6; // bottom → perk
+            else if (cur >= 9) cur = 6;
         }
 
         // Companion row: cur 9+ means companion slot (9=first active, 10=second, etc)
@@ -504,6 +506,9 @@ bool shopUpdate() {
                 gShop.selectedCard = -1;
                 gShop.selectedCompanion = -1;
             }
+        } else if (cur == -2) {
+            gShop.selectedCard = -2;  // heal button
+            gShop.selectedCompanion = -1;
         } else if (cur >= 0 && cur <= 7) {
             gShop.selectedCard = static_cast<s8>(cur);
             gShop.selectedCompanion = -1;
@@ -543,8 +548,27 @@ bool shopUpdate() {
     // A button = confirm current selection
     if (kd & KEY_A) {
         // "Start" selected or nothing selected → start wave
-        if (gShop.selectedCard == 8 || (gShop.selectedCard < 0 && gShop.selectedCompanion < 0)) {
+        if (gShop.selectedCard == 8 || (gShop.selectedCard == -1 && gShop.selectedCompanion < 0)) {
             return true;
+        }
+        // Heal selected
+        if (gShop.selectedCard == -2) {
+            if (gPlayer.gold >= HEAL_COST && gPlayer.hp < gPlayer.maxHp) {
+                gPlayer.gold = static_cast<u16>(gPlayer.gold - HEAL_COST);
+                s16 heal = gPlayer.maxHp / 5;
+                if (heal < 1) heal = 1;
+                gPlayer.hp += heal;
+                if (gPlayer.hp > gPlayer.maxHp) gPlayer.hp = gPlayer.maxHp;
+                for (auto& comp : gCompanions) {
+                    if (!comp.active) continue;
+                    s16 cheal = comp.maxHp / 5;
+                    if (cheal < 1) cheal = 1;
+                    comp.hp += cheal;
+                    if (comp.hp > comp.maxHp) comp.hp = comp.maxHp;
+                }
+                audioPlaySfx(GSFX_HEAL);
+            }
+            shopDirty = true;
         }
         // Reroll selected
         if (gShop.selectedCard == 7) {
@@ -927,9 +951,14 @@ void shopRender() {
     // Heal button
     {
         bool canHeal = (gPlayer.gold >= HEAL_COST && gPlayer.hp < gPlayer.maxHp);
-        u16 healBg = canHeal ? RGB15(2, 12, 4) : RGB15(4, 4, 4);
+        bool healSel = (gShop.selectedCard == -2);
+        u16 healBg = healSel ? RGB15(4, 16, 6) : canHeal ? RGB15(2, 12, 4) : RGB15(4, 4, 4);
         u16 healTxt = canHeal ? RGB15(10, 31, 10) : RGB15(10, 10, 10);
         renderFilledRectSub(HEAL_X, HEAL_Y, HEAL_W, HEAL_H, healBg);
+        if (healSel) {
+            renderFilledRectSub(HEAL_X, HEAL_Y, HEAL_W, 1, RGB15(31,31,31));
+            renderFilledRectSub(HEAL_X, HEAL_Y+HEAL_H-1, HEAL_W, 1, RGB15(31,31,31));
+        }
         char healBuf[20];
         snprintf(healBuf, sizeof(healBuf), str(kUI[31]), HEAL_COST);
         int htw = renderTextWidth(healBuf);
