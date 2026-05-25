@@ -1194,8 +1194,10 @@ void renderText(int x, int y, const char* text, u16 color) {
 // ---------------------------------------------------------------------------
 
 void waveAnnouncementStart(int waveNum) {
-    // Build "WAVE X" or "WAVE XX"
-    const char* prefix = "WAVE ";
+    // Build localized "WAVE X" / "WELLE X"
+    char prefixBuf[12];
+    snprintf(prefixBuf, sizeof(prefixBuf), "%s ", str(kUI[37]));
+    const char* prefix = prefixBuf;
     int i = 0;
     while (prefix[i]) { annText[i] = prefix[i]; i++; }
     // Write digits (supports up to 99)
