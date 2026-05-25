@@ -152,11 +152,8 @@ void playerDash() {
         c.iframes = gPlayer.dashTimer + 60; // matches player post-dash iframes
     }
 
-    // Initial burst of particles at dash origin
-    spawnParticleBurst(gPlayer.pos, 10, 12, static_cast<u8>(rngRange(6)));
-
     audioPlaySfx(GSFX_DASH);
-    cameraShake(10, 14);
+    cameraShake(3, 6);
 }
 
 void playerUpdate(u32 held, u32 down) {
@@ -256,26 +253,30 @@ void playerUpdate(u32 held, u32 down) {
             }
         }
 
-        // Trail particles — 8 per frame, thick rainbow trail
-        for (int p = 0; p < 8; p++) {
-            Vec2 pvel = {static_cast<Fixed>(rngRange(20) - 10), static_cast<Fixed>(rngRange(20) - 10)};
-            spawnParticle(gPlayer.pos, pvel, 16, static_cast<u8>(rngRange(6)));
-        }
-        // Afterimage particles along the dash direction (behind the player)
-        {
-            Vec2 behind = {static_cast<Fixed>(gPlayer.pos.x - gPlayer.dashDir.x * 4),
-                           static_cast<Fixed>(gPlayer.pos.y - gPlayer.dashDir.y * 4)};
-            for (int p = 0; p < 3; p++) {
-                Vec2 pvel = {static_cast<Fixed>(rngRange(8) - 4), static_cast<Fixed>(rngRange(8) - 4)};
-                spawnParticle(behind, pvel, 20, 0); // white afterimage
-            }
+        // Lots of tiny particles shooting out the back of the dash
+        // Reverse of dash direction = "behind" the player
+        Fixed backX = (gPlayer.dashDir.x > 0) ? static_cast<Fixed>(-FP_ONE) :
+                      (gPlayer.dashDir.x < 0) ? FP_ONE : 0;
+        Fixed backY = (gPlayer.dashDir.y > 0) ? static_cast<Fixed>(-FP_ONE) :
+                      (gPlayer.dashDir.y < 0) ? FP_ONE : 0;
+
+        for (int p = 0; p < 10; p++) {
+            // Particles fly backward with spread
+            Vec2 pvel = {
+                static_cast<Fixed>(backX * (8 + rngRange(8)) / 4 + rngRange(12) - 6),
+                static_cast<Fixed>(backY * (8 + rngRange(8)) / 4 + rngRange(12) - 6)
+            };
+            spawnParticle(gPlayer.pos, pvel, static_cast<u8>(6 + rngRange(8)), static_cast<u8>(rngRange(6)));
         }
 
-        // Warp Drive: massive particle storm
+        // Warp Drive: even more back-spray
         if (perkIsActive(PERK_WARP_DRIVE)) {
             for (int p = 0; p < 6; p++) {
-                Vec2 pvel2 = {static_cast<Fixed>(rngRange(32) - 16), static_cast<Fixed>(rngRange(32) - 16)};
-                spawnParticle(gPlayer.pos, pvel2, 22, static_cast<u8>(rngRange(6)));
+                Vec2 pvel2 = {
+                    static_cast<Fixed>(backX * (10 + rngRange(12)) / 4 + rngRange(16) - 8),
+                    static_cast<Fixed>(backY * (10 + rngRange(12)) / 4 + rngRange(16) - 8)
+                };
+                spawnParticle(gPlayer.pos, pvel2, static_cast<u8>(10 + rngRange(10)), static_cast<u8>(rngRange(6)));
             }
         }
 
