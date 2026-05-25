@@ -467,6 +467,12 @@ bool shopUpdate() {
         shopDirty = true;
     }
 
+    // L button = toggle lock on selected card
+    if ((kd & KEY_L) && gShop.selectedCard >= 0 && gShop.selectedCard < SHOP_CARDS) {
+        gShop.cards[gShop.selectedCard].locked = !gShop.cards[gShop.selectedCard].locked;
+        shopDirty = true;
+    }
+
     // A button = confirm current selection
     if (kd & KEY_A) {
         // "Start" selected or nothing selected → start wave
