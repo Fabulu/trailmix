@@ -449,8 +449,15 @@ bool shopUpdate() {
     }
 
     if (kd & (KEY_LEFT | KEY_RIGHT | KEY_UP | KEY_DOWN)) {
-        int cur = gShop.selectedCard; // -1=none, 0-5=cards, 6=perk, 7=reroll, 8=start
-        if (gShop.selectedCompanion >= 0) cur = -1; // companion selection uses touch only
+        int cur = gShop.selectedCard; // -1=none, 0-5=cards, 6=perk, 7=reroll, 8=start, 9+=companions
+        if (gShop.selectedCompanion >= 0) {
+            // Map companion slot to cursor index
+            int idx = 0;
+            for (int i = 0; i < gShop.selectedCompanion && i < MAX_COMPANIONS; i++) {
+                if (gCompanions[i].active) idx++;
+            }
+            cur = 9 + idx;
+        }
 
         if (cur < 0) {
             // Nothing selected — start at card 0

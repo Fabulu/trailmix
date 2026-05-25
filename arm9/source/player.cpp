@@ -253,16 +253,18 @@ void playerUpdate(u32 held, u32 down) {
             }
         }
 
-        // Trail particles — 2 per frame
-        for (int p = 0; p < 2; p++) {
-            Vec2 pvel = {static_cast<Fixed>(rngRange(10) - 5), static_cast<Fixed>(rngRange(10) - 5)};
-            spawnParticle(gPlayer.pos, pvel, 10, 2);
+        // Trail particles — 5 per frame for a thick, flashy trail
+        for (int p = 0; p < 5; p++) {
+            Vec2 pvel = {static_cast<Fixed>(rngRange(16) - 8), static_cast<Fixed>(rngRange(16) - 8)};
+            spawnParticle(gPlayer.pos, pvel, 14, static_cast<u8>(rngRange(6)));
         }
 
-        // Warp Drive: extra trail
+        // Warp Drive: even more particles + wider spread
         if (perkIsActive(PERK_WARP_DRIVE)) {
-            Vec2 pvel2 = {static_cast<Fixed>(rngRange(12) - 6), static_cast<Fixed>(rngRange(12) - 6)};
-            spawnParticle(gPlayer.pos, pvel2, 14, 5);
+            for (int p = 0; p < 3; p++) {
+                Vec2 pvel2 = {static_cast<Fixed>(rngRange(24) - 12), static_cast<Fixed>(rngRange(24) - 12)};
+                spawnParticle(gPlayer.pos, pvel2, 18, static_cast<u8>(rngRange(6)));
+            }
         }
 
         --gPlayer.dashTimer;
