@@ -143,8 +143,11 @@ void audioPlayMusic(int id) {
     const u8* pcm = wavFindData(m.data, m.size, pcmLen);
     if (!pcm || pcmLen < 64) { currentMusic = -1; return; }
 
-    // 16-bit 11025Hz looping music, low volume
-    musicSoundId = soundPlaySample(pcm, SoundFormat_16Bit, pcmLen, 11025, 20, 64, true, 0);
+    // 16-bit 11025Hz looping music — per-track volume
+    // Menu and shop are sparser/quieter tracks, need more volume on real hardware
+    static const u8 musicVol[] = { 40, 30, 30, 40, 40 }; // menu, battle, shop(unused), boss, shop
+    u8 vol = (id >= 0 && id <= 4) ? musicVol[id] : 20;
+    musicSoundId = soundPlaySample(pcm, SoundFormat_16Bit, pcmLen, 11025, vol, 64, true, 0);
     currentMusic = id;
 }
 

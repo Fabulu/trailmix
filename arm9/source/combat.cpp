@@ -343,10 +343,16 @@ static void updateEnemies() {
 
             case ETYPE_BOSS_SENTINEL: { // Sentinel — orbiting turret with rotating bullet spiral
                 e.frame++;
-                // Orbit player at medium distance, reverse direction every 3 seconds
-                Fixed orbitDir = ((e.frame / 180) & 1) ? FP_ONE : static_cast<Fixed>(-FP_ONE);
-                e.vel.x += fixMul(fixMul(-dir.y, orbitDir), FP_ONE / 12) + fixMul(dir.x, FP_ONE / 16);
-                e.vel.y += fixMul(fixMul(dir.x, orbitDir), FP_ONE / 12) + fixMul(dir.y, FP_ONE / 16);
+                // Orbit player, reverse direction every 3 seconds
+                bool clockwise = ((e.frame / 180) & 1);
+                // Perpendicular orbit + approach
+                if (clockwise) {
+                    e.vel.x += fixMul(-dir.y, FP_ONE / 6) + fixMul(dir.x, FP_ONE / 10);
+                    e.vel.y += fixMul(dir.x, FP_ONE / 6) + fixMul(dir.y, FP_ONE / 10);
+                } else {
+                    e.vel.x += fixMul(dir.y, FP_ONE / 6) + fixMul(dir.x, FP_ONE / 10);
+                    e.vel.y += fixMul(-dir.x, FP_ONE / 6) + fixMul(dir.y, FP_ONE / 10);
+                }
 
                 // Constant slow rotation fire — 1 bullet every 20 frames in a spiral
                 if (e.shootTimer > 0) { e.shootTimer--; }
