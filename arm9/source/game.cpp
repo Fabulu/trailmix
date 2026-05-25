@@ -345,92 +345,331 @@ static void spawnGroup(const WaveEntry& g, int wave) {
 }
 
 // --------------------------------------------------------------------------
-// Wave templates for waves 1-15
-// 16+ use procedural scaling
+// Wave table: 30 waves x 5 hand-designed variants
+// Formations: 0=line, 1=pincer, 2=surround, 3=scatter, 4=fish-school, 5=boss-center
+// After wave 30, procedural endless mode kicks in.
 // --------------------------------------------------------------------------
-static const WaveTemplate kWaveTemplates[15] = {
-    // Wave 1: 6 small Grunts — line advance; learn to shoot
-    { {{ ETYPE_GRUNT, SIZE_SMALL, 6, 0 }}, 1, false },
+constexpr int WAVE_VARIANTS = 5;
+constexpr int TOTAL_WAVES   = 30;
 
-    // Wave 2: 8 small Grunts + 2 medium Grunts — surround pressure
-    { {{ ETYPE_GRUNT, SIZE_SMALL,  8, 2 },
-       { ETYPE_GRUNT, SIZE_MEDIUM, 2, 0 }}, 2, false },
-
-    // Wave 3: Fish School of 8 small Grunts — first swarm pattern
-    { {{ ETYPE_GRUNT, SIZE_SMALL, 8, 4 }}, 1, false },
-
-    // Wave 4: 4 medium Grunts + 2 small Chargers — introduce flankers
-    { {{ ETYPE_GRUNT,   SIZE_MEDIUM, 4, 0 },
-       { ETYPE_CHARGER, SIZE_SMALL,  2, 1 }}, 2, false },
-
-    // Wave 5: BOSS — Sentinel + 4 small Grunt adds
-    { {{ ETYPE_BOSS_SENTINEL, SIZE_LARGE, 1, 5 },
-       { ETYPE_GRUNT,         SIZE_SMALL, 4, 3 }}, 2, true },
-
-    // Wave 6: Pincer formation — 2 groups of 3 Chargers
-    { {{ ETYPE_CHARGER, SIZE_SMALL,  3, 1 },
-       { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }}, 2, false },
-
-    // Wave 7: Spitters introduced — 4 medium Spitters + 6 small Grunts
-    { {{ ETYPE_SPITTER, SIZE_MEDIUM, 4, 3 },
-       { ETYPE_GRUNT,   SIZE_SMALL,  6, 2 }}, 2, false },
-
-    // Wave 8: 1 large Brute + swarm of 8 small Grunts (fish school)
-    { {{ ETYPE_BRUTE, SIZE_LARGE, 1, 3 },
-       { ETYPE_GRUNT, SIZE_SMALL, 8, 4 }}, 2, false },
-
-    // Wave 9: Mixed ranged — 3 Snipers + 3 Spitters + 4 Grunts
-    { {{ ETYPE_SNIPER,  SIZE_MEDIUM, 3, 3 },
-       { ETYPE_SPITTER, SIZE_MEDIUM, 3, 3 },
-       { ETYPE_GRUNT,   SIZE_SMALL,  4, 0 }}, 3, false },
-
-    // Wave 10: BOSS — Dreadnought + Spitter adds
-    { {{ ETYPE_BOSS_DREADNOUGHT, SIZE_LARGE,  1, 5 },
-       { ETYPE_SPITTER,          SIZE_SMALL,  4, 2 }}, 2, true },
-
-    // Wave 11: Splitters — kill them and they multiply!
-    { {{ ETYPE_SPLITTER, SIZE_MEDIUM, 6, 2 },
-       { ETYPE_SPLITTER, SIZE_LARGE,  2, 3 }}, 2, false },
-
-    // Wave 12: Shield enemies — must flank them
-    { {{ ETYPE_SHIELD,  SIZE_MEDIUM, 4, 1 },
-       { ETYPE_CHARGER, SIZE_SMALL,  4, 3 },
-       { ETYPE_GRUNT,   SIZE_SMALL,  4, 2 }}, 3, false },
-
-    // Wave 13: Spiral Close (Ghosts + Artillery) — teleport chaos + lobbed explosives
-    { {{ ETYPE_GHOST,     SIZE_SMALL,  4, 3 },
-       { ETYPE_ARTILLERY, SIZE_MEDIUM, 3, 2 },
-       { ETYPE_GRUNT,     SIZE_SMALL,  4, 4 }}, 3, false },
-
-    // Wave 14: Everything mixed — large Brutes + Swarm Drones + ranged
-    { {{ ETYPE_BRUTE,       SIZE_LARGE,  2, 3 },
-       { ETYPE_SWARM_DRONE, SIZE_SMALL,  8, 4 },
-       { ETYPE_SNIPER,      SIZE_MEDIUM, 2, 3 },
-       { ETYPE_NIGHTMARE,   SIZE_MEDIUM, 1, 3 }}, 4, false },
-
-    // Wave 15: BOSS — Leviathan + all enemy types as adds
-    { {{ ETYPE_BOSS_LEVIATHAN, SIZE_LARGE,  1, 5 },
-       { ETYPE_SPLITTER,       SIZE_MEDIUM, 2, 3 },
-       { ETYPE_SPITTER,        SIZE_SMALL,  3, 3 },
-       { ETYPE_CHARGER,        SIZE_SMALL,  3, 3 }}, 4, true },
+static const WaveTemplate kWaveTable[TOTAL_WAVES][WAVE_VARIANTS] = {
+    // ====================================================================
+    // WAVE 1 — Tutorial: all small grunts
+    // ====================================================================
+    {
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 3, 3 }},                                                           1, false }, // A: 3 scatter
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 4, 0 }},                                                           1, false }, // B: 4 line
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 1, 3 }},                        2, false }, // C: 2+1 scatter
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 3, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 1, 3 }},                        2, false }, // D: 3 line + 1 scatter
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 0 }},                        2, false }, // E: 2+2 line
+    },
+    // ====================================================================
+    // WAVE 2 — Introduce charger
+    // ====================================================================
+    {
+        { {{ ETYPE_CHARGER, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }},                      2, false }, // A
+        { {{ ETYPE_CHARGER, SIZE_SMALL, 3, 3 }},                                                          1, false }, // B
+        { {{ ETYPE_CHARGER, SIZE_SMALL, 2, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 1, 3 }},                       2, false }, // C
+        { {{ ETYPE_GRUNT,   SIZE_SMALL, 5, 0 }},                                                          1, false }, // D
+        { {{ ETYPE_GRUNT,   SIZE_SMALL, 2, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 2, 3 }},                     2, false }, // E
+    },
+    // ====================================================================
+    // WAVE 3 — Introduce ranged (spitter/splitter)
+    // ====================================================================
+    {
+        { {{ ETYPE_SPITTER, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 0 }},                       2, false }, // A
+        { {{ ETYPE_SPLITTER, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }},                      2, false }, // B
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 4, 0 }, { ETYPE_SPITTER, SIZE_SMALL, 1, 3 }},                       2, false }, // C
+        { {{ ETYPE_SPLITTER, SIZE_SMALL, 3, 3 }},                                                         1, false }, // D
+        { {{ ETYPE_SPITTER, SIZE_SMALL, 2, 1 }, { ETYPE_CHARGER, SIZE_SMALL, 2, 0 }},                     2, false }, // E
+    },
+    // ====================================================================
+    // WAVE 4 — Introduce shield/sniper
+    // ====================================================================
+    {
+        { {{ ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 3 }},                        2, false }, // A
+        { {{ ETYPE_SNIPER, SIZE_SMALL, 1, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 0 }},                        2, false }, // B
+        { {{ ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_SPITTER, SIZE_SMALL, 2, 3 }},                      2, false }, // C
+        { {{ ETYPE_CHARGER, SIZE_SMALL, 3, 1 }, { ETYPE_SNIPER, SIZE_SMALL, 1, 3 }},                      2, false }, // D
+        { {{ ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_SPLITTER, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 1, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 5 — BOSS: Sentinel
+    // ====================================================================
+    {
+        { {{ ETYPE_BOSS_SENTINEL, SIZE_LARGE, 1, 5 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 3 }},                 2, true  }, // A
+        { {{ ETYPE_BOSS_SENTINEL, SIZE_LARGE, 1, 5 }, { ETYPE_SPITTER, SIZE_SMALL, 3, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 0 }}, 3, true }, // B
+        { {{ ETYPE_BOSS_SENTINEL, SIZE_LARGE, 1, 5 }, { ETYPE_CHARGER, SIZE_SMALL, 4, 4 }},               2, true  }, // C
+        { {{ ETYPE_BOSS_SENTINEL, SIZE_LARGE, 1, 5 }, { ETYPE_SHIELD, SIZE_SMALL, 3, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }}, 3, true }, // D
+        { {{ ETYPE_BOSS_SENTINEL, SIZE_LARGE, 1, 5 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 2, 1 }}, 3, true }, // E
+    },
+    // ====================================================================
+    // WAVE 6 — Introduce bomber, medium enemies appear
+    // ====================================================================
+    {
+        { {{ ETYPE_BOMBER, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_MEDIUM, 2, 0 }},                       2, false }, // A
+        { {{ ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 3 }},                      2, false }, // B
+        { {{ ETYPE_BOMBER, SIZE_SMALL, 3, 3 }, { ETYPE_SPITTER, SIZE_SMALL, 2, 1 }},                      2, false }, // C
+        { {{ ETYPE_GRUNT, SIZE_MEDIUM, 3, 0 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }},                      2, false }, // D
+        { {{ ETYPE_BOMBER, SIZE_SMALL, 2, 1 }, { ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 7 — Introduce ghost
+    // ====================================================================
+    {
+        { {{ ETYPE_GHOST, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_MEDIUM, 3, 0 }},                        2, false }, // A
+        { {{ ETYPE_GHOST, SIZE_SMALL, 3, 3 }, { ETYPE_SPITTER, SIZE_SMALL, 3, 1 }},                       2, false }, // B
+        { {{ ETYPE_GHOST, SIZE_SMALL, 2, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 2, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 0 }}, 3, false }, // C
+        { {{ ETYPE_SPITTER, SIZE_MEDIUM, 3, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 2 }},                      2, false }, // D
+        { {{ ETYPE_GHOST, SIZE_SMALL, 2, 3 }, { ETYPE_BOMBER, SIZE_SMALL, 2, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 4 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 8 — Introduce artillery
+    // ====================================================================
+    {
+        { {{ ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 0 }},                    2, false }, // A
+        { {{ ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 2 }, { ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }}, 3, false }, // B
+        { {{ ETYPE_BRUTE, SIZE_LARGE, 1, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 6, 4 }},                         2, false }, // C
+        { {{ ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }},                  2, false }, // D
+        { {{ ETYPE_ARTILLERY, SIZE_SMALL, 3, 2 }, { ETYPE_SPITTER, SIZE_MEDIUM, 2, 3 }},                  2, false }, // E
+    },
+    // ====================================================================
+    // WAVE 9 — Introduce swarm drone
+    // ====================================================================
+    {
+        { {{ ETYPE_SWARM_DRONE, SIZE_SMALL, 6, 4 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }},                 2, false }, // A
+        { {{ ETYPE_SWARM_DRONE, SIZE_SMALL, 5, 4 }, { ETYPE_SPITTER, SIZE_MEDIUM, 2, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }}, 3, false }, // B
+        { {{ ETYPE_SNIPER, SIZE_MEDIUM, 3, 3 }, { ETYPE_SPITTER, SIZE_MEDIUM, 3, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 0 }}, 3, false }, // C
+        { {{ ETYPE_SWARM_DRONE, SIZE_SMALL, 8, 4 }, { ETYPE_BRUTE, SIZE_MEDIUM, 1, 3 }},                  2, false }, // D
+        { {{ ETYPE_SWARM_DRONE, SIZE_SMALL, 4, 4 }, { ETYPE_GHOST, SIZE_SMALL, 2, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 10 — BOSS: Dreadnought
+    // ====================================================================
+    {
+        { {{ ETYPE_BOSS_DREADNOUGHT, SIZE_LARGE, 1, 5 }, { ETYPE_SPITTER, SIZE_SMALL, 4, 2 }},            2, true  }, // A
+        { {{ ETYPE_BOSS_DREADNOUGHT, SIZE_LARGE, 1, 5 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 3 }}, 3, true }, // B
+        { {{ ETYPE_BOSS_DREADNOUGHT, SIZE_LARGE, 1, 5 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 5, 4 }},        2, true  }, // C
+        { {{ ETYPE_BOSS_DREADNOUGHT, SIZE_LARGE, 1, 5 }, { ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_SPITTER, SIZE_SMALL, 3, 3 }}, 3, true }, // D
+        { {{ ETYPE_BOSS_DREADNOUGHT, SIZE_LARGE, 1, 5 }, { ETYPE_BOMBER, SIZE_SMALL, 3, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 0 }}, 3, true }, // E
+    },
+    // ====================================================================
+    // WAVE 11 — Introduce medic; splitter-heavy
+    // ====================================================================
+    {
+        { {{ ETYPE_SPLITTER, SIZE_MEDIUM, 4, 2 }, { ETYPE_MEDIC, SIZE_SMALL, 1, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 0 }}, 3, false }, // A
+        { {{ ETYPE_SPLITTER, SIZE_MEDIUM, 3, 3 }, { ETYPE_SPLITTER, SIZE_LARGE, 1, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }}, 3, false }, // B
+        { {{ ETYPE_MEDIC, SIZE_SMALL, 2, 3 }, { ETYPE_BRUTE, SIZE_MEDIUM, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 4 }}, 3, false }, // C
+        { {{ ETYPE_SPLITTER, SIZE_MEDIUM, 5, 2 }, { ETYPE_MEDIC, SIZE_SMALL, 1, 3 }},                     2, false }, // D
+        { {{ ETYPE_SPLITTER, SIZE_LARGE, 2, 3 }, { ETYPE_SPITTER, SIZE_MEDIUM, 2, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 12 — Introduce anchor; shield combos
+    // ====================================================================
+    {
+        { {{ ETYPE_SHIELD, SIZE_MEDIUM, 3, 1 }, { ETYPE_ANCHOR, SIZE_SMALL, 1, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 4, 3 }}, 3, false }, // A
+        { {{ ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }, { ETYPE_GRUNT, SIZE_MEDIUM, 3, 0 }, { ETYPE_SPITTER, SIZE_SMALL, 2, 1 }}, 3, false }, // B
+        { {{ ETYPE_SHIELD, SIZE_MEDIUM, 4, 1 }, { ETYPE_SNIPER, SIZE_SMALL, 2, 3 }},                      2, false }, // C
+        { {{ ETYPE_ANCHOR, SIZE_SMALL, 2, 3 }, { ETYPE_BRUTE, SIZE_MEDIUM, 2, 0 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }}, 3, false }, // D
+        { {{ ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }, { ETYPE_ANCHOR, SIZE_SMALL, 1, 3 }, { ETYPE_GHOST, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 4 }}, 4, false }, // E
+    },
+    // ====================================================================
+    // WAVE 13 — Introduce trapper; ghost + artillery combos
+    // ====================================================================
+    {
+        { {{ ETYPE_TRAPPER, SIZE_SMALL, 2, 3 }, { ETYPE_GHOST, SIZE_SMALL, 3, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 4 }}, 3, false }, // A
+        { {{ ETYPE_ARTILLERY, SIZE_MEDIUM, 3, 2 }, { ETYPE_TRAPPER, SIZE_SMALL, 2, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }}, 3, false }, // B
+        { {{ ETYPE_GHOST, SIZE_SMALL, 4, 3 }, { ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 2 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 0 }}, 3, false }, // C
+        { {{ ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SHIELD, SIZE_SMALL, 2, 0 }}, 3, false }, // D
+        { {{ ETYPE_TRAPPER, SIZE_SMALL, 3, 3 }, { ETYPE_BOMBER, SIZE_SMALL, 2, 1 }, { ETYPE_SPITTER, SIZE_MEDIUM, 2, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 14 — Introduce hexer + hive; everything mixed
+    // ====================================================================
+    {
+        { {{ ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_LARGE, 1, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 5, 4 }}, 3, false }, // A
+        { {{ ETYPE_HIVE, SIZE_MEDIUM, 1, 3 }, { ETYPE_NIGHTMARE, SIZE_MEDIUM, 1, 3 }, { ETYPE_GRUNT, SIZE_MEDIUM, 3, 0 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }}, 4, false }, // B
+        { {{ ETYPE_HEXER, SIZE_SMALL, 3, 3 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }, { ETYPE_SPITTER, SIZE_MEDIUM, 2, 1 }}, 3, false }, // C
+        { {{ ETYPE_HIVE, SIZE_MEDIUM, 2, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 4, 4 }, { ETYPE_SNIPER, SIZE_MEDIUM, 1, 3 }}, 3, false }, // D
+        { {{ ETYPE_HEXER, SIZE_MEDIUM, 1, 3 }, { ETYPE_HIVE, SIZE_MEDIUM, 1, 3 }, { ETYPE_BRUTE, SIZE_MEDIUM, 2, 0 }, { ETYPE_GHOST, SIZE_SMALL, 2, 3 }}, 4, false }, // E
+    },
+    // ====================================================================
+    // WAVE 15 — BOSS: Leviathan
+    // ====================================================================
+    {
+        { {{ ETYPE_BOSS_LEVIATHAN, SIZE_LARGE, 1, 5 }, { ETYPE_SPLITTER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SPITTER, SIZE_SMALL, 3, 3 }}, 3, true }, // A
+        { {{ ETYPE_BOSS_LEVIATHAN, SIZE_LARGE, 1, 5 }, { ETYPE_CHARGER, SIZE_SMALL, 4, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 3 }}, 3, true }, // B
+        { {{ ETYPE_BOSS_LEVIATHAN, SIZE_LARGE, 1, 5 }, { ETYPE_MEDIC, SIZE_SMALL, 2, 3 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }}, 3, true }, // C
+        { {{ ETYPE_BOSS_LEVIATHAN, SIZE_LARGE, 1, 5 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 6, 4 }, { ETYPE_SNIPER, SIZE_SMALL, 2, 3 }}, 3, true }, // D
+        { {{ ETYPE_BOSS_LEVIATHAN, SIZE_LARGE, 1, 5 }, { ETYPE_BOMBER, SIZE_SMALL, 3, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }}, 3, true }, // E
+    },
+    // ====================================================================
+    // WAVE 16 — Late game: shield + sniper combos
+    // ====================================================================
+    {
+        { {{ ETYPE_SHIELD, SIZE_MEDIUM, 3, 0 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 1 }}, 3, false }, // A
+        { {{ ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }, { ETYPE_SNIPER, SIZE_MEDIUM, 3, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 2, 1 }}, 3, false }, // B
+        { {{ ETYPE_SHIELD, SIZE_LARGE, 1, 0 }, { ETYPE_SNIPER, SIZE_SMALL, 3, 3 }, { ETYPE_SPITTER, SIZE_MEDIUM, 2, 1 }}, 3, false }, // C
+        { {{ ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }}, 4, false }, // D
+        { {{ ETYPE_SHIELD, SIZE_MEDIUM, 3, 1 }, { ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 3 }, { ETYPE_SNIPER, SIZE_SMALL, 2, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 17 — Nightmare + charger pressure
+    // ====================================================================
+    {
+        { {{ ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 4, 1 }},                  2, false }, // A
+        { {{ ETYPE_NIGHTMARE, SIZE_MEDIUM, 1, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }, { ETYPE_BOMBER, SIZE_SMALL, 3, 3 }}, 3, false }, // B
+        { {{ ETYPE_NIGHTMARE, SIZE_LARGE, 1, 3 }, { ETYPE_GHOST, SIZE_SMALL, 3, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 4, 4 }}, 3, false }, // C
+        { {{ ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 3 }, { ETYPE_HEXER, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_MEDIUM, 3, 0 }}, 3, false }, // D
+        { {{ ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 1 }, { ETYPE_CHARGER, SIZE_SMALL, 5, 4 }, { ETYPE_MEDIC, SIZE_SMALL, 1, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 18 — Artillery + shield fortress
+    // ====================================================================
+    {
+        { {{ ETYPE_ARTILLERY, SIZE_MEDIUM, 3, 2 }, { ETYPE_SHIELD, SIZE_MEDIUM, 3, 0 }, { ETYPE_GRUNT, SIZE_MEDIUM, 2, 3 }}, 3, false }, // A
+        { {{ ETYPE_ARTILLERY, SIZE_LARGE, 1, 3 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }, { ETYPE_TRAPPER, SIZE_SMALL, 3, 3 }}, 3, false }, // B
+        { {{ ETYPE_ARTILLERY, SIZE_MEDIUM, 3, 2 }, { ETYPE_ANCHOR, SIZE_MEDIUM, 1, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }}, 3, false }, // C
+        { {{ ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 3 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 1 }}, 4, false }, // D
+        { {{ ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 2 }, { ETYPE_HIVE, SIZE_MEDIUM, 1, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 4, 4 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 19 — Hive + drone swarm
+    // ====================================================================
+    {
+        { {{ ETYPE_HIVE, SIZE_MEDIUM, 2, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 6, 4 }, { ETYPE_SPITTER, SIZE_MEDIUM, 2, 1 }}, 3, false }, // A
+        { {{ ETYPE_HIVE, SIZE_LARGE, 1, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 8, 4 }},                    2, false }, // B
+        { {{ ETYPE_HIVE, SIZE_MEDIUM, 2, 3 }, { ETYPE_BOMBER, SIZE_SMALL, 3, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }}, 3, false }, // C
+        { {{ ETYPE_HIVE, SIZE_MEDIUM, 1, 3 }, { ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_GHOST, SIZE_SMALL, 3, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 4 }}, 4, false }, // D
+        { {{ ETYPE_HIVE, SIZE_MEDIUM, 2, 3 }, { ETYPE_HEXER, SIZE_MEDIUM, 1, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 5, 4 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 20 — BOSS: Nightmare King
+    // ====================================================================
+    {
+        { {{ ETYPE_BOSS_NIGHTMARE_B, SIZE_LARGE, 1, 5 }, { ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 4, 1 }}, 3, true }, // A
+        { {{ ETYPE_BOSS_NIGHTMARE_B, SIZE_LARGE, 1, 5 }, { ETYPE_GHOST, SIZE_SMALL, 3, 3 }, { ETYPE_BOMBER, SIZE_SMALL, 3, 3 }}, 3, true }, // B
+        { {{ ETYPE_BOSS_NIGHTMARE_B, SIZE_LARGE, 1, 5 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }}, 3, true }, // C
+        { {{ ETYPE_BOSS_NIGHTMARE_B, SIZE_LARGE, 1, 5 }, { ETYPE_MEDIC, SIZE_SMALL, 2, 3 }, { ETYPE_BRUTE, SIZE_MEDIUM, 2, 0 }, { ETYPE_GRUNT, SIZE_MEDIUM, 2, 3 }}, 4, true }, // D
+        { {{ ETYPE_BOSS_NIGHTMARE_B, SIZE_LARGE, 1, 5 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 6, 4 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }}, 3, true }, // E
+    },
+    // ====================================================================
+    // WAVE 21 — Endgame: medic + brute combos
+    // ====================================================================
+    {
+        { {{ ETYPE_MEDIC, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_LARGE, 2, 0 }, { ETYPE_GRUNT, SIZE_MEDIUM, 3, 1 }}, 3, false }, // A
+        { {{ ETYPE_MEDIC, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_MEDIUM, 3, 0 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 1 }}, 3, false }, // B
+        { {{ ETYPE_MEDIC, SIZE_SMALL, 3, 3 }, { ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_LARGE, 1, 0 }, { ETYPE_CHARGER, SIZE_MEDIUM, 2, 1 }}, 4, false }, // C
+        { {{ ETYPE_BRUTE, SIZE_LARGE, 2, 0 }, { ETYPE_SPITTER, SIZE_MEDIUM, 3, 1 }, { ETYPE_MEDIC, SIZE_SMALL, 1, 3 }}, 3, false }, // D
+        { {{ ETYPE_MEDIC, SIZE_MEDIUM, 2, 3 }, { ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_MEDIUM, 3, 0 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 22 — Trapper + charger kill zone
+    // ====================================================================
+    {
+        { {{ ETYPE_TRAPPER, SIZE_MEDIUM, 3, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 4, 1 }, { ETYPE_GRUNT, SIZE_MEDIUM, 2, 0 }}, 3, false }, // A
+        { {{ ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_BOMBER, SIZE_MEDIUM, 3, 1 }, { ETYPE_GHOST, SIZE_SMALL, 3, 3 }}, 3, false }, // B
+        { {{ ETYPE_TRAPPER, SIZE_LARGE, 1, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 4, 4 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }}, 3, false }, // C
+        { {{ ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }, { ETYPE_MEDIC, SIZE_SMALL, 1, 3 }}, 4, false }, // D
+        { {{ ETYPE_TRAPPER, SIZE_MEDIUM, 3, 2 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 4, 4 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 23 — Hexer + sniper precision hell
+    // ====================================================================
+    {
+        { {{ ETYPE_HEXER, SIZE_MEDIUM, 3, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 3, 3 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }}, 3, false }, // A
+        { {{ ETYPE_HEXER, SIZE_LARGE, 1, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 2 }, { ETYPE_GRUNT, SIZE_MEDIUM, 2, 0 }}, 4, false }, // B
+        { {{ ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 3, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }}, 3, false }, // C
+        { {{ ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_GHOST, SIZE_MEDIUM, 3, 3 }, { ETYPE_SNIPER, SIZE_SMALL, 3, 3 }}, 3, false }, // D
+        { {{ ETYPE_HEXER, SIZE_MEDIUM, 2, 1 }, { ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_MEDIUM, 1, 0 }}, 4, false }, // E
+    },
+    // ====================================================================
+    // WAVE 24 — All-type gauntlet
+    // ====================================================================
+    {
+        { {{ ETYPE_HIVE, SIZE_MEDIUM, 1, 3 }, { ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_LARGE, 1, 0 }, { ETYPE_CHARGER, SIZE_MEDIUM, 4, 4 }}, 4, false }, // A
+        { {{ ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 3 }, { ETYPE_SPLITTER, SIZE_LARGE, 1, 3 }, { ETYPE_MEDIC, SIZE_MEDIUM, 1, 3 }, { ETYPE_BOMBER, SIZE_MEDIUM, 3, 1 }}, 4, false }, // B
+        { {{ ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 2 }, { ETYPE_SHIELD, SIZE_MEDIUM, 3, 0 }}, 3, false }, // C
+        { {{ ETYPE_GHOST, SIZE_MEDIUM, 3, 3 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_GRUNT, SIZE_MEDIUM, 2, 0 }}, 4, false }, // D
+        { {{ ETYPE_SPLITTER, SIZE_LARGE, 2, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 5, 4 }, { ETYPE_MEDIC, SIZE_MEDIUM, 1, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 25 — BOSS: Dual-threat boss wave
+    // ====================================================================
+    {
+        { {{ ETYPE_BOSS_SENTINEL, SIZE_LARGE, 1, 5 }, { ETYPE_BOSS_DREADNOUGHT, SIZE_LARGE, 1, 5 }, { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }}, 3, true }, // A
+        { {{ ETYPE_BOSS_LEVIATHAN, SIZE_LARGE, 1, 5 }, { ETYPE_MEDIC, SIZE_MEDIUM, 2, 3 }, { ETYPE_SHIELD, SIZE_MEDIUM, 3, 0 }}, 3, true }, // B
+        { {{ ETYPE_BOSS_SENTINEL, SIZE_LARGE, 1, 5 }, { ETYPE_BOSS_NIGHTMARE_B, SIZE_LARGE, 1, 5 }, { ETYPE_GRUNT, SIZE_MEDIUM, 3, 3 }}, 3, true }, // C
+        { {{ ETYPE_BOSS_DREADNOUGHT, SIZE_LARGE, 1, 5 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_LARGE, 1, 0 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }}, 4, true }, // D
+        { {{ ETYPE_BOSS_LEVIATHAN, SIZE_LARGE, 1, 5 }, { ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }, { ETYPE_ARTILLERY, SIZE_MEDIUM, 2, 2 }}, 3, true }, // E
+    },
+    // ====================================================================
+    // WAVE 26 — Final gauntlet: maximum danger combos
+    // ====================================================================
+    {
+        { {{ ETYPE_SHIELD, SIZE_LARGE, 2, 0 }, { ETYPE_SNIPER, SIZE_MEDIUM, 3, 3 }, { ETYPE_MEDIC, SIZE_MEDIUM, 2, 3 }}, 3, false }, // A
+        { {{ ETYPE_NIGHTMARE, SIZE_LARGE, 1, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 4, 1 }, { ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }}, 3, false }, // B
+        { {{ ETYPE_HIVE, SIZE_LARGE, 1, 3 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 5, 4 }, { ETYPE_SHIELD, SIZE_MEDIUM, 2, 0 }}, 4, false }, // C
+        { {{ ETYPE_ARTILLERY, SIZE_LARGE, 1, 3 }, { ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }, { ETYPE_BRUTE, SIZE_LARGE, 1, 0 }, { ETYPE_BOMBER, SIZE_MEDIUM, 3, 1 }}, 4, false }, // D
+        { {{ ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 3 }, { ETYPE_GHOST, SIZE_MEDIUM, 3, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 27 — Fortress breaker: tanky + support
+    // ====================================================================
+    {
+        { {{ ETYPE_BRUTE, SIZE_LARGE, 2, 0 }, { ETYPE_MEDIC, SIZE_MEDIUM, 2, 3 }, { ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }}, 3, false }, // A
+        { {{ ETYPE_SHIELD, SIZE_LARGE, 2, 0 }, { ETYPE_ARTILLERY, SIZE_MEDIUM, 3, 2 }, { ETYPE_MEDIC, SIZE_SMALL, 2, 3 }}, 3, false }, // B
+        { {{ ETYPE_BRUTE, SIZE_LARGE, 1, 0 }, { ETYPE_SHIELD, SIZE_LARGE, 1, 0 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }}, 4, false }, // C
+        { {{ ETYPE_ANCHOR, SIZE_LARGE, 1, 3 }, { ETYPE_BRUTE, SIZE_MEDIUM, 3, 0 }, { ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }}, 3, false }, // D
+        { {{ ETYPE_BRUTE, SIZE_LARGE, 2, 0 }, { ETYPE_HIVE, SIZE_MEDIUM, 1, 3 }, { ETYPE_SWARM_DRONE, SIZE_SMALL, 4, 4 }, { ETYPE_MEDIC, SIZE_SMALL, 1, 3 }}, 4, false }, // E
+    },
+    // ====================================================================
+    // WAVE 28 — Chaos swarm: fast + teleport + fear
+    // ====================================================================
+    {
+        { {{ ETYPE_GHOST, SIZE_MEDIUM, 3, 3 }, { ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 3 }, { ETYPE_BOMBER, SIZE_MEDIUM, 3, 1 }}, 3, false }, // A
+        { {{ ETYPE_GHOST, SIZE_LARGE, 1, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 4, 4 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }}, 3, false }, // B
+        { {{ ETYPE_NIGHTMARE, SIZE_LARGE, 1, 3 }, { ETYPE_GHOST, SIZE_MEDIUM, 3, 3 }, { ETYPE_BOMBER, SIZE_MEDIUM, 2, 1 }, { ETYPE_CHARGER, SIZE_MEDIUM, 2, 4 }}, 4, false }, // C
+        { {{ ETYPE_GHOST, SIZE_MEDIUM, 3, 3 }, { ETYPE_SPLITTER, SIZE_LARGE, 2, 3 }, { ETYPE_MEDIC, SIZE_MEDIUM, 1, 3 }}, 3, false }, // D
+        { {{ ETYPE_NIGHTMARE, SIZE_MEDIUM, 3, 2 }, { ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_GHOST, SIZE_MEDIUM, 2, 3 }}, 3, false }, // E
+    },
+    // ====================================================================
+    // WAVE 29 — The gauntlet: everything at once
+    // ====================================================================
+    {
+        { {{ ETYPE_BRUTE, SIZE_LARGE, 2, 0 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 3, 3 }, { ETYPE_MEDIC, SIZE_MEDIUM, 1, 3 }}, 4, false }, // A
+        { {{ ETYPE_HIVE, SIZE_LARGE, 1, 3 }, { ETYPE_ANCHOR, SIZE_MEDIUM, 2, 3 }, { ETYPE_NIGHTMARE, SIZE_MEDIUM, 2, 3 }, { ETYPE_CHARGER, SIZE_MEDIUM, 3, 1 }}, 4, false }, // B
+        { {{ ETYPE_SHIELD, SIZE_LARGE, 2, 0 }, { ETYPE_ARTILLERY, SIZE_LARGE, 1, 3 }, { ETYPE_TRAPPER, SIZE_MEDIUM, 2, 3 }, { ETYPE_BOMBER, SIZE_MEDIUM, 2, 1 }}, 4, false }, // C
+        { {{ ETYPE_SPLITTER, SIZE_LARGE, 2, 3 }, { ETYPE_GHOST, SIZE_MEDIUM, 3, 3 }, { ETYPE_HEXER, SIZE_MEDIUM, 2, 3 }}, 3, false }, // D
+        { {{ ETYPE_NIGHTMARE, SIZE_LARGE, 1, 3 }, { ETYPE_BRUTE, SIZE_LARGE, 1, 0 }, { ETYPE_MEDIC, SIZE_MEDIUM, 2, 3 }, { ETYPE_SNIPER, SIZE_MEDIUM, 2, 3 }}, 4, false }, // E
+    },
+    // ====================================================================
+    // WAVE 30 — Apothecary (handled separately; placeholder entries)
+    // ====================================================================
+    {
+        { {{}}, 0, true },
+        { {{}}, 0, true },
+        { {{}}, 0, true },
+        { {{}}, 0, true },
+        { {{}}, 0, true },
+    },
 };
 
-// Endless (16+): pool of enemy types weighted by wave depth, randomised counts
-static void spawnEndlessWave(int wave) {
-    // Wave 30: final boss — no regular enemies
-    if (wave == 30) {
-        Vec2 pos = farthestEdgeFromPlayer();
-        s16 bossHp = scaledHp(3000, wave);  // final boss — must survive full 3-phase fight
-        spawnEnemy(pos, {0,0}, bossHp, ETYPE_BOSS_APOTHECARY, SIZE_LARGE, SPRITE_SIZE_BOSS_LARGE);
-        return;
-    }
+// Spawn wave 30 final boss (Apothecary) — called from spawnWave()
+static void spawnApothecaryBoss(int wave) {
+    Vec2 pos = farthestEdgeFromPlayer();
+    s16 bossHp = scaledHp(3000, wave);  // final boss — must survive full 3-phase fight
+    spawnEnemy(pos, {0,0}, bossHp, ETYPE_BOSS_APOTHECARY, SIZE_LARGE, SPRITE_SIZE_BOSS_LARGE);
+}
 
+// Endless (31+): pool of enemy types weighted by wave depth, randomised counts
+static void spawnEndlessWave(int wave) {
     // How many total enemy-slots to fill, capped at MAX_ENEMIES - 1
     int budget = 8 + (wave - 15) * 2;
     if (budget > 28) budget = 28;
 
-    // Increase variety and difficulty every 5 waves past wave 15
-    int tier = (wave - 16) / 5;  // 0,1,2,3...
+    // Increase variety and difficulty every 5 waves past wave 30
+    int tier = (wave - 31) / 5;  // 0,1,2,3...
     if (tier > 3) tier = 3;
 
     // Available type pool grows with tier
@@ -463,13 +702,13 @@ static void spawnEndlessWave(int wave) {
         budget -= cnt;
     }
 
-    // Every 5 waves past 15: add a roaming boss
-    if ((wave - 15) % 5 == 0) {
+    // Every 5 waves past 30: add a roaming boss
+    if ((wave - 30) % 5 == 0 && wave > 30) {
         static const u8 bossTypes[4] = {
             ETYPE_BOSS_SENTINEL, ETYPE_BOSS_DREADNOUGHT,
             ETYPE_BOSS_LEVIATHAN, ETYPE_BOSS_NIGHTMARE_B
         };
-        u8 bossType = bossTypes[((wave - 15) / 5 - 1) % 4];
+        u8 bossType = bossTypes[((wave - 30) / 5 - 1) % 4];
         Vec2 pos = farthestEdgeFromPlayer();
         s16 bossHp = scaledHp(baseHpForSize(3, wave), wave);
         spawnEnemy(pos, {0,0}, bossHp, bossType, SIZE_LARGE, SPRITE_SIZE_BOSS);
@@ -485,14 +724,20 @@ static void spawnWave() {
     waveAnnounceTimer = 90;
     overflowSpawned   = false;
 
-    if (waveNumber <= 15) {
-        // Scripted wave: use template
-        const WaveTemplate& tmpl = kWaveTemplates[waveNumber - 1];
-        for (int g = 0; g < tmpl.groupCount; g++) {
-            spawnGroup(tmpl.groups[g], waveNumber);
+    if (waveNumber <= TOTAL_WAVES) {
+        if (waveNumber == 30) {
+            // Wave 30: final boss (Apothecary) — special spawn
+            spawnApothecaryBoss(waveNumber);
+        } else {
+            // Waves 1-29: pick a random variant from the hand-designed table
+            int variant = rngRange(WAVE_VARIANTS);
+            const WaveTemplate& tmpl = kWaveTable[waveNumber - 1][variant];
+            for (int g = 0; g < tmpl.groupCount; g++) {
+                spawnGroup(tmpl.groups[g], waveNumber);
+            }
         }
     } else {
-        // Endless: procedural scaling
+        // Endless (31+): procedural scaling
         spawnEndlessWave(waveNumber);
     }
 }
@@ -545,9 +790,10 @@ static void updatePlay() {
         waveClearTimer = 60;
         waveAnnouncementClear();
         // Boss waves get the extra "BOSS DEFEATED!" banner timer
-        bool bossWave = (waveNumber <= 15)
-                        ? kWaveTemplates[waveNumber - 1].isBossWave
-                        : ((waveNumber - 15) % 5 == 0);
+        bool bossWave = (waveNumber == 5 || waveNumber == 10 ||
+                         waveNumber == 15 || waveNumber == 20 ||
+                         waveNumber == 25 || waveNumber == 30 ||
+                         (waveNumber > 30 && (waveNumber - 30) % 5 == 0));
         if (bossWave) bossDefeatedTimer = 90;
     }
 
@@ -558,9 +804,10 @@ static void updatePlay() {
     if (!waveActive && waveClearTimer > 0) {
         waveClearTimer--;
         if (waveClearTimer == 0) {
-            bool bossWave = (waveNumber <= 15)
-                        ? kWaveTemplates[waveNumber - 1].isBossWave
-                        : ((waveNumber - 15) % 5 == 0);
+            bool bossWave = (waveNumber == 5 || waveNumber == 10 ||
+                         waveNumber == 15 || waveNumber == 20 ||
+                         waveNumber == 25 || waveNumber == 30 ||
+                         (waveNumber > 30 && (waveNumber - 30) % 5 == 0));
             if (bossWave) {
                 // bossDefeatedTimer was already set above; stay in Play state
                 // and let the banner tick finish before entering PerkChoice
