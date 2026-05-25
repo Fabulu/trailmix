@@ -133,6 +133,13 @@ static void enterGameOver() {
     audioPlayMusic(0); // MOD_MENU
 }
 
+static void enterVictory() {
+    state = GameState::Victory;
+    renderClearSub();
+    audioPlaySfx(GSFX_VICTORY);
+    audioPlayMusic(0); // MOD_MENU
+}
+
 // --- Wave-clear detection ---
 
 static bool allEnemiesDead() {
@@ -231,9 +238,9 @@ struct WaveTemplate {
     bool isBossWave;
 };
 
-// HP scaling: base * (100 + (wave-1)*18) / 100
+// HP scaling: base * (100 + (wave-1)*25) / 100
 static s16 scaledHp(int baseHp, int wave) {
-    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 18) / 100);
+    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 25) / 100);
     return (hp < 1) ? 1 : hp;
 }
 
@@ -253,7 +260,7 @@ static int baseHpForSize(u8 sc, int /*wave*/) {
         case SIZE_SMALL:  return 4;
         case SIZE_MEDIUM: return 8;
         case SIZE_LARGE:  return 14;
-        default:          return 250;  // boss — already high base
+        default:          return 500;  // boss base HP
     }
 }
 
@@ -412,7 +419,7 @@ static void spawnEndlessWave(int wave) {
     // Wave 30: final boss — no regular enemies
     if (wave == 30) {
         Vec2 pos = farthestEdgeFromPlayer();
-        s16 bossHp = scaledHp(250, wave);
+        s16 bossHp = scaledHp(1500, wave);  // 3x regular boss — final boss is a spectacle
         spawnEnemy(pos, {0,0}, bossHp, ETYPE_BOSS_APOTHECARY, SIZE_LARGE, SPRITE_SIZE_BOSS_LARGE);
         return;
     }
@@ -563,11 +570,15 @@ static void updatePlay() {
         }
     }
 
-    // "BOSS DEFEATED!" banner countdown → PerkChoice
+    // "BOSS DEFEATED!" banner countdown → Victory (wave 30) or PerkChoice
     if (!waveActive && waveClearTimer == 0 && bossDefeatedTimer > 0) {
         bossDefeatedTimer--;
         if (bossDefeatedTimer == 0) {
-            enterPerkChoice();
+            if (waveNumber == 30) {
+                enterVictory();
+            } else {
+                enterPerkChoice();
+            }
             return;
         }
     }
@@ -603,6 +614,17 @@ static void updateGameOver() {
     }
 }
 
+static void updateVictory() {
+    u32 kd = keysDown();
+    if (kd & KEY_START) {
+        // Continue to endless mode
+        startNextWave();
+    }
+    if (kd & KEY_A) {
+        enterMenu();
+    }
+}
+
 // --- Per-state render ---
 
 static void renderPlayState() {
@@ -634,6 +656,7 @@ static const StateFunc updateTable[static_cast<int>(GameState::COUNT)] = {
     updatePerkChoice,
     updateShop,
     updateGameOver,
+    updateVictory,
 };
 
 static const StateFunc renderTable[static_cast<int>(GameState::COUNT)] = {
@@ -642,6 +665,7 @@ static const StateFunc renderTable[static_cast<int>(GameState::COUNT)] = {
     renderPerkChoiceState,
     renderShopState,
     renderGameOver,
+    renderVictory,
 };
 
 // --- Public API ---

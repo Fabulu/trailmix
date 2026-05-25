@@ -1140,6 +1140,25 @@ void renderGameOver() {
     oamUpdate(&oamMain);
 }
 
+void renderVictory() {
+    renderClearParticleLayer();
+    // Hide OAM sprites
+    for (int i = 0; i < 128; i++)
+        oamSet(&oamMain, i, 0, 0, 0, 0, SpriteSize_16x16,
+               SpriteColorFormat_16Color, nullptr, -1, false, true, false, false, false);
+    oamUpdate(&oamMain);
+
+    renderFilledRect(0, 0, 256, 192, RGB15(1, 1, 4));
+    renderFilledRect(20, 40, 216, 100, RGB15(4, 8, 20));
+
+    renderText(128 - renderTextWidth("VICTORY!") / 2, 50, "VICTORY!", RGB15(31, 28, 0));
+    renderText(128 - renderTextWidth("THE APOTHECARY") / 2, 68, "THE APOTHECARY", RGB15(20, 20, 28));
+    renderText(128 - renderTextWidth("HAS BEEN DEFEATED") / 2, 78, "HAS BEEN DEFEATED", RGB15(20, 20, 28));
+
+    renderText(128 - renderTextWidth("START: ENDLESS MODE") / 2, 104, "START: ENDLESS MODE", RGB15(10, 31, 10));
+    renderText(128 - renderTextWidth("A: RETURN TO MENU") / 2, 118, "A: RETURN TO MENU", RGB15(20, 20, 20));
+}
+
 // ---------------------------------------------------------------------------
 // Pixel font rendering
 // ---------------------------------------------------------------------------

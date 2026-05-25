@@ -8,6 +8,7 @@ void renderFlip();
 void renderGameplay();
 void renderMenu();
 void renderGameOver();
+void renderVictory();
 
 // Low-level drawing into the particle framebuffer (top screen)
 void renderClearParticleLayer();

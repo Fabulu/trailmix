@@ -85,9 +85,9 @@ struct SfxTuning { u8 volume; u16 rate; };
 static const SfxTuning sfxTuning[GSFX_COUNT] = {
     {  3, 22050},  // SHOOT — barely there
     {  1, 22050},  // EXPLODE
-    { 12, 22050},  // GOLD
+    {  3, 22050},  // GOLD
     { 18, 22050},  // MERGE
-    {  6, 22050},  // HIT — audible tick on enemy damage
+    { 15, 22050},  // HIT
     { 10, 22050},  // SELECT
     {  5, 22050},  // DASH
     { 10, 22050},  // BUY

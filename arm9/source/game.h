@@ -9,6 +9,7 @@ enum class GameState : int {
     PerkChoice = 2,
     Shop       = 3,
     GameOver   = 4,
+    Victory    = 5,
     COUNT
 };
 
