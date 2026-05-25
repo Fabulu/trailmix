@@ -734,7 +734,7 @@ static void updateParticles() {
 }
 
 // Helper: kill or drop gold for an enemy that just reached 0 hp
-static void killEnemy(Enemy& e, u8 bulletColor) {
+void killEnemy(Enemy& e, u8 bulletColor) {
     // Track enemy index for Bounty Board
     int enemyIdx = static_cast<int>(&e - &gEnemies[0]);
 

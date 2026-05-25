@@ -1,6 +1,7 @@
 #include "companion.h"
 #include "player.h"
 #include "entities.h"
+#include "combat.h"
 #include "perk.h"
 #include "audio.h"
 #include "render.h"
@@ -375,7 +376,7 @@ void companionUpdate() {
                                 e.hp -= dmg;
                                 if (c.tier >= 2) { e.freezeTimer = 60; }
                                 else if (c.tier >= 1) { if (e.slowTimer < 30) e.slowTimer = 30; }
-                                if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 8, 12, static_cast<u8>(c.color)); }
+                                if (e.hp <= 0) killEnemy(e, static_cast<u8>(c.color));
                             }
                         }
                         spawnParticleBurst(c.pos, 6, 8, static_cast<u8>(c.color));
@@ -541,7 +542,7 @@ void companionUpdate() {
                                 e.fearTimer = static_cast<u8>(60 + c.tier * 30);
                                 // T3: feared enemies also get slowed
                                 if (c.tier >= 2) { if (e.slowTimer < e.fearTimer) e.slowTimer = e.fearTimer; }
-                                if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 8, 12, static_cast<u8>(c.color)); }
+                                if (e.hp <= 0) killEnemy(e, static_cast<u8>(c.color));
                             }
                         }
                         spawnParticleBurst(c.pos, 8, 10, static_cast<u8>(c.color));
@@ -592,7 +593,7 @@ void companionUpdate() {
                             if (dist < static_cast<s32>(toFixed(48)) * toFixed(48)) {
                                 e.hp -= static_cast<s16>(dmg / 2);
                                 spawnParticleBurst(e.pos, 3, 6, static_cast<u8>(c.color));
-                                if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 8, 12, static_cast<u8>(c.color)); }
+                                if (e.hp <= 0) killEnemy(e, static_cast<u8>(c.color));
                                 if (++chains >= maxChains) break;
                             }
                         }
@@ -714,7 +715,7 @@ void companionUpdate() {
                                 if (dist < static_cast<s32>(toFixed(32)) * toFixed(32)) {
                                     e.hp -= dmg;
                                     e.hurtTimer = 4;
-                                    if (e.hp <= 0) { e.active = false; spawnParticleBurst(e.pos, 6, 10, 5); }
+                                    if (e.hp <= 0) killEnemy(e, static_cast<u8>(c.color));
                                 }
                             }
                             c.shootTimer = 30; // forced overheat cooldown
