@@ -131,10 +131,10 @@ static void startNextWave() {
     waveActive = true;
     state = GameState::Play;
 
-    // Wave-start grace period: player + companions get 90 iframes
-    gPlayer.iframes = 90;
+    // Wave-start grace period: player + companions get 180 iframes (3 seconds)
+    gPlayer.iframes = 180;
     for (auto& c : gCompanions) {
-        if (c.active) c.iframes = 90;
+        if (c.active) c.iframes = 180;
     }
 }
 
