@@ -1668,19 +1668,17 @@ static void renderUpgradePath(int panelX, int panelY,
     static const u16 kGold   = RGB15(31, 28, 0);
 
     // Generic per-tier change labels (same for all classes in this build)
-    static const char* kTierChange[3] = {
-        "",              // T1: base, nothing extra
-        "+1 shot",       // T2 bonus over T1
-        "+2 shots",      // T3 bonus over T1 (second line drawn separately)
+    const char* kTierChange[3] = {
+        "",                // T1: base
+        str(kUI[41]),      // "+1 shot" / "+1 Schuss"
+        str(kUI[42]),      // "+2 shots" / "+2 Schuesse"
     };
-    // T3 pierce annotation drawn as a second sub-line
-    static const char* kT3Extra = "pierce all";
+    const char* kT3Extra = str(kUI[43]); // "pierce all" / "durchbohrt alle"
 
-    // Merge requirement text per tier (the cost to reach the NEXT tier from here)
-    static const char* kMergeReq[3] = {
-        "3 to merge",   // T1 → T2
-        "2 to merge",   // T2 → T3
-        "MAX",          // T3: already at top
+    const char* kMergeReq[3] = {
+        str(kUI[38]),      // "3 to merge" / "3 zum Verschm."
+        str(kUI[39]),      // "2 to merge" / "2 zum Verschm."
+        str(kUI[40]),      // "MAX"
     };
 
     for (int t = 0; t < 3; ++t) {

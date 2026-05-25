@@ -75,6 +75,12 @@ constexpr StrEntry kUI[] = {
     /* STR_UI_TAP_HINT    [35]  */ S("TAP ONCE TO SELECT  TAP AGAIN TO CONFIRM", "ANTIPPEN ZUM WAEHLEN  NOCHMAL ZUM BESTAETIGEN"),
     /* STR_UI_UPGRADE     [36]  */ S("UPGRADE PATH:", "AUFWERTUNGSPFAD:"),
     /* STR_UI_WAVE        [37]  */ S("WAVE", "WELLE"),
+    /* STR_UI_3MERGE      [38]  */ S("3 to merge", "3 zum Verschm."),
+    /* STR_UI_2MERGE      [39]  */ S("2 to merge", "2 zum Verschm."),
+    /* STR_UI_TIERMAX     [40]  */ S("MAX", "MAX"),
+    /* STR_UI_PLUS1SHOT   [41]  */ S("+1 shot", "+1 Schuss"),
+    /* STR_UI_PLUS2SHOTS  [42]  */ S("+2 shots", "+2 Schuesse"),
+    /* STR_UI_PIERCEALL   [43]  */ S("pierce all", "durchbohrt alle"),
 };
 
 // Color abbreviations for HUD (indexed by PillColor)
