@@ -359,44 +359,44 @@ constexpr int TOTAL_WAVES   = 30;
 
 static const WaveTemplate kWaveTable[TOTAL_WAVES][WAVE_VARIANTS] = {
     // ====================================================================
-    // WAVE 1 — Tutorial: all small grunts
+    // WAVE 1 — Tutorial: grunts (8-10 enemies, enough gold for 1 buy)
     // ====================================================================
     {
-        { {{ ETYPE_GRUNT, SIZE_SMALL, 3, 3 }},                                                           1, false }, // A: 3 scatter
-        { {{ ETYPE_GRUNT, SIZE_SMALL, 4, 0 }},                                                           1, false }, // B: 4 line
-        { {{ ETYPE_GRUNT, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 1, 3 }},                        2, false }, // C: 2+1 scatter
-        { {{ ETYPE_GRUNT, SIZE_SMALL, 3, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 1, 3 }},                        2, false }, // D: 3 line + 1 scatter
-        { {{ ETYPE_GRUNT, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 0 }},                        2, false }, // E: 2+2 line
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 6, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 0 }},                        2, false }, // A: 10
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 8, 0 }},                                                           1, false }, // B: 8 line
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 5, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 2 }},                        2, false }, // C: 8
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 4, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 1 }},                        2, false }, // D: 8 pincer
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 5, 4 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 3 }},                        2, false }, // E: 9
     },
     // ====================================================================
-    // WAVE 2 — Introduce charger
+    // WAVE 2 — Introduce charger (8-10 enemies)
     // ====================================================================
     {
-        { {{ ETYPE_CHARGER, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }},                      2, false }, // A
-        { {{ ETYPE_CHARGER, SIZE_SMALL, 3, 3 }},                                                          1, false }, // B
-        { {{ ETYPE_CHARGER, SIZE_SMALL, 2, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 1, 3 }},                       2, false }, // C
-        { {{ ETYPE_GRUNT,   SIZE_SMALL, 5, 0 }},                                                          1, false }, // D
-        { {{ ETYPE_GRUNT,   SIZE_SMALL, 2, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 2, 3 }},                     2, false }, // E
+        { {{ ETYPE_CHARGER, SIZE_SMALL, 3, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 5, 3 }},                      2, false }, // A: 8
+        { {{ ETYPE_CHARGER, SIZE_SMALL, 4, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 0 }},                      2, false }, // B: 8
+        { {{ ETYPE_CHARGER, SIZE_SMALL, 3, 1 }, { ETYPE_GRUNT, SIZE_SMALL, 6, 2 }},                      2, false }, // C: 9
+        { {{ ETYPE_GRUNT,   SIZE_SMALL, 8, 0 }, { ETYPE_CHARGER, SIZE_SMALL, 2, 1 }},                    2, false }, // D: 10
+        { {{ ETYPE_GRUNT,   SIZE_SMALL, 4, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 4, 1 }},                    2, false }, // E: 8
     },
     // ====================================================================
-    // WAVE 3 — Introduce ranged (spitter/splitter)
+    // WAVE 3 — Introduce ranged (8-10 enemies)
     // ====================================================================
     {
-        { {{ ETYPE_SPITTER, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 0 }},                       2, false }, // A
-        { {{ ETYPE_SPLITTER, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 2, 3 }},                      2, false }, // B
-        { {{ ETYPE_GRUNT, SIZE_SMALL, 4, 0 }, { ETYPE_SPITTER, SIZE_SMALL, 1, 3 }},                       2, false }, // C
-        { {{ ETYPE_SPLITTER, SIZE_SMALL, 3, 3 }},                                                         1, false }, // D
-        { {{ ETYPE_SPITTER, SIZE_SMALL, 2, 1 }, { ETYPE_CHARGER, SIZE_SMALL, 2, 0 }},                     2, false }, // E
+        { {{ ETYPE_SPITTER, SIZE_SMALL, 3, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 5, 0 }},                      2, false }, // A: 8
+        { {{ ETYPE_SPLITTER, SIZE_SMALL, 3, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 5, 3 }},                     2, false }, // B: 8
+        { {{ ETYPE_GRUNT, SIZE_SMALL, 6, 0 }, { ETYPE_SPITTER, SIZE_SMALL, 2, 3 }},                      2, false }, // C: 8
+        { {{ ETYPE_SPLITTER, SIZE_SMALL, 4, 3 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 1 }},                   2, false }, // D: 7
+        { {{ ETYPE_SPITTER, SIZE_SMALL, 3, 1 }, { ETYPE_CHARGER, SIZE_SMALL, 3, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 3 }}, 3, false }, // E: 9
     },
     // ====================================================================
-    // WAVE 4 — Introduce shield/sniper
+    // WAVE 4 — Introduce shield/sniper (8-10 enemies)
     // ====================================================================
     {
-        { {{ ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 3 }},                        2, false }, // A
-        { {{ ETYPE_SNIPER, SIZE_SMALL, 1, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 4, 0 }},                        2, false }, // B
-        { {{ ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_SPITTER, SIZE_SMALL, 2, 3 }},                      2, false }, // C
-        { {{ ETYPE_CHARGER, SIZE_SMALL, 3, 1 }, { ETYPE_SNIPER, SIZE_SMALL, 1, 3 }},                      2, false }, // D
-        { {{ ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_SPLITTER, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 1, 3 }}, 3, false }, // E
+        { {{ ETYPE_SHIELD, SIZE_SMALL, 3, 0 }, { ETYPE_GRUNT, SIZE_SMALL, 5, 3 }},                        2, false }, // A: 8
+        { {{ ETYPE_SNIPER, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 6, 0 }},                        2, false }, // B: 8
+        { {{ ETYPE_SHIELD, SIZE_SMALL, 2, 0 }, { ETYPE_SPITTER, SIZE_SMALL, 3, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 1 }}, 3, false }, // C: 8
+        { {{ ETYPE_CHARGER, SIZE_SMALL, 4, 1 }, { ETYPE_SNIPER, SIZE_SMALL, 2, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 0 }}, 3, false }, // D: 9
+        { {{ ETYPE_SHIELD, SIZE_SMALL, 3, 0 }, { ETYPE_SPLITTER, SIZE_SMALL, 3, 3 }, { ETYPE_GRUNT, SIZE_SMALL, 3, 2 }}, 3, false }, // E: 9
     },
     // ====================================================================
     // WAVE 5 — BOSS: Sentinel
