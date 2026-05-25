@@ -673,7 +673,9 @@ void companionUpdate() {
 }
 
 Companion* companionSpawn(PillColor color, u8 classId, u8 tier) {
-    if (gCompanionCount >= perkMaxCompanions()) return nullptr;
+    // Allow spawning up to MAX_COMPANIONS (array size) even if over soft cap
+    // The shop checks merge eligibility before calling this
+    if (gCompanionCount >= MAX_COMPANIONS) return nullptr;
 
     // Find first inactive slot
     for (auto& c : gCompanions) {
