@@ -33,9 +33,13 @@ static const u16 kPerkPriceShop[30] = {
 #include <cstdio>
 
 ShopState gShop;
+bool gShowPerkInfo = false;
 
 // Dirty flag: only re-render when something changed
 static bool shopDirty = true;
+
+// Scroll offset for perk info screen (persists while overlay is open)
+static int sPerkInfoScroll = 0;
 
 // ---------------------------------------------------------------------------
 // Layout constants -- all pixel coordinates for the 256x192 sub screen
@@ -215,6 +219,25 @@ bool shopUpdate() {
         } else {
             shopDirty = true;
         }
+    }
+
+    // Toggle perk info overlay with SELECT
+    if (keysDown() & KEY_SELECT) {
+        gShowPerkInfo = !gShowPerkInfo;
+        if (gShowPerkInfo) sPerkInfoScroll = 0;
+        shopDirty = true;
+    }
+
+    // While perk info is open, only handle B (close) and D-pad (scroll)
+    if (gShowPerkInfo) {
+        u32 kd = keysDown();
+        if (kd & KEY_B) {
+            gShowPerkInfo = false;
+            shopDirty = true;
+        }
+        if (kd & KEY_DOWN) { sPerkInfoScroll++; shopDirty = true; }
+        if (kd & KEY_UP)   { if (sPerkInfoScroll > 0) sPerkInfoScroll--; shopDirty = true; }
+        return false;
     }
 
     if (keysDown() & KEY_START) {

@@ -54,6 +54,9 @@ void renderArmySummary();
 // Top-screen detail view for an owned companion (inventory bar tap)
 void renderCompanionDetail(int companionSlot);
 
+// Top-screen perk info overlay (all owned perks)
+void renderPerkInfo();
+
 // Get the active top-screen framebuffer pointer (for enemy sprite blitting)
 u16* renderGetActiveBuffer();
 

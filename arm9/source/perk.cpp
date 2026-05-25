@@ -60,6 +60,12 @@ bool perkIsActive(PerkId id) {
     return gPerks.active[id];
 }
 
+// Index-based variant for use without PerkId enum (avoids header conflicts)
+extern "C" bool perkIsActiveIdx(int idx) {
+    if (idx < 0 || idx >= PERK_COUNT) return false;
+    return gPerks.active[idx];
+}
+
 int perkGetRandom() {
     int candidates[PERK_COUNT];
     int count = 0;

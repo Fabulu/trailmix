@@ -673,56 +673,84 @@ static void spawnApothecaryBoss(int wave) {
     spawnEnemy(pos, {0,0}, bossHp, ETYPE_BOSS_APOTHECARY, SIZE_LARGE, SPRITE_SIZE_BOSS_LARGE);
 }
 
-// Endless (31+): pool of enemy types weighted by wave depth, randomised counts
+// Endless (31+): full roster, randomised compositions, guaranteed support
 static void spawnEndlessWave(int wave) {
-    // How many total enemy-slots to fill, capped at MAX_ENEMIES - 1
-    int budget = 8 + (wave - 15) * 2;
-    if (budget > 28) budget = 28;
+    // Budget: 10 + 2 per wave past 30, capped at 20
+    int budget = 10 + (wave - 30) * 2;
+    if (budget > 20) budget = 20;
 
-    // Increase variety and difficulty every 5 waves past wave 30
-    int tier = (wave - 31) / 5;  // 0,1,2,3...
-    if (tier > 3) tier = 3;
-
-    // Available type pool grows with tier
-    static const u8 typePools[4][8] = {
-        { ETYPE_GRUNT, ETYPE_CHARGER, ETYPE_SPITTER, ETYPE_BRUTE,
-          ETYPE_GRUNT, ETYPE_CHARGER, ETYPE_GRUNT,   ETYPE_CHARGER },         // tier 0
-        { ETYPE_CHARGER, ETYPE_SPITTER, ETYPE_SNIPER, ETYPE_SPLITTER,
-          ETYPE_BRUTE,   ETYPE_SHIELD,  ETYPE_GRUNT,  ETYPE_CHARGER },        // tier 1
-        { ETYPE_SPLITTER, ETYPE_SHIELD, ETYPE_ARTILLERY, ETYPE_NIGHTMARE,
-          ETYPE_SPITTER,  ETYPE_SNIPER, ETYPE_GHOST,     ETYPE_BOMBER },      // tier 2
-        { ETYPE_NIGHTMARE, ETYPE_GHOST, ETYPE_BOMBER, ETYPE_SWARM_DRONE,
-          ETYPE_SPLITTER,  ETYPE_SHIELD,ETYPE_ARTILLERY, ETYPE_SPITTER },     // tier 3
-    };
-    static const u8 sizePools[4][2] = {
-        { SIZE_SMALL, SIZE_SMALL  },
-        { SIZE_SMALL, SIZE_MEDIUM },
-        { SIZE_MEDIUM, SIZE_LARGE },
-        { SIZE_MEDIUM, SIZE_LARGE },
+    // Full roster of 17 regular enemy types (0-16)
+    static const u8 fullRoster[17] = {
+        ETYPE_GRUNT, ETYPE_CHARGER, ETYPE_BRUTE, ETYPE_SPITTER,
+        ETYPE_SNIPER, ETYPE_SPLITTER, ETYPE_SHIELD, ETYPE_ARTILLERY,
+        ETYPE_NIGHTMARE, ETYPE_GHOST, ETYPE_SWARM_DRONE, ETYPE_BOMBER,
+        ETYPE_MEDIC, ETYPE_ANCHOR, ETYPE_TRAPPER, ETYPE_HEXER, ETYPE_HIVE
     };
 
-    while (budget > 0) {
-        int poolIdx = rngRange(8);
-        u8 etype = typePools[tier][poolIdx];
-        u8 sc    = sizePools[tier][rngRange(2)];
-        int cnt  = (sc == SIZE_LARGE) ? 1 : (sc == SIZE_MEDIUM ? rngRange(2) + 1 : rngRange(3) + 1);
-        if (cnt > budget) cnt = budget;
-        int form = rngRange(5);
-        WaveEntry g = { etype, sc, static_cast<u8>(cnt), static_cast<u8>(form) };
-        spawnGroup(g, wave);
-        budget -= cnt;
+    // Support types (Medic, Anchor, Hive) — at least 1 guaranteed per wave
+    static const u8 supportTypes[3] = { ETYPE_MEDIC, ETYPE_ANCHOR, ETYPE_HIVE };
+
+    // Pick 2-4 random types for this wave's composition
+    int numTypes = 2 + rngRange(3); // 2, 3, or 4
+
+    u8 picked[4];
+    int pickedCount = 0;
+
+    // Guarantee one support type as the first pick
+    picked[pickedCount++] = supportTypes[rngRange(3)];
+
+    // Fill remaining slots from full roster, avoiding duplicates
+    while (pickedCount < numTypes) {
+        u8 candidate = fullRoster[rngRange(17)];
+        bool dup = false;
+        for (int i = 0; i < pickedCount; i++) {
+            if (picked[i] == candidate) { dup = true; break; }
+        }
+        if (!dup) picked[pickedCount++] = candidate;
     }
 
-    // Every 5 waves past 30: add a roaming boss
-    if ((wave - 30) % 5 == 0 && wave > 30) {
-        static const u8 bossTypes[4] = {
+    // Distribute budget roughly evenly across picked types
+    int remaining = budget;
+    for (int i = 0; i < pickedCount; i++) {
+        int share;
+        if (i == pickedCount - 1) {
+            share = remaining; // last type gets the rest
+        } else {
+            // Give each type a roughly equal share with some randomness
+            int base = remaining / (pickedCount - i);
+            int jitter = (base > 2) ? rngRange(base / 2 + 1) - base / 4 : 0;
+            share = base + jitter;
+            if (share < 1) share = 1;
+            if (share > remaining - (pickedCount - i - 1))
+                share = remaining - (pickedCount - i - 1); // leave at least 1 for others
+        }
+
+        // Size distribution: 40% LARGE, 40% MEDIUM, 20% SMALL
+        u8 sc;
+        int roll = rngRange(10); // 0-9
+        if (roll < 4)      sc = SIZE_LARGE;
+        else if (roll < 8) sc = SIZE_MEDIUM;
+        else               sc = SIZE_SMALL;
+
+        int form = rngRange(5); // 0=line, 1=pincer, 2=surround, 3=scatter, 4=fish-school
+        WaveEntry g = { picked[i], sc, static_cast<u8>(share), static_cast<u8>(form) };
+        spawnGroup(g, wave);
+        remaining -= share;
+    }
+
+    // Boss every 5 waves (35, 40, 45, ...) — cycle through all 5 bosses
+    if (wave >= 35 && (wave - 30) % 5 == 0) {
+        static const u8 bossTypes[5] = {
             ETYPE_BOSS_SENTINEL, ETYPE_BOSS_DREADNOUGHT,
-            ETYPE_BOSS_LEVIATHAN, ETYPE_BOSS_NIGHTMARE_B
+            ETYPE_BOSS_LEVIATHAN, ETYPE_BOSS_NIGHTMARE_B,
+            ETYPE_BOSS_APOTHECARY
         };
-        u8 bossType = bossTypes[((wave - 30) / 5 - 1) % 4];
+        u8 bossType = bossTypes[((wave - 35) / 5) % 5];
         Vec2 pos = farthestEdgeFromPlayer();
         s16 bossHp = scaledHp(baseHpForSize(3, wave), wave);
-        spawnEnemy(pos, {0,0}, bossHp, bossType, SIZE_LARGE, SPRITE_SIZE_BOSS);
+        u8 bossSprSz = (bossType == ETYPE_BOSS_APOTHECARY)
+                        ? SPRITE_SIZE_BOSS_LARGE : SPRITE_SIZE_BOSS;
+        spawnEnemy(pos, {0,0}, bossHp, bossType, SIZE_LARGE, bossSprSz);
     }
 }
 

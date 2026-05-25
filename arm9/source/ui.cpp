@@ -177,35 +177,46 @@ void uiRenderHUD() {
             if (sx >= 250) break; // no room for more
         }
 
-        // Active synergy effect descriptions — compact line below badges
-        // Format: "R:2 PIERCE ALL  B:1 SLOW FIELD" etc.
+        // Active synergy effect description — compact line below badges
+        // Shows the actual effect description from kSynergyDesc.
+        // If multiple synergies are active, cycle between them every ~3s.
         const int DESC_Y = 78;
-        int dx = 4;
+        static const char kLabel[PILL_COLOR_COUNT] = { 'R', 'B', 'G', 'Y', 'P', 'C' };
+
+        // Collect active synergies (color index + tier)
+        int activeSyn[PILL_COLOR_COUNT];
+        int activeCount = 0;
         for (int ci = 0; ci < PILL_COLOR_COUNT; ci++) {
             int cnt = colorCount[ci];
             if (cnt < 2) continue;
+            activeSyn[activeCount++] = ci;
+        }
 
-            int tier = cnt - 2;
+        if (activeCount > 0) {
+            // Cycle through active synergies every ~180 frames (~3s at 60fps)
+            static int synCycleFrame = 0;
+            synCycleFrame++;
+            int showIdx = (synCycleFrame / 180) % activeCount;
+            int ci = activeSyn[showIdx];
+
+            int tier = colorCount[ci] - 2;
             if (tier >= SYN_TIERS) tier = SYN_TIERS - 1;
 
             u16 col = pillColorToRGB(static_cast<PillColor>(ci));
-            const char* synName = str(kSynergyNames[ci][tier]);
+            const char* desc = str(kSynergyDesc[ci][tier]);
 
             // "R2:" prefix
-            static const char kLabel[PILL_COLOR_COUNT] = { 'R', 'B', 'G', 'Y', 'P', 'C' };
+            int dx = 4;
             char prefix[4] = { kLabel[ci], static_cast<char>('1' + tier), ':', '\0' };
             renderTextSub(dx, DESC_Y, prefix, col);
             dx += 3 * 6; // 3 chars × 6px
 
-            // Synergy name, truncated to 10 chars to fit
-            char dBuf[11];
+            // Description, truncated to 39 chars (256px - 18px prefix = 238px / 6px)
+            char dBuf[40];
             int nc = 0;
-            while (synName[nc] && nc < 10) { dBuf[nc] = synName[nc]; nc++; }
+            while (desc[nc] && nc < 39) { dBuf[nc] = desc[nc]; nc++; }
             dBuf[nc] = '\0';
             renderTextSub(dx, DESC_Y, dBuf, RGB15(22, 22, 22));
-            dx += nc * 6 + 6; // text width + gap
-
-            if (dx >= 250) break;
         }
     }
 

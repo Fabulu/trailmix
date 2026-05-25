@@ -28,6 +28,7 @@ struct ShopState {
 };
 
 extern ShopState gShop;
+extern bool gShowPerkInfo;
 
 void shopGenerate(int wave);
 // Returns true when player wants to start next wave

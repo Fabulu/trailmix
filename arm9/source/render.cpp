@@ -18,6 +18,9 @@
 extern u8  gameGetWaveTimerPct();
 extern u8  gameGetAnnounceTimer();
 
+// Forward declaration: perk active check by index (avoids perk.h PERK_COUNT conflict)
+extern "C" bool perkIsActiveIdx(int idx);
+
 // Merge flash overlay — timer counts down each frame, visual overlay when > 0
 static int gMergeFlashTimer = 0;
 static constexpr int MERGE_FLASH_FRAMES = 30;
@@ -2006,37 +2009,102 @@ void renderArmySummary() {
         y += 12;
     }
 
-    // Gold
+    // Gold + Wave — right-aligned alongside companion list
     char goldBuf[16];
     snprintf(goldBuf, sizeof(goldBuf), "%s %d", str(kUI[47]), gPlayer.gold);
-    renderText(8, 150, goldBuf, RGB15(31, 28, 0));
+    int gw = renderTextWidth(goldBuf);
+    renderText(248 - gw, 20, goldBuf, RGB15(31, 28, 0));
 
-    // Wave
-    char waveBuf[16];
-    snprintf(waveBuf, sizeof(waveBuf), "%s: %d", str(kUI[37]), gameGetWave());
-    renderText(8, 165, waveBuf, RGB15(20, 20, 31));
+    char waveBuf2[16];
+    snprintf(waveBuf2, sizeof(waveBuf2), "%s: %d", str(kUI[37]), gameGetWave());
+    int ww = renderTextWidth(waveBuf2);
+    renderText(248 - ww, 32, waveBuf2, RGB15(20, 20, 31));
 
-    // Synergy counts per color (new threshold: activates at 2 companions)
-    int synY = 20;
-    for (int ci = 0; ci < PILL_COLOR_COUNT; ci++) {
-        int count = 0;
-        for (int j = 0; j < MAX_COMPANIONS; j++) {
-            if (gCompanions[j].active && static_cast<int>(gCompanions[j].color) == ci)
-                count++;
+    // Synergy info panel — full-width below companion list
+    // For each color with at least 1 companion, show all 4 tiers in a compact row.
+    // Active tiers are bright (color + white desc), future tiers are dimmed.
+    // Layout: "RED(3) 2:FIRE TRAIL  3:KILL BLAST  4:PIERCE ALL  5:INFERNO AURA"
+    //         "  Bullets leave fire trails"  (desc of highest active tier)
+    // Each color block: header line + desc line = 18px.  Max 6 colors = 108px.
+    // Starts at y depending on companion count (after the companion list).
+    {
+        // Count companions to know where list ends
+        int compCount = 0;
+        for (int j = 0; j < MAX_COMPANIONS; j++)
+            if (gCompanions[j].active) compCount++;
+
+        const u16 kDim    = RGB15(10, 10, 10);
+        const u16 kActive = RGB15(28, 28, 28);
+        int synY = 20 + compCount * 12 + 6; // 6px gap below companion list
+        if (synY < 90) synY = 90;           // min start for visual spacing
+
+        // Divider line
+        renderFilledRect(4, synY - 2, 248, 1, RGB15(8, 8, 12));
+
+        // Section header
+        renderText(8, synY, str(kUI[65]), RGB15(18, 18, 26));
+        synY += 10;
+
+        for (int ci = 0; ci < PILL_COLOR_COUNT; ci++) {
+            int count = 0;
+            for (int j = 0; j < MAX_COMPANIONS; j++) {
+                if (gCompanions[j].active && static_cast<int>(gCompanions[j].color) == ci)
+                    count++;
+            }
+            if (count == 0) continue;
+            if (synY > 176) break;  // don't overflow screen
+
+            int activeTier = count - 2;  // -1 if <2, 0..3 if active
+            if (activeTier >= SYN_TIERS) activeTier = SYN_TIERS - 1;
+
+            u16 headerCol = PILL_COLORS[ci];
+            const char* abbr = str(kColorAbbr[ci]);
+
+            // Header line: "RED(3)" followed by tier names in a row
+            char hdr[8];
+            snprintf(hdr, sizeof(hdr), "%s(%d)", abbr, count);
+            renderText(8, synY, hdr, headerCol);
+
+            // Tier markers along the header line
+            // Each tier: threshold digit + synergy name, separated by spaces
+            // Budget: 206px (from x=50 to x=256), 4 tiers -> ~50px each
+            // Format: "2:BLAZE 3:BLAST 4:PIERCE 5:INFERNO"
+            int tx = 48;
+            for (int t = 0; t < SYN_TIERS; t++) {
+                bool active = (t <= activeTier);
+                u16 col = active ? headerCol : kDim;
+
+                // Threshold digit
+                char marker[3];
+                snprintf(marker, sizeof(marker), "%d", SYNERGY_THRESHOLDS[t]);
+                renderText(tx, synY, marker, col);
+                tx += 7; // digit + colon-like gap
+
+                // Short synergy name, truncated to 7 chars to fit 4 tiers
+                const char* tname = str(kSynergyNames[ci][t]);
+                char nbuf[8];
+                int nc = 0;
+                while (tname[nc] && nc < 7) { nbuf[nc] = tname[nc]; nc++; }
+                nbuf[nc] = '\0';
+                renderText(tx, synY, nbuf, col);
+                tx += nc * 6 + 3;
+
+                if (tx > 252) break;
+            }
+            synY += 9;
+
+            // Description of highest active tier (or "need 2" hint)
+            if (activeTier >= 0) {
+                const char* desc = str(kSynergyDesc[ci][activeTier]);
+                renderText(12, synY, desc, kActive);
+            } else {
+                // Has companions but not enough for T1
+                char needBuf[24];
+                snprintf(needBuf, sizeof(needBuf), "(%d/%d)", count, SYNERGY_THRESHOLDS[0]);
+                renderText(12, synY, needBuf, kDim);
+            }
+            synY += 11; // line + gap before next color
         }
-        if (count == 0) continue;
-        int ti = count - 2;
-        if (ti >= SYN_TIERS) ti = SYN_TIERS - 1;
-        char sBuf[32];
-        const char* abbr = str(kColorAbbr[ci]);
-        if (ti >= 0) {
-            const char* tname = str(kSynergyNames[ci][ti]);
-            snprintf(sBuf, sizeof(sBuf), "%s:%d %s", abbr, count, tname);
-        } else {
-            snprintf(sBuf, sizeof(sBuf), "%s:%d", abbr, count);
-        }
-        renderText(170, synY, sBuf, PILL_COLORS[ci]);
-        synY += 12;
     }
 
     // Hide OAM sprites

@@ -99,6 +99,10 @@ constexpr StrEntry kUI[] = {
     /* STR_UI_UNLOCKS     [59]  */ S("unlocks!", "freigeschaltet!"),
     /* STR_UI_HP_COLON    [60]  */ S("HP:", "LP:"),
     /* STR_UI_HINTS       [61]  */ S("A:OK  B:BACK  L:LOCK  R:SELL", "A:OK  B:ZUR.  L:SPERR  R:VERK"),
+    /* STR_UI_PERKS_TITLE [62]  */ S("PERKS", "TALENTE"),
+    /* STR_UI_SEL_CLOSE   [63]  */ S("SELECT: CLOSE", "SELECT: SCHL."),
+    /* STR_UI_NO_PERKS    [64]  */ S("No perks owned", "Keine Talente"),
+    /* STR_UI_SYNERGIES   [65]  */ S("SYNERGIES", "SYNERGIEN"),
 };
 
 // Color abbreviations for HUD (indexed by PillColor)
