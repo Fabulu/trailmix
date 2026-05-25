@@ -146,14 +146,17 @@ void playerDash() {
     // Dash in current movement direction, or last-faced direction
     gPlayer.dashDir = gPlayer.facing;
 
-    // Companions gain invincibility for the dash duration
+    // Companions gain generous invincibility too
     for (auto& c : gCompanions) {
         if (!c.active) continue;
-        c.iframes = gPlayer.dashTimer + 4; // slight buffer after dash ends
+        c.iframes = gPlayer.dashTimer + 60; // matches player post-dash iframes
     }
 
+    // Initial burst of particles at dash origin
+    spawnParticleBurst(gPlayer.pos, 10, 12, static_cast<u8>(rngRange(6)));
+
     audioPlaySfx(GSFX_DASH);
-    cameraShake(8, 12);
+    cameraShake(10, 14);
 }
 
 void playerUpdate(u32 held, u32 down) {
@@ -253,17 +256,26 @@ void playerUpdate(u32 held, u32 down) {
             }
         }
 
-        // Trail particles — 5 per frame for a thick, flashy trail
-        for (int p = 0; p < 5; p++) {
-            Vec2 pvel = {static_cast<Fixed>(rngRange(16) - 8), static_cast<Fixed>(rngRange(16) - 8)};
-            spawnParticle(gPlayer.pos, pvel, 14, static_cast<u8>(rngRange(6)));
+        // Trail particles — 8 per frame, thick rainbow trail
+        for (int p = 0; p < 8; p++) {
+            Vec2 pvel = {static_cast<Fixed>(rngRange(20) - 10), static_cast<Fixed>(rngRange(20) - 10)};
+            spawnParticle(gPlayer.pos, pvel, 16, static_cast<u8>(rngRange(6)));
+        }
+        // Afterimage particles along the dash direction (behind the player)
+        {
+            Vec2 behind = {static_cast<Fixed>(gPlayer.pos.x - gPlayer.dashDir.x * 4),
+                           static_cast<Fixed>(gPlayer.pos.y - gPlayer.dashDir.y * 4)};
+            for (int p = 0; p < 3; p++) {
+                Vec2 pvel = {static_cast<Fixed>(rngRange(8) - 4), static_cast<Fixed>(rngRange(8) - 4)};
+                spawnParticle(behind, pvel, 20, 0); // white afterimage
+            }
         }
 
-        // Warp Drive: even more particles + wider spread
+        // Warp Drive: massive particle storm
         if (perkIsActive(PERK_WARP_DRIVE)) {
-            for (int p = 0; p < 3; p++) {
-                Vec2 pvel2 = {static_cast<Fixed>(rngRange(24) - 12), static_cast<Fixed>(rngRange(24) - 12)};
-                spawnParticle(gPlayer.pos, pvel2, 18, static_cast<u8>(rngRange(6)));
+            for (int p = 0; p < 6; p++) {
+                Vec2 pvel2 = {static_cast<Fixed>(rngRange(32) - 16), static_cast<Fixed>(rngRange(32) - 16)};
+                spawnParticle(gPlayer.pos, pvel2, 22, static_cast<u8>(rngRange(6)));
             }
         }
 
@@ -271,8 +283,8 @@ void playerUpdate(u32 held, u32 down) {
         if (gPlayer.dashTimer == 0) {
             gPlayer.isDashing = false;
             gPlayer.dashInvincible = false;
-            // Brief iframes after dash ends so you don't get hit immediately
-            if (gPlayer.iframes < 20) gPlayer.iframes = 20;
+            // Generous iframes after dash ends
+            gPlayer.iframes = 60;
         }
     } else {
         // Normal movement
