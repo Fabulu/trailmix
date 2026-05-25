@@ -73,6 +73,7 @@ constexpr StrEntry kUI[] = {
     /* STR_UI_RR_FMT      [33]  */ S("RR %dg",         "UW %dg"),
     /* STR_UI_NA          [34]  */ S("N/A",             "K.A."),
     /* STR_UI_TAP_HINT    [35]  */ S("TAP ONCE TO SELECT  TAP AGAIN TO CONFIRM", "ANTIPPEN ZUM WAEHLEN  NOCHMAL ZUM BESTAETIGEN"),
+    /* STR_UI_UPGRADE     [36]  */ S("UPGRADE PATH:", "AUFWERTUNGSPFAD:"),
 };
 
 // Color abbreviations for HUD (indexed by PillColor)
@@ -191,7 +192,7 @@ constexpr StrEntry kSynergyNames[PILL_COLOR_COUNT][SYN_TIERS] = {
 
 struct PerkEntry { StrEntry name; StrEntry desc; };
 
-constexpr int PERK_COUNT = 15;
+constexpr int PERK_COUNT = 30;
 constexpr PerkEntry kPerks[PERK_COUNT] = {
     // ── OFFENSE ──
     /* [0]  BULLET_HELL     */ { S("Bullet Hell",     "Kugelhagel"),        S("Fire in all 4 directions!",        "Feuere in alle 4 Richtungen!") },
@@ -212,6 +213,25 @@ constexpr PerkEntry kPerks[PERK_COUNT] = {
     /* [12] PACK_RAT        */ { S("Pack Rat",        "Hamsterer"),         S("+1 companion slot",                "+1 Begleiterslot") },
     /* [13] WARP_DRIVE      */ { S("Warp Drive",      "Warpantrieb"),       S("Dash 2x far + damage trail",      "Dash 2x weiter + Schadensspur") },
     /* [14] SOUL_SURGE      */ { S("Soul Surge",      "Seelenansturm"),     S("Wave clear heals all 20%",         "Wellensieg heilt alle 20%") },
+    // ── TRAIL MIX: OFFENSE ──
+    /* [15] RICOCHET        */ { S("Ricochet",        "Ricochet"),          S("Bullets bounce off walls once",    "Kugeln prallen einmal ab") },
+    /* [16] BLOODLUST       */ { S("Bloodlust",       "Blutrausch"),        S("+3% fire rate per kill this wave", "+3% Feuerrate pro Kill diese Welle") },
+    /* [17] ECHO_CHAMBER    */ { S("Echo Chamber",    "Echokammer"),        S("Every 5th shot fires a bonus",     "Jeder 5. Schuss feuert Bonuskugel") },
+    // ── TRAIL MIX: DEFENSE ──
+    /* [18] THORNS          */ { S("Thorns",          "Dornen"),            S("Companions hurt attackers",        "Begleiter verletzen Angreifer") },
+    /* [19] LAST_STAND      */ { S("Last Stand",      "Letztes Gefecht"),   S("Last companion deals 3x damage",  "Letzter Begleiter macht 3x Schaden") },
+    /* [20] JUGGERNAUT      */ { S("Juggernaut",      "Koloss"),            S("Take 1 less damage from all hits","Erhalte 1 weniger Schaden pro Treffer") },
+    // ── TRAIL MIX: ECONOMY ──
+    /* [21] DOUBLE_OR_NOTHING*/ { S("Double or Nothing","Alles oder Nichts"),S("50/50: double gold or nothing!", "50/50: Doppelgold oder nichts!") },
+    /* [22] SHORTCUT        */ { S("Shortcut",        "Abkuerzung"),        S("Merge with only 2 copies!",       "Verschmelze mit nur 2 Kopien!") },
+    /* [23] BLACK_MARKET    */ { S("Black Market",    "Schwarzmarkt"),      S("Better rarity in shop",            "Bessere Seltenheit im Laden") },
+    /* [24] MAGNET          */ { S("Magnet",          "Magnet"),            S("Double gold pickup range",         "Doppelte Gold-Aufsammelweite") },
+    /* [25] PENSION         */ { S("Pension",         "Rente"),             S("+2g per companion at wave end",    "+2g pro Begleiter bei Wellenende") },
+    /* [26] LOAN_SHARK      */ { S("Loan Shark",      "Kredithai"),         S("Get 80g now, pay 10g/wave for 10","80g sofort, 10g/Welle fuer 10 Wellen") },
+    // ── TRAIL MIX: UTILITY ──
+    /* [27] REWIND          */ { S("Rewind",          "Rueckspulen"),       S("Enemies flee for 2s at wave start","Feinde fliehen 2s bei Wellenstart") },
+    /* [28] BOUNTY_BOARD    */ { S("Bounty Board",    "Kopfgeldtafel"),     S("One marked enemy drops 3x gold",  "Ein markierter Feind gibt 3x Gold") },
+    /* [29] WILDCARD        */ { S("Wildcard",        "Joker"),             S("Merge any color together!",        "Verschmelze beliebige Farben!") },
 };
 
 // ─────────────────────────────────────────────────────────────────

@@ -1782,7 +1782,7 @@ void renderShopDetail(int selectedCard) {
             const char* tname = str(kSynergyNames[colorIdx][ti]);
             snprintf(synBuf, sizeof(synBuf), "%s: %d -> %s active", colorAbbr, ownedCount, tname);
         } else {
-            snprintf(synBuf, sizeof(synBuf), "%s: %d -> no synergy", colorAbbr, ownedCount);
+            snprintf(synBuf, sizeof(synBuf), "%s: %d -", colorAbbr, ownedCount);
         }
         renderText(8, 135, synBuf, synColor);
     }
@@ -1800,7 +1800,7 @@ void renderShopDetail(int selectedCard) {
                 snprintf(buyBuf, sizeof(buyBuf), "->%d -> %s", afterCount, tname);
             }
         } else {
-            snprintf(buyBuf, sizeof(buyBuf), "->%d -> no synergy", afterCount);
+            snprintf(buyBuf, sizeof(buyBuf), "->%d -", afterCount);
         }
         renderText(8, 143, buyBuf, RGB15(28, 28, 20));
     }
@@ -1820,7 +1820,7 @@ void renderShopDetail(int selectedCard) {
             }
         }
         // Label row above the path
-        renderText(8, 152, "UPGRADE PATH:", RGB15(18, 18, 18));
+        renderText(8, 152, str(kUI[36]), RGB15(18, 18, 18));
         // Panel origin: x=8, y=162 — uses full 240px width, split into 3 cols of 54+6
         renderUpgradePath(8, 162, colorIdx, card.classId, ownedTier);
     }
@@ -2007,7 +2007,7 @@ void renderCompanionDetail(int companionSlot) {
             const char* tname = str(kSynergyNames[colorIdx][ti]);
             snprintf(synBuf, sizeof(synBuf), "%s: %d -> %s active", abbr, ownedColor, tname);
         } else {
-            snprintf(synBuf, sizeof(synBuf), "%s: %d -> no synergy", abbr, ownedColor);
+            snprintf(synBuf, sizeof(synBuf), "%s: %d -", abbr, ownedColor);
         }
         renderText(8, 140, synBuf, pillColorToRGB(c.color));
     }
