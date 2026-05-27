@@ -38,8 +38,9 @@ data/zen_masters*.txt
 data/zen_masters*.bin
 nitrofs/zen_masters*.txt
 arm9/data/zen_masters*.bin
-# NOTE: nitrofs/zen_masters_*.enc files ARE tracked (committed) so contributors can build
+# NOTE: nitrofs/*.bin files ARE tracked (committed) so contributors can build
 
 # OS
 Thumbs.db
 .DS_Store
+tools/

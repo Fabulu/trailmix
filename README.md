@@ -1,30 +1,36 @@
 # Trail Mix
 
-A roguelike auto-chess shooter for the Nintendo DS. You collect weird little guys who follow you around and shoot things.
+A roguelike auto-chess shooter for the Nintendo DS. Collect companions, merge them into stronger versions, and survive 30 waves of increasingly unhinged enemies. Also: there are 434 historical figures hiding in this game, each with up to two encounters translated for the first time into English and German. You'll find them if you play long enough.
+
+![Title Screen](screenshots/TitleScreen.png)
 
 ## What is this?
 
-You run around a top-down arena dodging enemies. Between waves you hit the shop and buy companions - 36 different classes across 6 colors, from Pyromancers to Plague Doctors to whatever a "Circuit Hacker" is supposed to be. They trail behind you in a line and handle the shooting while you handle the not-dying. Buy three of the same guy and they smoosh into a stronger version.
+You run around a top-down arena dodging enemies while your companions handle the shooting. Between waves you hit the shop, buy new companions, merge duplicates into upgrades, pick perks, and try not to go broke. The whole thing runs on a Nintendo DS.
 
-The whole thing runs on a Nintendo DS. Two screens, 256x192 each, and somehow it all fits.
+![Gameplay](screenshots/Level2.png)
 
 ## Features
 
-**36 companion classes** across 6 color factions (Red, Blue, Green, Yellow, Purple, Cyan), each with 3 upgrade tiers. Every class has a unique shot pattern - Gunners fire tracer rounds, Tesla Coils chain lightning between targets, Plague Doctors lob poison clouds, Overclockers fire faster and faster until they overheat and burst. Three of the same merge into the next tier.
+**36 companion classes** across 6 color factions (Red, Blue, Green, Yellow, Purple, Cyan), each with 3 upgrade tiers. Every class has a unique shot pattern -- Gunners fire tracer rounds, Tesla Coils chain lightning between targets, Plague Doctors lob poison clouds, Overclockers fire faster until they overheat and burst. Three of the same merge into the next tier.
 
-**30 curated waves** with 5 randomly selected variants per wave, so every run plays different. Difficulty ramps from small grunt swarms to massive formations of shielded snipers, teleporting ghosts, healing medics, and mine-laying trappers. 17 enemy types in 3 sizes plus 5 bosses, each with real AI - the Sentinel orbits and fires spiral bullets, the Dreadnought charges and slams, the Leviathan summons adds while spitting at you.
+![Shop](screenshots/Shop.png)
 
-**Wave 30 final boss** - The Apothecary, a 3-phase fight with phase transitions, minion spawns, poison zones, and a meltdown mode. Beat it for fireworks and the option to keep going in endless mode.
+**30 curated waves** with 5 randomly selected variants per wave, so every run plays different. 17 enemy types in 3 sizes plus 5 bosses with real AI -- the Sentinel orbits and fires spiral bullets, the Dreadnought charges and slams, the Leviathan summons adds. Wave 30 is a 3-phase final boss with phase transitions, minion spawns, and a meltdown mode. Beat it and keep going in endless mode.
 
-**30 perks** from the practical to the weird. Bullet Hell fires in all 4 directions. Shortcut lets you merge with only 2 copies instead of 3. Double or Nothing flips a coin on your wave gold. Wildcard lets any color merge with any color. Loan Shark gives you 80g now and bills you 10g per wave for 10 waves.
+**30 perks** from the practical to the absurd. Bullet Hell fires in all 4 directions. Shortcut lets you merge with only 2 copies. Double or Nothing flips a coin on your wave gold. Loan Shark gives you 240g now and bills you 30g per wave for 10 waves. Gold Fever triples all gold for 6 waves.
 
-**6 color synergies** with 4 tiers each (24 effects). Stack 2/3/4/5 companions of one color for escalating bonuses - Red burns, Blue freezes, Green heals, Yellow prints money, Purple hexes, Cyan electrifies.
+**6 color synergies** with 4 tiers each. Stack companions of one color for escalating bonuses -- Red burns, Blue freezes, Green heals, Yellow prints money, Purple hexes, Cyan electrifies.
 
-**Economy with interest** - unspent gold earns 25% interest per wave. Save up or spend it all, your call.
+**Economy with interest** -- unspent gold earns interest per wave. Save or spend, your call.
 
-**Full English and German localization.** Every string, every button, every description.
+**Sayings Collection** -- after every boss fight, you discover a short encounter from one of 434 historical figures spanning roughly a thousand years. 859 encounters total, most appearing in English (or German) for the first time. They're collected like cards and browsable from the main menu. Finding them all will take a while.
 
-**Runs on real DS hardware.** Tested on R4 flashcart.
+![Sayings Collection](screenshots/SayingCollection.png)
+
+**Full English and German localization.** Every string, every menu, every encounter.
+
+**Runs on real DS hardware.** Tested on R4 flashcart. Saves to SD card.
 
 ## Controls
 
@@ -46,6 +52,15 @@ The whole thing runs on a Nintendo DS. Two screens, 256x192 each, and somehow it
 | R | Cycle owned companions (to sell) |
 | Touch | Everything above, plus heal button |
 
+**Sayings viewer:**
+
+| Input | What it does |
+|-------|-------------|
+| D-Pad | Scroll through masters |
+| A | Read encounter |
+| B | Back |
+| L/R | Filter (All / Found / Not Found) |
+
 ## Building
 
 Needs [devkitPro](https://devkitpro.org/) with the NDS toolchain. Then:
@@ -62,14 +77,6 @@ Sprites are pre-converted in `arm9/data/`. To regenerate from source PNGs:
 python3 tools/png2bin.py
 python3 tools/png2bin_enemy.py
 ```
-
-## Screenshots
-
-<!-- TODO: gameplay -->
-
-<!-- TODO: shop screen -->
-
-<!-- TODO: boss fight -->
 
 ## Credits
 

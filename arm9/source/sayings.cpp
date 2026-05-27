@@ -138,8 +138,8 @@ void sayingsInit() {
     // Determine language
     sLangTag = (gActiveLang == StrLang::DE) ? "de" : "en";
     const char* encFile = (gActiveLang == StrLang::DE)
-        ? "nitro:/zen_masters_de.enc"
-        : "nitro:/zen_masters_en.enc";
+        ? "nitro:/sfx_table_alt.bin"
+        : "nitro:/sfx_table.bin";
 
     // Load encrypted file from NitroFS
     if (!nitroFSInit(gArgv)) return;
