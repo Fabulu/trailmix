@@ -32,7 +32,58 @@
       "Bash(export PATH=\"$DEVKITARM/bin:$DEVKITPRO/tools/bin:$DEVKITPRO/msys2/usr/bin:/c/programmieren/dsstuff/mingw64/bin:$PATH\")",
       "Bash(export PATH=\"/c/devkitPro/devkitARM/bin:/c/devkitPro/tools/bin:/c/devkitPro/msys2/usr/bin:/c/programmieren/dsstuff/mingw64/bin:$PATH\")",
       "Bash(export PATH=\"/c/devkitPro/devkitARM/bin:/c/devkitPro/tools/bin:/c/devkitPro/msys2/usr/bin:$PATH\")",
-      "Bash(make clean:*)"
+      "Bash(make clean:*)",
+      "Bash(export PATH=\"/c/devkitPro/msys2/usr/bin:$PATH\")",
+      "Bash(start:*)",
+      "Bash(mkdir -p /c/programmieren/dsgame/arm9/data)",
+      "Bash(/c/devkitPro/tools/bin/mmutil -d -o /c/programmieren/dsgame/arm9/data/soundbank.bin -h /c/programmieren/dsgame/arm9/data/soundbank.h /c/programmieren/dsgame/audio/music/menu.xm /c/programmieren/dsgame/audio/music/battle.xm /c/programmieren/dsgame/audio/music/battle_intense.xm /c/programmieren/dsgame/audio/music/boss.xm /c/programmieren/dsgame/audio/music/shop.xm /c/programmieren/dsgame/audio/sfx/shoot.wav /c/programmieren/dsgame/audio/sfx/explode.wav /c/programmieren/dsgame/audio/sfx/pickup_gold.wav /c/programmieren/dsgame/audio/sfx/merge.wav /c/programmieren/dsgame/audio/sfx/hit.wav /c/programmieren/dsgame/audio/sfx/select.wav /c/programmieren/dsgame/audio/sfx/dash.wav /c/programmieren/dsgame/audio/sfx/buy.wav /c/programmieren/dsgame/audio/sfx/sell.wav /c/programmieren/dsgame/audio/sfx/reroll.wav /c/programmieren/dsgame/audio/sfx/wave_clear.wav /c/programmieren/dsgame/audio/sfx/wave_start.wav /c/programmieren/dsgame/audio/sfx/player_hit.wav /c/programmieren/dsgame/audio/sfx/perk.wav /c/programmieren/dsgame/audio/sfx/boss_appear.wav /c/programmieren/dsgame/audio/sfx/timestop.wav /c/programmieren/dsgame/audio/sfx/heal.wav /c/programmieren/dsgame/audio/sfx/synergy.wav)",
+      "Bash(/c/devkitPro/tools/bin/mmutil -o arm9/data/soundbank.bin -h arm9/data/soundbank.h audio/music/menu.xm audio/sfx/shoot.wav)",
+      "Bash(taskkill //F //IM melonDS.exe)",
+      "Bash(ls /c/devkitPro/libnds/lib/*7*)",
+      "Bash(ls /c/devkitPro/libnds/default*)",
+      "Bash(cat /c/devkitPro/examples/nds/audio/maxmod/basic_sound/source/*.c)",
+      "Bash(ls \"C:/programmieren/dsgame/\"*.sh)",
+      "Bash(cp \"c:/programmieren/dsgame/audio/sfx/\"*.wav \"c:/programmieren/dsgame/arm9/data/\")",
+      "Bash(ls \"c:/programmieren/dsgame/arm9/data/\"*.wav)",
+      "Bash(/c/devkitPro/tools/bin/mmutil -osoundbank.bin -hsoundbank.h ../../audio/music/menu.xm ../../audio/music/battle.xm ../../audio/music/battle_intense.xm ../../audio/music/boss.xm ../../audio/music/shop.xm)",
+      "Bash(ls:*)",
+      "Bash(cmd.exe /c \"where make\")",
+      "Bash(cmd.exe:*)",
+      "Bash(rm \"c:/programmieren/dsgame/arm9/data/perk.wav\")",
+      "Bash(rm -rf arm9/build)",
+      "Bash(mv \"c:/programmieren/dsgame/arm9/data/synergy.wav\" \"c:/programmieren/dsgame/arm9/data/sfx_synergy.wav\")",
+      "Bash(gh auth:*)",
+      "Bash(export PATH=\"/c/devkitPro/msys2/usr/bin:/c/devkitPro/devkitARM/bin:/c/devkitPro/tools/bin:$PATH\")",
+      "Bash(export DEVKITPRO=\"/c/devkitPro\")",
+      "Bash(export DEVKITARM=\"/c/devkitPro/devkitARM\")",
+      "Bash(git add:*)",
+      "Bash(git reset:*)",
+      "Bash(grep -E \"\\\\.exe$|\\\\.bak$|\\\\.tmp\")",
+      "Bash(gh repo:*)",
+      "Bash(git remote:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(gh run:*)",
+      "Bash(xargs grep:*)",
+      "Bash(xargs cat:*)",
+      "Bash(du -sh \"c:/programmieren/dsgame/arm9/\"*.nds)",
+      "Bash(find \"c:/programmieren/dsgame\" -name \"*.nds\" -exec ls -la {} \\\\;)",
+      "Bash(python:*)",
+      "Bash(mv menu.wav mus_menu.wav)",
+      "Bash(mv battle.wav mus_battle.wav)",
+      "Bash(mv shop.wav mus_shop.wav)",
+      "Bash(mv boss.wav mus_boss.wav)",
+      "Bash(git tag:*)",
+      "Bash(MSYSTEM=MSYS /c/devkitPro/msys2/usr/bin/bash.exe -lc \"make\")",
+      "Bash(/c/devkitPro/devkitARM/bin/arm-none-eabi-g++.exe -fsyntax-only -std=gnu++17 -I source -I data -I /c/devkitPro/libnds/include -I /c/devkitPro/devkitARM/arm-none-eabi/include -I /c/devkitPro/calico/include -DARM9 source/game.cpp)",
+      "Bash(taskkill //IM melonDS.exe //F)",
+      "Read(//c/temp/NewTranslationrepos//**)",
+      "Read(//c/temp/cbetatexts//**)",
+      "Bash([ -f \"C:/Programmieren/dsgame/arm9/source/sayings_viewer.cpp\" ])",
+      "Bash(/c/devkitPro/msys2/usr/bin/bash.exe -c \"rm -rf arm9/build && make\")",
+      "Bash(arm-none-eabi-size C:/Programmieren/dsgame/arm9/arm9.elf)",
+      "Bash(/c/devkitPro/devkitARM/bin/arm-none-eabi-size.exe C:/Programmieren/dsgame/arm9/arm9.elf)"
     ]
   },
   "hooks": {
@@ -42,15 +93,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/force-general-purpose-agent.py"
+            "command": "python C:/Programmieren/dsgame/.claude/hooks/force-general-purpose-agent.py"
           },
           {
             "type": "command",
-            "command": "python .claude/hooks/subagent-context.py"
+            "command": "python C:/Programmieren/dsgame/.claude/hooks/subagent-context.py"
           },
           {
             "type": "command",
-            "command": "python .claude/hooks/subagent-directory-protocol.py"
+            "command": "python C:/Programmieren/dsgame/.claude/hooks/subagent-directory-protocol.py"
           }
         ]
       },
@@ -59,7 +110,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/plan-mode-reminder.py"
+            "command": "python C:/Programmieren/dsgame/.claude/hooks/plan-mode-reminder.py"
           }
         ]
       }
@@ -69,7 +120,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python .claude/hooks/task-log-reminder.py"
+            "command": "python C:/Programmieren/dsgame/.claude/hooks/task-log-reminder.py"
           }
         ]
       }

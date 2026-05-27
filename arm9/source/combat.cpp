@@ -827,9 +827,9 @@ void killEnemy(Enemy& e, u8 bulletColor) {
             goldValue = static_cast<u8>(goldValue * (100 + (wave - 15) * 12) / 100);
         }
     }
-    // Gold Fever: 2x gold for duration
+    // Gold Fever: 3x gold for duration
     if (gPerks.goldFeverWaves > 0) {
-        goldValue = static_cast<u8>(goldValue * 2);
+        goldValue = static_cast<u8>(goldValue * 3);
     }
     // Apply gold bonus from passives
     if (gPassive.goldBonusPct > 0) {

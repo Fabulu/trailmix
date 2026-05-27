@@ -285,8 +285,8 @@ constexpr PerkEntry kPerks[PERK_COUNT] = {
     /* [6]  SHIELD_BASH     */ { S("Shield Bash",     "Schildstoss"),       S("Dash deals 8 damage to enemies",   "Ausweichen macht 8 Schaden") },
     /* [7]  SECOND_WIND     */ { S("Second Wind",     "Zweite Luft"),       S("Full heal once when near death",   "Volle Heilung bei Todesgefahr") },
     // ── ECONOMY ──
-    /* [8]  GOLD_FEVER      */ { S("Gold Fever",      "Goldfieber"),        S("2x gold for 6 waves!",            "2x Gold fuer 6 Wellen!") },
-    /* [9]  WAR_CHEST       */ { S("War Chest",       "Kriegskasse"),       S("Get 30g now, +6g each wave",       "30g sofort, +6g jede Welle") },
+    /* [8]  GOLD_FEVER      */ { S("Gold Fever",      "Goldfieber"),        S("3x gold for 6 waves!",            "3x Gold fuer 6 Wellen!") },
+    /* [9]  WAR_CHEST       */ { S("War Chest",       "Kriegskasse"),       S("Get 45g now, +9g each wave",       "45g sofort, +9g jede Welle") },
     /* [10] JACKPOT         */ { S("Jackpot",         "Jackpot"),           S("Interest cap doubled to 20",       "Zinsobergrenze auf 20 verdoppelt") },
     /* [11] WHOLESALE       */ { S("Wholesale",       "Grosshandel"),       S("Companions cost 30% less",         "Begleiter kosten 30% weniger") },
     // ── UTILITY ──
@@ -306,8 +306,8 @@ constexpr PerkEntry kPerks[PERK_COUNT] = {
     /* [22] SHORTCUT        */ { S("Shortcut",        "Abkuerzung"),        S("Merge with only 2 copies!",       "Verschmelze mit nur 2 Kopien!") },
     /* [23] BLACK_MARKET    */ { S("Black Market",    "Schwarzmarkt"),      S("Better rarity in shop",            "Bessere Seltenheit im Laden") },
     /* [24] MAGNET          */ { S("Magnet",          "Magnet"),            S("Double gold pickup range",         "Doppelte Gold-Aufsammelweite") },
-    /* [25] PENSION         */ { S("Pension",         "Rente"),             S("+10g bonus at wave end",           "+10g Bonus bei Wellenende") },
-    /* [26] LOAN_SHARK      */ { S("Loan Shark",      "Kredithai"),         S("Get 160g now, pay 20g/wave for 10","160g sofort, 20g/Welle fuer 10 Wellen") },
+    /* [25] PENSION         */ { S("Pension",         "Rente"),             S("+15g bonus at wave end",           "+15g Bonus bei Wellenende") },
+    /* [26] LOAN_SHARK      */ { S("Loan Shark",      "Kredithai"),         S("Get 240g now, pay 30g/wave for 10","240g sofort, 30g/Welle fuer 10 Wellen") },
     // ── TRAIL MIX: UTILITY ──
     /* [27] REWIND          */ { S("Rewind",          "Rueckspulen"),       S("Enemies flee for 2s at wave start","Feinde fliehen 2s bei Wellenstart") },
     /* [28] BOUNTY_BOARD    */ { S("Bounty Board",    "Kopfgeldtafel"),     S("One marked enemy drops 3x gold",  "Ein markierter Feind gibt 3x Gold") },

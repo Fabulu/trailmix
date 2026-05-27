@@ -105,9 +105,9 @@ static void enterShop() {
     renderClearSub();
     applyInterest();
 
-    // Pension: flat +10g at wave end
+    // Pension: flat +15g at wave end
     if (perkIsActive(PERK_PENSION)) {
-        gPlayer.gold = static_cast<u16>(gPlayer.gold + 10);
+        gPlayer.gold = static_cast<u16>(gPlayer.gold + 15);
     }
 
     // Soul Surge: heal all units 20% maxHP on wave clear
