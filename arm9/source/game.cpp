@@ -12,6 +12,10 @@
 #include "perk.h"
 #include "perk_choice.h"
 #include "synergy.h"
+#include "sayings.h"
+#include "encounter.h"
+#include "sayings_viewer.h"
+#include "save.h"
 #include <nds.h>
 
 static GameState state = GameState::Menu;
@@ -101,9 +105,9 @@ static void enterShop() {
     renderClearSub();
     applyInterest();
 
-    // Pension: flat +5g at wave end
+    // Pension: flat +10g at wave end
     if (perkIsActive(PERK_PENSION)) {
-        gPlayer.gold = static_cast<u16>(gPlayer.gold + 5);
+        gPlayer.gold = static_cast<u16>(gPlayer.gold + 10);
     }
 
     // Soul Surge: heal all units 20% maxHP on wave clear
@@ -131,22 +135,24 @@ static void startNextWave() {
     waveActive = true;
     state = GameState::Play;
 
-    // Wave-start grace period: player + companions get 180 iframes (3 seconds)
-    gPlayer.iframes = 180;
+    // Wave-start grace period: player + companions get 90 iframes (1.5 seconds)
+    gPlayer.iframes = 90;
     for (auto& c : gCompanions) {
-        if (c.active) c.iframes = 180;
+        if (c.active) c.iframes = 90;
     }
 }
 
 static void enterGameOver() {
     state = GameState::GameOver;
     renderClearSub();
+    saveWrite();
     audioPlayMusic(0); // MOD_MENU
 }
 
 static void enterVictory() {
     state = GameState::Victory;
     renderClearSub();
+    saveWrite();
     audioPlaySfx(GSFX_VICTORY);
     audioPlayMusic(0); // MOD_MENU
 }
@@ -249,11 +255,23 @@ struct WaveTemplate {
     bool isBossWave;
 };
 
-// HP scaling: base * (100 + (wave-1)*65) / 100
-// 65% per wave — late game enemies must be genuinely threatening
+// HP scaling: base * (100 + (wave-1)*80) / 100
+// 80% per wave — enemies must keep up with player scaling
+// Waves 15-25: extra +25% HP bump
+// Waves 26-30: extra +50% HP bump (harsh final stretch)
+// Endless 31+: steeper curve — +50% base plus +5% per wave
 static s16 scaledHp(int baseHp, int wave) {
-    s16 hp = static_cast<s16>(baseHp * (100 + (wave - 1) * 65) / 100);
-    return (hp < 1) ? 1 : hp;
+    int hp = baseHp * (100 + (wave - 1) * 80) / 100;
+    if (wave >= 15 && wave <= 25) {
+        hp = hp * 125 / 100;  // +25% for waves 15-25
+    } else if (wave >= 26 && wave <= 30) {
+        hp = hp * 150 / 100;  // +50% for waves 26-30 (harsh)
+    } else if (wave > 30) {
+        // Endless: +50% base bump plus +5% per wave past 30
+        int endlessPct = 150 + (wave - 30) * 5;
+        hp = hp * endlessPct / 100;
+    }
+    return (hp < 1) ? 1 : static_cast<s16>(hp);
 }
 
 // Pixel size from size class
@@ -342,6 +360,10 @@ static void spawnGroup(const WaveEntry& g, int wave) {
             Vec2 pos = farthestEdgeFromPlayer();
             // Boss uses large sprite size
             s16 bossHp = scaledHp(baseHpForSize(3, wave), wave);  // size 3 = boss tier
+            // Extra +25% boss HP for waves 15, 20, 25 (bosses felt too easy)
+            if (wave == 15 || wave == 20 || wave == 25) {
+                bossHp = static_cast<s16>(bossHp * 125 / 100);
+            }
             spawnEnemy(pos, {0,0}, bossHp, g.type, SIZE_LARGE, SPRITE_SIZE_BOSS);
             break;
         }
@@ -675,9 +697,9 @@ static void spawnApothecaryBoss(int wave) {
 
 // Endless (31+): full roster, randomised compositions, guaranteed support
 static void spawnEndlessWave(int wave) {
-    // Budget: 10 + 2 per wave past 30, capped at 20
-    int budget = 10 + (wave - 30) * 2;
-    if (budget > 20) budget = 20;
+    // Budget: 12 + 3 per wave past 30, capped at 28 (steeper endless scaling)
+    int budget = 12 + (wave - 30) * 3;
+    if (budget > 28) budget = 28;
 
     // Full roster of 17 regular enemy types (0-16)
     static const u8 fullRoster[17] = {
@@ -748,6 +770,8 @@ static void spawnEndlessWave(int wave) {
         u8 bossType = bossTypes[((wave - 35) / 5) % 5];
         Vec2 pos = farthestEdgeFromPlayer();
         s16 bossHp = scaledHp(baseHpForSize(3, wave), wave);
+        // Endless bosses get an extra +30% on top of the scaledHp endless bonus
+        bossHp = static_cast<s16>(bossHp * 130 / 100);
         u8 bossSprSz = (bossType == ETYPE_BOSS_APOTHECARY)
                         ? SPRITE_SIZE_BOSS_LARGE : SPRITE_SIZE_BOSS;
         spawnEnemy(pos, {0,0}, bossHp, bossType, SIZE_LARGE, bossSprSz);
@@ -783,9 +807,23 @@ static void spawnWave() {
 
 // --- Per-state update ---
 
+int menuSelection = 0;  // kept for render.cpp extern
+bool menuDirty = true;
+
 static void updateMenu() {
-    if (keysDown() & KEY_START) {
-        enterPlay();
+    u32 kd = keysDown();
+    if (kd & (KEY_UP | KEY_DOWN)) {
+        menuSelection ^= 1;
+        menuDirty = true;
+    }
+    if (kd & (KEY_A | KEY_START)) {
+        if (menuSelection == 0) {
+            enterPlay();
+        } else {
+            state = GameState::SayingsViewer;
+            renderClearSub();
+            sayingsViewerEnter();
+        }
     }
 }
 
@@ -861,11 +899,10 @@ static void updatePlay() {
     if (!waveActive && waveClearTimer == 0 && bossDefeatedTimer > 0) {
         bossDefeatedTimer--;
         if (bossDefeatedTimer == 0) {
-            if (waveNumber == 30) {
-                enterVictory();
-            } else {
-                enterPerkChoice();
-            }
+            // Show encounter screen before proceeding
+            state = GameState::Encounter;
+            encounterEnter();
+            encounterRender();
             return;
         }
     }
@@ -898,6 +935,7 @@ static void updateShop() {
 static void updateGameOver() {
     if (keysDown() & KEY_START) {
         enterMenu();
+        menuDirty = true;
     }
 }
 
@@ -933,6 +971,34 @@ static void renderShopState() {
     uiRenderShop();
 }
 
+// --- Encounter / SayingsViewer forwarding ---
+
+static void updateEncounter() {
+    if (encounterUpdate()) {
+        if (waveNumber == 30) {
+            enterVictory();
+        } else {
+            enterPerkChoice();
+        }
+    }
+}
+
+static void renderEncounterState() {
+    encounterRender();
+}
+
+static void updateSayingsViewer() {
+    if (sayingsViewerUpdate()) {
+        state = GameState::Menu;
+        renderClearSub();
+        menuDirty = true;
+    }
+}
+
+static void renderSayingsViewerState() {
+    sayingsViewerRender();
+}
+
 // --- Function pointer tables ---
 
 using StateFunc = void (*)();
@@ -944,6 +1010,8 @@ static const StateFunc updateTable[static_cast<int>(GameState::COUNT)] = {
     updateShop,
     updateGameOver,
     updateVictory,
+    updateEncounter,
+    updateSayingsViewer,
 };
 
 static const StateFunc renderTable[static_cast<int>(GameState::COUNT)] = {
@@ -953,11 +1021,15 @@ static const StateFunc renderTable[static_cast<int>(GameState::COUNT)] = {
     renderShopState,
     renderGameOver,
     renderVictory,
+    renderEncounterState,
+    renderSayingsViewerState,
 };
 
 // --- Public API ---
 
 void gameInit() {
+    sayingsInit();
+    saveInit();
     rngSeed(42); // TODO: seed from RTC or user input
     entitiesInit();
     playerInit();

@@ -26,8 +26,8 @@ int perkGetRandom();
 void perkApplyOnBuy(PerkId id);
 int perkMaxCompanions();
 static const u16 kPerkPriceShop[30] = {
-    60,70,75,65,60,65,55,70,50,65,60,80,55,65,70,
-    70,60,85,60,75,90,50,90,65,55,80,50,75,70,100
+    120,140,150,130,120,130,110,140,100,130,120,160,110,130,140,
+    140,120,170,120,150,180,100,180,130,110,160,100,150,140,200
 };
 #include <nds.h>
 #include <cstdio>
@@ -39,7 +39,8 @@ bool gShowPerkInfo = false;
 static bool shopDirty = true;
 
 // Scroll offset for perk info screen (persists while overlay is open)
-static int sPerkInfoScroll = 0;
+// Not static: externed by renderPerkInfo() in render.cpp
+int sPerkInfoScroll = 0;
 
 // ---------------------------------------------------------------------------
 // Layout constants -- all pixel coordinates for the 256x192 sub screen
@@ -128,9 +129,9 @@ void shopGenerate(int wave) {
         // Price by rarity: flat prices
         int base;
         switch (c.rarity) {
-            case 0:  base = 8; break;
-            case 1:  base = 14; break;
-            default: base = 32; break;
+            case 0:  base = 16; break;
+            case 1:  base = 28; break;
+            default: base = 64; break;
         }
         // Wholesale: 30% discount on companions
         if (perkIsActive(PERK_WHOLESALE)) {
@@ -168,7 +169,7 @@ void shopGenerate(int wave) {
                     }
                     if (numCands > 0) c.classId = cands[rngRange(numCands)];
                     int fci = colorBase + c.classId;
-                    int base = (c.rarity == 0) ? 8 : (c.rarity == 1) ? 14 : 32;
+                    int base = (c.rarity == 0) ? 16 : (c.rarity == 1) ? 28 : 64;
                     if (perkIsActive(PERK_WHOLESALE)) {
                         base = base * 7 / 10;
                         if (base < 1) base = 1;

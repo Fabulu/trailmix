@@ -20,8 +20,8 @@ enum PerkId : u8 {
 
     // ── ECONOMY (4) ──
     PERK_GOLD_FEVER,       // 2x gold drops for 3 waves after purchase
-    PERK_WAR_CHEST,        // 15g now, +3g each wave
-    PERK_JACKPOT,          // interest cap raised to 10 (from 5)
+    PERK_WAR_CHEST,        // 30g now, +6g each wave
+    PERK_JACKPOT,          // interest cap raised to 20 (from 10)
     PERK_WHOLESALE,        // all companions cost 30% less
 
     // ── UTILITY (3) ──
@@ -44,8 +44,8 @@ enum PerkId : u8 {
     PERK_SHORTCUT,         // merging needs only 2 instead of 3
     PERK_BLACK_MARKET,     // uncommon/rare odds improved
     PERK_MAGNET,           // double gold pickup range
-    PERK_PENSION,          // +2g per living companion at wave end
-    PERK_LOAN_SHARK,       // get 80g now, lose 10g/wave for 10 waves
+    PERK_PENSION,          // +10g bonus at wave end
+    PERK_LOAN_SHARK,       // get 160g now, lose 20g/wave for 10 waves
 
     // ── TRAIL MIX: UTILITY (3) ──
     PERK_REWIND,           // enemies flee for 2s at wave start
@@ -55,37 +55,37 @@ enum PerkId : u8 {
 
 // Per-perk price table
 static const u16 kPerkPrice[PERK_COUNT] = {
-    60,  // Bullet Hell
-    70,  // Overcharge
-    75,  // Glass Cannon
-    65,  // Chain Lightning
-    60,  // Phoenix Down
-    65,  // Fortress
-    55,  // Shield Bash
-    70,  // Second Wind
-    50,  // Gold Fever
-    65,  // War Chest
-    60,  // Jackpot
-    80,  // Wholesale
-    55,  // Pack Rat
-    65,  // Warp Drive
-    70,  // Soul Surge
+    120, // Bullet Hell
+    140, // Overcharge
+    150, // Glass Cannon
+    130, // Chain Lightning
+    120, // Phoenix Down
+    130, // Fortress
+    110, // Shield Bash
+    140, // Second Wind
+    100, // Gold Fever
+    130, // War Chest
+    120, // Jackpot
+    160, // Wholesale
+    110, // Pack Rat
+    130, // Warp Drive
+    140, // Soul Surge
     // ── Trail Mix ──
-    70,  // Ricochet
-    60,  // Bloodlust
-    85,  // Echo Chamber
-    60,  // Thorns
-    75,  // Last Stand
-    90,  // Juggernaut
-    50,  // Double or Nothing
-    90,  // Shortcut
-    65,  // Black Market
-    55,  // Magnet
-    80,  // Pension
-    50,  // Loan Shark
-    75,  // Rewind
-    70,  // Bounty Board
-   100,  // Wildcard
+    140, // Ricochet
+    120, // Bloodlust
+    170, // Echo Chamber
+    120, // Thorns
+    150, // Last Stand
+    180, // Juggernaut
+    100, // Double or Nothing
+    180, // Shortcut
+    130, // Black Market
+    110, // Magnet
+    160, // Pension
+    100, // Loan Shark
+    150, // Rewind
+    140, // Bounty Board
+    200, // Wildcard
 };
 
 struct PerkState {
@@ -115,7 +115,7 @@ int perkGetRandom();
 // Get the max companion count (base 5 + Pack Rat)
 int perkMaxCompanions();
 
-// Get interest cap (base 5 + Jackpot)
+// Get interest cap (base 10 + Jackpot)
 int perkInterestCap();
 
 // Called at wave start to reset per-wave perk state

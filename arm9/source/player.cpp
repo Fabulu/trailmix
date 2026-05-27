@@ -13,7 +13,7 @@ void playerInit() {
     gPlayer.speed = toFixed(3);
     gPlayer.hp = 20;
     gPlayer.maxHp = 20;
-    gPlayer.gold = 0;
+    gPlayer.gold = 15;
     gPlayer.shootTimer = 0;
     gPlayer.shootCooldown = 24;
     gPlayer.bulletDamage = 3;
@@ -149,7 +149,7 @@ void playerDash() {
     // Companions gain generous invincibility too
     for (auto& c : gCompanions) {
         if (!c.active) continue;
-        c.iframes = gPlayer.dashTimer + 60; // matches player post-dash iframes
+        c.iframes = gPlayer.dashTimer + 30; // matches player post-dash iframes
     }
 
     audioPlaySfx(GSFX_DASH);
@@ -284,8 +284,8 @@ void playerUpdate(u32 held, u32 down) {
         if (gPlayer.dashTimer == 0) {
             gPlayer.isDashing = false;
             gPlayer.dashInvincible = false;
-            // Generous iframes after dash ends
-            gPlayer.iframes = 60;
+            // Post-dash iframes
+            gPlayer.iframes = 30;
         }
     } else {
         // Normal movement

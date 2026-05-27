@@ -499,7 +499,7 @@ static void updateEnemies() {
                         // Fear pulse: fear all companions + slow player
                         e.shootTimer = 120;
                         for (auto& comp : gCompanions) {
-                            if (comp.active) comp.iframes = 30; // scatter via iframes
+                            if (comp.active) comp.iframes = 15; // scatter via iframes
                         }
                         // 6-way slow projectiles
                         static const Fixed cos6[] = { 16, 8, -8, -16, -8, 8 };
@@ -662,6 +662,19 @@ static void updateEnemies() {
         };
         int typeIdx = (e.type < 22) ? e.type : 20;
         Fixed maxSpd = maxSpeedTable[typeIdx];
+        // Late-game speed boost
+        {
+            int w = gameGetWave();
+            if (w >= 15 && w <= 25) {
+                maxSpd = static_cast<Fixed>(maxSpd * 120 / 100); // +20%
+            } else if (w >= 26 && w <= 30) {
+                maxSpd = static_cast<Fixed>(maxSpd * 135 / 100); // +35% harsh
+            } else if (w > 30) {
+                int spdPct = 135 + (w - 30) * 3; // +3% per wave past 30
+                if (spdPct > 200) spdPct = 200;  // cap at +100%
+                maxSpd = static_cast<Fixed>(maxSpd * spdPct / 100);
+            }
+        }
         Fixed mag = (e.vel.x < 0 ? -e.vel.x : e.vel.x);
         Fixed magy = (e.vel.y < 0 ? -e.vel.y : e.vel.y);
         if (magy > mag) mag = magy;
@@ -777,7 +790,7 @@ void killEnemy(Enemy& e, u8 bulletColor) {
                 if (perkIsActive(PERK_JUGGERNAUT) && dmg > 1) dmg--;
                 if (dmg > 0) {
                     gPlayer.hp -= dmg;
-                    gPlayer.iframes = 90;
+                    gPlayer.iframes = 45;
                     perkOnPlayerHit();
                 }
             }
@@ -890,6 +903,9 @@ static void applyAoe(const Bullet& b) {
 static void checkBulletEnemyCollisions() {
     for (auto& b : gBullets) {
         if (!b.active) continue;
+
+        // Skip enemy bullets — they shouldn't hit enemies
+        if (b.color == BULLET_COLOR_ENEMY) continue;
 
         // Lifetime countdown (0 = unlimited)
         if (b.lifetime > 0) {
@@ -1104,7 +1120,7 @@ static void checkEnemyCompanionCollisions() {
             if (!er.overlaps(cr)) continue;
 
             c.hp -= 3;
-            c.iframes = 180;  // same generous invuln as player (3 seconds)
+            c.iframes = 90;  // 1.5 seconds invuln
             spawnParticleBurst(c.pos, 4, 6, 3);
 
             // Thorns perk: companions deal 5 damage back when hit
@@ -1150,7 +1166,7 @@ static void checkEnemyPlayerCollisions() {
             }
             if (dmg > 0) {
                 gPlayer.hp -= dmg;
-                gPlayer.iframes = 90;  // 1.5 seconds of mercy
+                gPlayer.iframes = 45;  // ~0.75 seconds of mercy
                 perkOnPlayerHit();
                 spawnParticleBurst(gPlayer.pos, 8, 10, 3);
                 audioPlaySfx(GSFX_PLAYER_HIT);
@@ -1205,6 +1221,74 @@ static void updateZones() {
     }
 }
 
+// Check bullet-player collisions (enemy bullets hitting the player)
+static void checkBulletPlayerCollisions() {
+    if (gPlayer.iframes > 0) return;   // player is invincible, skip all
+    if (gPlayer.dashInvincible) return; // dash invincibility
+
+    Rect pr = playerRect();
+
+    for (auto& b : gBullets) {
+        if (!b.active) continue;
+        if (b.color != BULLET_COLOR_ENEMY) continue; // only enemy bullets
+
+        Rect br = {
+            static_cast<s16>(b.pos.pixelX() - 3),
+            static_cast<s16>(b.pos.pixelY() - 3),
+            6, 6
+        };
+
+        if (!pr.overlaps(br)) continue;
+
+        // BFLAG_EXPLODE: AoE damage to companions in radius
+        if (b.flags & BFLAG_EXPLODE) {
+            int bx = b.pos.pixelX(), by = b.pos.pixelY();
+            int r = b.aoeRadius > 0 ? b.aoeRadius : 16;
+            for (int i = 0; i < MAX_COMPANIONS; i++) {
+                Companion& c = gCompanions[i];
+                if (!c.active) continue;
+                if (c.iframes > 0) continue;
+                int dx = c.pos.pixelX() - bx;
+                int dy = c.pos.pixelY() - by;
+                if (dx * dx + dy * dy <= r * r) {
+                    c.hp -= b.damage;
+                    c.iframes = 90;
+                    spawnParticleBurst(c.pos, 4, 6, 1);
+                    if (c.hp <= 0) {
+                        spawnParticleBurst(c.pos, 12, 15, static_cast<u8>(c.color));
+                        companionRemove(i);
+                    }
+                }
+            }
+            spawnParticleBurst(b.pos, 6, 12, 1);
+            cameraShake(2, 4);
+        }
+
+        // BFLAG_SLOW: apply slow to player (reduce speed temporarily via iframes duration)
+        // Slow effect is represented by extended iframes since player has no dedicated slow field
+        u8 iframeDuration = 45;
+        if (b.flags & BFLAG_SLOW) {
+            iframeDuration = 60; // longer recovery when slowed
+        }
+
+        // Route damage through synergy (shield absorption, damage reduction)
+        s16 dmg = synergyOnPlayerHit(b.damage);
+        // Juggernaut: reduce all incoming damage by 1 (min 1)
+        if (perkIsActive(PERK_JUGGERNAUT) && dmg > 1) dmg--;
+
+        if (dmg > 0) {
+            gPlayer.hp -= dmg;
+            gPlayer.iframes = iframeDuration;
+            perkOnPlayerHit();
+            spawnParticleBurst(gPlayer.pos, 8, 10, 1);
+            audioPlaySfx(GSFX_PLAYER_HIT);
+        }
+
+        b.active = false;
+        break; // only take damage from one bullet per frame
+    }
+}
+
 void combatUpdate() {
     // Bounty Board: assign bounty target on first frame enemies exist
     if (gPerks.bountyEnemyIdx == -2) {
@@ -1228,6 +1312,7 @@ void combatUpdate() {
     updateParticles();
     updateZones();
     checkBulletEnemyCollisions();
+    checkBulletPlayerCollisions();
     checkPlayerGoldCollisions();
     checkPlayerHealOrbCollisions();
     checkEnemyPlayerCollisions();

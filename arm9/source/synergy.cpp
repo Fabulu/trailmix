@@ -87,7 +87,7 @@ int  synergyCyanCooldownPct()    { return gSynergy.tier[static_cast<int>(PillCol
 int  synergyGoldDropPct()        { return gSynergy.tier[static_cast<int>(PillColor::Yellow)] >= 0 ? 120 : 100; }
 bool synergyFreeReroll()         { return gSynergy.tier[static_cast<int>(PillColor::Yellow)] >= 1 && !gSynergy.yellowFreeRerollUsed; }
 void synergyMarkFreeRerollUsed() { gSynergy.yellowFreeRerollUsed = true; }
-int  synergyInterestCapBonus()   { return gSynergy.tier[static_cast<int>(PillColor::Yellow)] >= 2 ? 3  : 0; }
+int  synergyInterestCapBonus()   { return gSynergy.tier[static_cast<int>(PillColor::Yellow)] >= 2 ? 6  : 0; }
 bool synergyDropHealOrbs()       { return gSynergy.tier[static_cast<int>(PillColor::Green)]  >= 1; }
 bool synergyShieldActive()       { return gSynergy.tier[static_cast<int>(PillColor::Green)]  >= 2 && gSynergy.greenShieldReady; }
 bool synergyCyanChainOnKill()    { return gSynergy.tier[static_cast<int>(PillColor::Cyan)]   >= 1; }

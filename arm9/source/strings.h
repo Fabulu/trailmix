@@ -285,9 +285,9 @@ constexpr PerkEntry kPerks[PERK_COUNT] = {
     /* [6]  SHIELD_BASH     */ { S("Shield Bash",     "Schildstoss"),       S("Dash deals 8 damage to enemies",   "Ausweichen macht 8 Schaden") },
     /* [7]  SECOND_WIND     */ { S("Second Wind",     "Zweite Luft"),       S("Full heal once when near death",   "Volle Heilung bei Todesgefahr") },
     // ── ECONOMY ──
-    /* [8]  GOLD_FEVER      */ { S("Gold Fever",      "Goldfieber"),        S("2x gold for 3 waves!",            "2x Gold fuer 3 Wellen!") },
-    /* [9]  WAR_CHEST       */ { S("War Chest",       "Kriegskasse"),       S("Get 15g now, +3g each wave",       "15g sofort, +3g jede Welle") },
-    /* [10] JACKPOT         */ { S("Jackpot",         "Jackpot"),           S("Interest cap doubled to 10",       "Zinsobergrenze auf 10 verdoppelt") },
+    /* [8]  GOLD_FEVER      */ { S("Gold Fever",      "Goldfieber"),        S("2x gold for 6 waves!",            "2x Gold fuer 6 Wellen!") },
+    /* [9]  WAR_CHEST       */ { S("War Chest",       "Kriegskasse"),       S("Get 30g now, +6g each wave",       "30g sofort, +6g jede Welle") },
+    /* [10] JACKPOT         */ { S("Jackpot",         "Jackpot"),           S("Interest cap doubled to 20",       "Zinsobergrenze auf 20 verdoppelt") },
     /* [11] WHOLESALE       */ { S("Wholesale",       "Grosshandel"),       S("Companions cost 30% less",         "Begleiter kosten 30% weniger") },
     // ── UTILITY ──
     /* [12] PACK_RAT        */ { S("Pack Rat",        "Hamsterer"),         S("+1 companion slot",                "+1 Begleiterslot") },
@@ -306,8 +306,8 @@ constexpr PerkEntry kPerks[PERK_COUNT] = {
     /* [22] SHORTCUT        */ { S("Shortcut",        "Abkuerzung"),        S("Merge with only 2 copies!",       "Verschmelze mit nur 2 Kopien!") },
     /* [23] BLACK_MARKET    */ { S("Black Market",    "Schwarzmarkt"),      S("Better rarity in shop",            "Bessere Seltenheit im Laden") },
     /* [24] MAGNET          */ { S("Magnet",          "Magnet"),            S("Double gold pickup range",         "Doppelte Gold-Aufsammelweite") },
-    /* [25] PENSION         */ { S("Pension",         "Rente"),             S("+5g bonus at wave end",            "+5g Bonus bei Wellenende") },
-    /* [26] LOAN_SHARK      */ { S("Loan Shark",      "Kredithai"),         S("Get 80g now, pay 10g/wave for 10","80g sofort, 10g/Welle fuer 10 Wellen") },
+    /* [25] PENSION         */ { S("Pension",         "Rente"),             S("+10g bonus at wave end",           "+10g Bonus bei Wellenende") },
+    /* [26] LOAN_SHARK      */ { S("Loan Shark",      "Kredithai"),         S("Get 160g now, pay 20g/wave for 10","160g sofort, 20g/Welle fuer 10 Wellen") },
     // ── TRAIL MIX: UTILITY ──
     /* [27] REWIND          */ { S("Rewind",          "Rueckspulen"),       S("Enemies flee for 2s at wave start","Feinde fliehen 2s bei Wellenstart") },
     /* [28] BOUNTY_BOARD    */ { S("Bounty Board",    "Kopfgeldtafel"),     S("One marked enemy drops 3x gold",  "Ein markierter Feind gibt 3x Gold") },
@@ -502,5 +502,49 @@ extern StrLang gActiveLang;
 inline const char* str(const StrEntry& e) {
     return (gActiveLang == StrLang::DE) ? e.de : e.en;
 }
+
+// ─────────────────────────────────────────────────────────────────
+// SAYINGS SYSTEM UI
+// ─────────────────────────────────────────────────────────────────
+constexpr int SAY_TITLE       = 0;
+constexpr int SAY_YOU_FOUND   = 1;
+constexpr int SAY_S_SAYINGS   = 2;
+constexpr int SAY_FAMILIAR    = 3;
+constexpr int SAY_PRESS_A     = 4;
+constexpr int SAY_FOUND       = 5;
+constexpr int SAY_ALL         = 6;
+constexpr int SAY_NOT_FOUND   = 7;
+constexpr int SAY_B_BACK      = 8;
+constexpr int SAY_SCROLL      = 9;
+constexpr int SAY_A_READ      = 10;
+constexpr int SAY_ENCOUNTER1  = 11;
+constexpr int SAY_ENCOUNTER2  = 12;
+constexpr int SAY_UNKNOWN     = 13;
+
+inline constexpr StrEntry kSayingsUI[] = {
+    S("SAYINGS",               "WORTE"),
+    S("YOU FOUND",             "DU HAST GEFUNDEN"),
+    S("'S SAYINGS!",           "S WORTE!"),
+    S("A FAMILIAR VOICE...",   "EINE BEKANNTE STIMME..."),
+    S("PRESS A TO READ",       "DRUECKE A ZUM LESEN"),
+    S("FOUND",                 "GEFUNDEN"),
+    S("ALL",                   "ALLE"),
+    S("NOT FOUND",             "NICHT GEFUNDEN"),
+    S("B: BACK",               "B: ZURUECK"),
+    S("UP/DOWN: SCROLL",       "HOCH/RUNTER: ROLLEN"),
+    S("A: READ",               "A: LESEN"),
+    S("ENCOUNTER 1",           "BEGEGNUNG 1"),
+    S("ENCOUNTER 2",           "BEGEGNUNG 2"),
+    S("???",                   "???"),
+    S("L/R: FILTER",           "L/R: FILTER"),
+    S("A: SELECT",             "A: WAEHLEN"),
+    S("LINE",                  "ZEILE"),
+    S("L/R: SWITCH",           "L/R: WECHSELN"),
+};
+
+constexpr int SAY_LR_FILTER   = 14;
+constexpr int SAY_A_SELECT    = 15;
+constexpr int SAY_LINE        = 16;
+constexpr int SAY_LR_SWITCH   = 17;
 
 #endif // STRINGS_H

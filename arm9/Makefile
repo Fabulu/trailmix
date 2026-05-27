@@ -40,7 +40,7 @@ CXXFLAGS := $(CFLAGS) -std=c++17 -fno-exceptions -fno-rtti
 ASFLAGS	:= -g $(ARCH)
 LDFLAGS	:= -specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lnds9
+LIBS	:= -lfilesystem -lfat -lnds9
 
 LIBDIRS	:= $(LIBNDS)
 

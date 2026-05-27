@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-constexpr int MAX_BULLETS   = 64;
+constexpr int MAX_BULLETS   = 128;
 constexpr int MAX_ENEMIES   = 32;
 constexpr int MAX_GOLD      = 24;
 constexpr int MAX_SWARMS    = 4;

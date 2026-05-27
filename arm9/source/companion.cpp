@@ -958,7 +958,7 @@ void companionOnDamage(int index, s16 dmg) {
     if (!c.active || c.iframes > 0) return;
     c.hp -= dmg;
     c.hitFlashTimer = 3;
-    c.iframes = 45;  // ~0.75 s at 60 fps
+    c.iframes = 23;  // ~0.38 s at 60 fps
     if (c.hp <= 0) companionOnDeath(index);
 }
 
@@ -979,7 +979,7 @@ void companionOnDeath(int index) {
     // Phoenix Down: revive first companion to die each wave
     if (perkIsActive(PERK_PHOENIX_DOWN) && !gPerks.phoenixUsedThisWave) {
         c.hp = c.maxHp / 2;
-        c.iframes = 90;
+        c.iframes = 45;
         gPerks.phoenixUsedThisWave = true;
         audioPlaySfx(GSFX_HEAL);
         return; // don't actually die

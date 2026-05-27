@@ -41,14 +41,14 @@ void perkApplyOnBuy(PerkId id) {
         // speed reduction applied in playerUpdate via perkIsActive check
         break;
     case PERK_GOLD_FEVER:
-        gPerks.goldFeverWaves = 3;
+        gPerks.goldFeverWaves = 6;
         break;
     case PERK_WAR_CHEST:
-        gPlayer.gold += 15;
+        gPlayer.gold += 30;
         gPerks.warChestActive = true;
         break;
     case PERK_LOAN_SHARK:
-        gPlayer.gold += 80;
+        gPlayer.gold += 160;
         gPerks.loanWavesLeft = 10;
         break;
     default:
@@ -87,7 +87,7 @@ int perkMaxCompanions() {
 }
 
 int perkInterestCap() {
-    int cap = gPerks.active[PERK_JACKPOT] ? 10 : 5;
+    int cap = gPerks.active[PERK_JACKPOT] ? 20 : 10;
     cap += synergyInterestCapBonus(); // Yellow T2: +3
     return cap;
 }
@@ -100,18 +100,18 @@ void perkOnWaveStart() {
         gPerks.goldFeverWaves--;
     }
 
-    // War Chest: +3g each wave
+    // War Chest: +6g each wave
     if (gPerks.warChestActive) {
-        gPlayer.gold += 3;
+        gPlayer.gold += 6;
     }
 
     // Bloodlust: reset kill count each wave
     gPerks.killCount = 0;
 
-    // Loan Shark: deduct 10g per wave
+    // Loan Shark: deduct 20g per wave
     if (gPerks.loanWavesLeft > 0) {
-        if (gPlayer.gold >= 10)
-            gPlayer.gold -= 10;
+        if (gPlayer.gold >= 20)
+            gPlayer.gold -= 20;
         else
             gPlayer.gold = 0;
         gPerks.loanWavesLeft--;

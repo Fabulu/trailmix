@@ -3,6 +3,7 @@
 #include "game.h"
 #include "render.h"
 #include "strings.h"
+#include "save.h"
 #include "enemy_sprites.h"
 #include "entities.h"
 
@@ -128,8 +129,11 @@ int main() {
     // Language selection before game init
     languageSelect();
 
-    // Initialize game systems
+    // Initialize game systems (includes sayingsInit + saveInit)
     gameInit();
+
+    // Language is set by languageSelect() — the player's fresh choice takes priority.
+    // The save file will store whatever language they picked on next saveWrite().
 
     // Main loop — VBlank FIRST, then flip buffers during blanking period
     while (true) {

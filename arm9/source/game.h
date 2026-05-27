@@ -10,6 +10,8 @@ enum class GameState : int {
     Shop       = 3,
     GameOver   = 4,
     Victory    = 5,
+    Encounter      = 6,
+    SayingsViewer  = 7,
     COUNT
 };
 

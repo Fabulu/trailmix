@@ -26,7 +26,8 @@ $(TARGET).nds: arm9
 	ndstool -c $(TARGET).nds \
 		-9 arm9/arm9.elf \
 		-7 $(ARM7_ELF) \
-		-b graphics/icon.bmp "Trail Mix;Roguelike Auto-Chess;Shooter"
+		-b graphics/icon.bmp "Trail Mix;Roguelike Auto-Chess;Shooter" \
+		-d nitrofs
 
 # Clean everything
 clean:

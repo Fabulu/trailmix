@@ -100,6 +100,16 @@ static const u8 FONT_5X7[][7] = {
     {0x19,0x1A,0x02,0x04,0x0B,0x13,0x13},
     // ' (index 46) — apostrophe
     {0x04,0x04,0x08,0x00,0x00,0x00,0x00},
+    // , (index 47) — comma
+    {0x00,0x00,0x00,0x00,0x00,0x04,0x08},
+    // ? (index 48) — question mark
+    {0x0E,0x11,0x01,0x02,0x04,0x00,0x04},
+    // " (index 49) — double quote
+    {0x0A,0x0A,0x00,0x00,0x00,0x00,0x00},
+    // ; (index 50) — semicolon
+    {0x00,0x04,0x00,0x00,0x00,0x04,0x08},
+    // _ (index 51) — underscore
+    {0x00,0x00,0x00,0x00,0x00,0x00,0x1F},
 };
 
 static const int CHAR_W = 5;   // glyph pixel width
@@ -121,6 +131,11 @@ static int charToFontIdx(char c) {
     if (c == '.') return 44;
     if (c == '%') return 45;
     if (c == '\'') return 46;
+    if (c == ',') return 47;
+    if (c == '?') return 48;
+    if (c == '"') return 49;
+    if (c == ';') return 50;
+    if (c == '_') return 51;
     return 0; // space for unknown
 }
 
@@ -1159,6 +1174,25 @@ void renderMenu() {
                -1, false, true, false, false, false);
     }
     oamUpdate(&oamMain);
+
+    // Bottom screen: Play / Sayings menu
+    extern int menuSelection;
+    extern bool menuDirty;
+    if (menuDirty) {
+        renderClearSub();
+        u16 selColor = RGB15(31, 28, 0);
+        u16 dimColor = RGB15(14, 14, 14);
+        const char* playLabel = (gActiveLang == StrLang::DE) ? "SPIELEN" : "PLAY";
+        const char* sayLabel  = str(kSayingsUI[SAY_TITLE]);
+        int y0 = 80, y1 = 100;
+        int x0 = 128 - renderTextWidth(playLabel) / 2;
+        int x1 = 128 - renderTextWidth(sayLabel) / 2;
+        renderTextSub(x0, y0, playLabel, menuSelection == 0 ? selColor : dimColor);
+        renderTextSub(x1, y1, sayLabel,  menuSelection == 1 ? selColor : dimColor);
+        renderTextSub((menuSelection == 0 ? x0 : x1) - 12,
+                      menuSelection == 0 ? y0 : y1, ">", selColor);
+        menuDirty = false;
+    }
 }
 
 void renderGameOver() {
