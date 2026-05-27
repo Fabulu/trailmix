@@ -337,15 +337,15 @@ static void renderLevel0Top() {
             char lvlBuf[4];
             intToStr(encLevel, lvlBuf);
             // "ENCOUNTERED: X/2" or "ENCOUNTERED: X/1"
-            bool hasE2 = (kMasters[id].e2 != nullptr || kMasters[id].e2_de != nullptr);
+            bool hasE2 = sayingsHasE2(id);
             snprintf(statusBuf, sizeof(statusBuf), "%s: %s/%d", str(kSayingsUI[SAY_FOUND]), lvlBuf, hasE2 ? 2 : 1);
             int sw = renderTextWidth(statusBuf);
             renderText(128 - sw / 2, 44, statusBuf, COL_WHITE_DIM);
 
-            // Preview: first few lines of E1 text
-            const char* e1 = sayingsGetE1(id);
+            // Preview: first few lines of E1 text (decrypt on demand)
+            const char* e1 = sayingsDecryptEncounter(id, 0);
             if (e1) {
-                int eLen = sayingsEncounterLen(e1);
+                int eLen = sayingsEncounterTextLen(id, 0);
                 textRenderWrapped(READ_MARGIN_X, 60, e1, eLen, READ_WIDTH, COL_WHITE_DIM, 0, 12);
             }
         } else {
@@ -424,7 +424,7 @@ static void renderLevel0Bottom() {
             u16 e1Color = COL_GREEN;
             renderTextSub(220, cy + 2, "E1", e1Color);
 
-            bool hasE2 = (kMasters[id].e2 != nullptr || kMasters[id].e2_de != nullptr);
+            bool hasE2 = sayingsHasE2(id);
             if (hasE2) {
                 u16 e2Color = (bits == 3) ? COL_GREEN : COL_GRAY;
                 renderTextSub(238, cy + 2, "E2", e2Color);
@@ -469,10 +469,10 @@ static void renderLevel1Top() {
     renderMasterName(128 - nw / 2, 10, id, COL_GOLD, false);
     renderFilledRect(16, 28, 224, 1, COL_GOLD_DIM);
 
-    // Preview of selected encounter
-    const char* text = (sEncSelect == 0) ? sayingsGetE1(id) : sayingsGetE2(id);
+    // Preview of selected encounter (decrypt on demand)
+    const char* text = sayingsDecryptEncounter(id, sEncSelect);
     if (text) {
-        int tLen = sayingsEncounterLen(text);
+        int tLen = sayingsEncounterTextLen(id, sEncSelect);
         textRenderWrapped(READ_MARGIN_X, 36, text, tLen, READ_WIDTH, COL_WHITE_DIM, 0, 14);
     }
 }
@@ -532,10 +532,10 @@ static void renderLevel2Top() {
     // Separator
     renderFilledRect(READ_MARGIN_X, 16, READ_WIDTH, 1, COL_GOLD_DIM);
 
-    // Word-wrapped encounter text with scroll
-    const char* text = (sReadEncounter == 0) ? sayingsGetE1(id) : sayingsGetE2(id);
+    // Word-wrapped encounter text with scroll (decrypt on demand)
+    const char* text = sayingsDecryptEncounter(id, sReadEncounter);
     if (text) {
-        int tLen = sayingsEncounterLen(text);
+        int tLen = sayingsEncounterTextLen(id, sReadEncounter);
         sReadTotalLines = textRenderWrapped(READ_MARGIN_X, READ_TEXT_Y, text, tLen,
                                              READ_WIDTH, COL_WHITE,
                                              sReadScroll, READ_VISIBLE);
@@ -601,6 +601,10 @@ void sayingsViewerRender() {
         case 1: renderLevel1Top(); break;
         case 2: renderLevel2Top(); break;
     }
+
+    // Wipe decrypted encounter text from RAM after top-screen rendering.
+    // Must happen unconditionally since the top screen renders every frame.
+    sayingsWipeBuffer();
 
     // Bottom screen: dirty-flag pattern (single-buffered, tearing risk)
     if (!sDirty) return;

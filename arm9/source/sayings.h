@@ -7,14 +7,17 @@
 constexpr int MASTER_COUNT       = 434;  // total masters in ROM data
 constexpr int MASTER_NAME_MAX    = 64;   // max chars for a name (includes NUL)
 constexpr int ENCOUNTER_MAX_LEN  = 2048; // max chars for one encounter text (DE texts can be longer)
+constexpr int ENCOUNTER_BUF_SIZE = 2048; // DTCM decrypt buffer size
 
-// --- ROM data index (built at startup from zen_masters.bin) ---
+// --- ROM data index (built at startup from encrypted NitroFS data) ---
+// Encounter text is NOT stored as pointers -- only offset+length into the
+// encrypted buffer.  Text is decrypted on demand into a DTCM buffer.
 struct MasterEntry {
-    const char* name;       // pointer into ROM data
-    const char* e1;         // encounter 1 text, English (pointer into ROM data)
-    const char* e1_de;      // encounter 1 text, German (pointer into ROM data)
-    const char* e2;         // encounter 2 text, English (nullptr if "---")
-    const char* e2_de;      // encounter 2 text, German (nullptr if "---")
+    const char* name;       // pointer into persistent name buffer (decrypted)
+    int         e1Len;      // length of E1 text in bytes (0 = no E1)
+    int         e2Len;      // length of E2 text in bytes (0 = no E2 / "---")
+    long        e1Offset;   // byte offset of E1 text in the encrypted buffer
+    long        e2Offset;   // byte offset of E2 text in the encrypted buffer
 };
 
 extern const MasterEntry* kMasters;  // array of MASTER_COUNT, built by sayingsInit()
@@ -59,16 +62,23 @@ int  sayingsGetEncounterLevel(int id);  // 0, 1, or 2
 // --- Encounter selection (called after boss kill) ---
 struct EncounterResult {
     int  masterId;          // index into kMasters[]
+    int  encounter;         // 0 = E1, 1 = E2
     bool isDuplicate;       // true if player already had this encounter level
-    const char* text;       // pointer to the encounter text to display (language-aware)
 };
 
 EncounterResult sayingsRollEncounter(); // RNG + duplicate logic
 void sayingsMarkFound(const EncounterResult& r); // update bits[] after player reads it
 
-// --- Language-aware text access ---
-const char* sayingsGetE1(int id);       // returns e1 or e1_de based on gActiveLang
-const char* sayingsGetE2(int id);       // returns e2 or e2_de based on gActiveLang
+// --- On-demand encounter decryption (RAM protection) ---
+// Decrypts a single encounter into a small DTCM buffer and returns a pointer.
+// The buffer is overwritten on each call -- only one encounter in memory at a time.
+const char* sayingsDecryptEncounter(int masterId, int encounter);
+
+// Wipe the DTCM decrypt buffer (call after rendering encounter text each frame)
+void sayingsWipeBuffer();
+
+// Check if a master has E2 text available
+bool sayingsHasE2(int id);
 
 // --- Viewer helpers ---
 int  sayingsFoundCount();               // how many masters have any encounter
@@ -79,6 +89,9 @@ void sayingsGetSortedIds(int* out, int* count, bool foundOnly);
 
 // --- Name/text helpers ---
 int sayingsMasterNameLen(int id);       // length of name (stops at ' ===' or '\n')
-int sayingsEncounterLen(const char* e); // length of encounter text (stops at '\n')
+int sayingsEncounterTextLen(int masterId, int encounter); // length of encounter text
+
+// --- Internal data pipeline (do not call directly) ---
+void initEncounterDecoder();
 
 #endif // SAYINGS_H

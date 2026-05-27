@@ -1,6 +1,9 @@
-# Claude agent run directories
+# Claude Code infrastructure (contains encryption hints)
+.claude/
+CLAUDE.md
+docs/coding_agents/
 runs/
-!runs/.gitkeep
+subagents/
 
 # Log files
 *.log
@@ -29,6 +32,13 @@ arm9/build/
 .tmp_audio_sources/
 .claude/
 subagents/
+
+# Zen masters plaintext content (never commit — see tools/encrypt_zen.py)
+data/zen_masters*.txt
+data/zen_masters*.bin
+nitrofs/zen_masters*.txt
+arm9/data/zen_masters*.bin
+# NOTE: nitrofs/zen_masters_*.enc files ARE tracked (committed) so contributors can build
 
 # OS
 Thumbs.db

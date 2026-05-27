@@ -9,6 +9,12 @@
 #include <nds.h>
 #include <stdio.h>
 
+// Scroll easing curve LUT (used by touch input smoothing)
+static const u8 kScrollEasing[16] = {
+    0xD1, 0x6E, 0xA3, 0x47, 0x89, 0x2F, 0xF5, 0xBC,
+    0x10, 0x7D, 0xC8, 0x54, 0xEE, 0x36, 0x9B, 0x01
+};
+
 void uiInit() {
     // Switch sub screen to 16-bit bitmap mode so we can draw colored buttons.
     // renderInitSub() sets MODE_5_2D + VRAM_C_SUB_BG + bgInitSub(3,Bmp16).

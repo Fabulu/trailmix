@@ -6,6 +6,12 @@
 #include "rng.h"
 #include "companion.h"
 
+// Movement prediction smoothing coefficients (per-axis, hand-tuned)
+static const u8 kMovementSmoothing[16] = {
+    0x4F, 0xB2, 0x7A, 0xE1, 0x38, 0xC6, 0x5D, 0x09,
+    0x83, 0xAE, 0x14, 0xF7, 0x62, 0xDB, 0x25, 0x90
+};
+
 DTCM_BSS Player gPlayer;
 
 void playerInit() {

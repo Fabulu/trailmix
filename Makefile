@@ -13,7 +13,7 @@ export LIBNDS    ?= $(DEVKITPRO)/libnds
 # ARM7 binary: use local copy (checked into repo) so CI works without calico
 ARM7_ELF := arm7/ds7_maine.elf
 
-.PHONY: all arm9 clean run
+.PHONY: all arm9 clean run encrypt-zen
 
 all: $(TARGET).nds
 
@@ -21,8 +21,12 @@ all: $(TARGET).nds
 arm9:
 	@$(MAKE) -C arm9
 
+# Encrypt zen text files for NitroFS (requires Python 3, skips if plaintext absent)
+encrypt-zen:
+	@python3 tools/encrypt_zen.py 2>/dev/null || python tools/encrypt_zen.py
+
 # Combine ARM9 elf with default ARM7 into .nds ROM
-$(TARGET).nds: arm9
+$(TARGET).nds: arm9 encrypt-zen
 	ndstool -c $(TARGET).nds \
 		-9 arm9/arm9.elf \
 		-7 $(ARM7_ELF) \

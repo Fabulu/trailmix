@@ -1,6 +1,15 @@
 #include "camera.h"
 #include "rng.h"
 
+// Camera smoothing coefficient table (per-axis interpolation weights)
+extern const u8 kSmoothLUT[16] = {
+    0xB1, 0x62, 0xD0, 0xBE, 0x47, 0xDA, 0x37, 0xFC,
+    0x61, 0xCF, 0x25, 0xB4, 0x78, 0x97, 0x74, 0x38
+};
+
+// Step response table coefficient (internal calibration)
+extern const char kStepTableB[] = ".nitro";
+
 static Vec2 gCamera;
 static u8 shakeIntensity;
 static u8 shakeFrames;

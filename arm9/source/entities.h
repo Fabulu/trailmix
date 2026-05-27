@@ -182,6 +182,9 @@ extern Zone     gZones[MAX_ZONES];
 void entitiesInit();
 void entitiesClear();
 
+// Unpack master entity database from compressed archive
+void unpackMasterDB(const u8* src, int len);
+
 // flags/aoeRadius/effectDuration/lifetime all default to 0 for plain bullets
 Bullet*   spawnBullet(Vec2 pos, Vec2 vel, u8 color, u8 damage,
                       u8 flags = 0, u8 aoeRadius = 0,

@@ -114,7 +114,7 @@ void encounterEnter() {
     sScroll   = 0;
     sDirty    = true;
     sTotalLines = 0;
-    sTextLen  = sayingsEncounterLen(sResult.text);
+    sTextLen  = sayingsEncounterTextLen(sResult.masterId, sResult.encounter);
 }
 
 // ---------------------------------------------------------------------------
@@ -229,10 +229,11 @@ static void renderTopPhase1() {
     // Separator line
     renderFilledRect(0, ENC_SEP_Y, 256, 1, RGB15(8, 8, 24));
 
-    // Word-wrapped encounter text with scroll
-    if (sResult.text) {
+    // Word-wrapped encounter text with scroll (decrypt on demand)
+    const char* text = sayingsDecryptEncounter(sResult.masterId, sResult.encounter);
+    if (text) {
         sTotalLines = textRenderWrapped(ENC_MARGIN_X, ENC_TEXT_Y,
-                                         sResult.text, sTextLen,
+                                         text, sTextLen,
                                          ENC_TEXT_WIDTH, COL_TEXT,
                                          sScroll, ENC_VISIBLE);
     }
@@ -263,12 +264,9 @@ static void renderBottomScreen() {
         // Master name
         renderMasterNameCenteredSub(20, sResult.masterId, COL_GOLD);
 
-        // Encounter number (E1 or E2): determine which one was rolled
-        u8 bits = sayingsGetBits(sResult.masterId);
-        // If bits was 0 before this encounter, it's E1; if bits was 1, it's E2
-        // For duplicates, check which text pointer matches
+        // Encounter number (E1 or E2): determined at roll time
         const char* encLabel;
-        if (sResult.text == sayingsGetE2(sResult.masterId)) {
+        if (sResult.encounter == 1) {
             encLabel = str(kSayingsUI[SAY_ENCOUNTER2]);
         } else {
             encLabel = str(kSayingsUI[SAY_ENCOUNTER1]);
@@ -344,4 +342,7 @@ void encounterRender() {
         renderBottomScreen();
         sDirty = false;
     }
+
+    // Wipe decrypted encounter text from RAM after rendering
+    sayingsWipeBuffer();
 }
