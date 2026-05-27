@@ -4,6 +4,7 @@
 #include "render.h"
 #include "strings.h"
 #include "save.h"
+#include <filesystem.h>
 #include "enemy_sprites.h"
 #include "entities.h"
 
@@ -119,12 +120,17 @@ void languageSelect() {
     }
 }
 
-int main() {
+int main(int argc, char** argv) {
+    (void)argc;
     // Hardware power-on
     powerOn(POWER_ALL_2D);
 
     // Map screens: top = main engine, bottom = sub engine
     lcdMainOnTop();
+
+    // Store argv globally for NitroFS init (needed by sayingsInit)
+    extern char** gArgv;
+    gArgv = argv;
 
     // Language selection before game init
     languageSelect();

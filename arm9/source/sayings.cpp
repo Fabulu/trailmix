@@ -60,10 +60,12 @@ static int findMasterByName(const char* name, const char* nameEnd) {
     return -1;
 }
 
+// Global argv pointer set by main() for NitroFS
+char** gArgv = nullptr;
+
 // Load German text from NitroFS and fill in e1_de/e2_de pointers
 static void loadGermanFromNitroFS() {
-    if (!nitroFSInit(NULL)) return;
-
+    if (!nitroFSInit(gArgv)) return;
     FILE* f = fopen("nitro:/zen_masters_de.txt", "rb");
     if (!f) return;
 
@@ -124,13 +126,46 @@ static void loadGermanFromNitroFS() {
     }
 }
 
+// Buffer for NitroFS-loaded text data (kept alive entire session)
+static char* sMainBuffer = nullptr;
+
 void sayingsInit() {
     memset(&gSayings, 0, sizeof(gSayings));
     memset(sMasterIndex, 0, sizeof(sMasterIndex));
 
-    // Data is embedded uncompressed — read directly from ROM
-    const char* data = reinterpret_cast<const char*>(zen_masters_bin);
-    const char* end  = reinterpret_cast<const char*>(zen_masters_bin_end);
+    // Load the appropriate language file from NitroFS
+    const char* filename = (gActiveLang == StrLang::DE)
+        ? "nitro:/zen_masters_de.txt"
+        : "nitro:/zen_masters_en.txt";
+
+    // Try NitroFS first
+    const char* data = nullptr;
+    const char* end  = nullptr;
+
+    if (nitroFSInit(gArgv)) {
+        FILE* f = fopen(filename, "rb");
+        if (f) {
+            fseek(f, 0, SEEK_END);
+            long size = ftell(f);
+            fseek(f, 0, SEEK_SET);
+            if (size > 0) {
+                sMainBuffer = (char*)malloc(size + 1);
+                if (sMainBuffer) {
+                    fread(sMainBuffer, 1, size, f);
+                    sMainBuffer[size] = '\0';
+                    data = sMainBuffer;
+                    end = sMainBuffer + size;
+                }
+            }
+            fclose(f);
+        }
+    }
+
+    // Fallback: use embedded ROM data (English only)
+    if (!data) {
+        data = reinterpret_cast<const char*>(zen_masters_bin);
+        end  = reinterpret_cast<const char*>(zen_masters_bin_end);
+    }
 
     int idx = 0;
     const char* p = data;
@@ -185,10 +220,9 @@ void sayingsInit() {
         idx++;
     }
 
-    // If language is German, load German text from NitroFS
-    if (gActiveLang == StrLang::DE) {
-        loadGermanFromNitroFS();
-    }
+    // When loaded from NitroFS, the language-specific file has E1/E2 lines
+    // that go directly into e1/e2 (not e1_de/e2_de). The language-aware
+    // accessors sayingsGetE1/E2 will just return e1/e2 since e1_de is null.
 }
 
 // ---------------------------------------------------------------------------
