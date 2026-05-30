@@ -59,6 +59,7 @@ SayingsState gSayings;
 // Encrypted file data (kept in RAM, never decrypted in place)
 static u8*  sEncBuffer = nullptr;
 static long sEncSize   = 0;
+static bool sNeedDecrypt = true;  // false when using embedded plaintext fallback
 
 // Persistent name buffer (decrypted names, copied out of temp parse buffer)
 static char* sNameBuffer = nullptr;
@@ -82,6 +83,13 @@ char** gArgv = nullptr;
 static bool decryptRegion(long offset, int len) {
     if (len <= 0 || len >= ENCOUNTER_BUF_SIZE) return false;
     if (!sEncBuffer || offset < 0 || offset + len > sEncSize) return false;
+
+    // Plaintext fallback: just copy directly
+    if (!sNeedDecrypt) {
+        memcpy(sDecryptBuf, sEncBuffer + offset, len);
+        sDecryptBuf[len] = '\0';
+        return true;
+    }
 
     // Build key
     u8 key[32];
@@ -141,27 +149,58 @@ void sayingsInit() {
         ? "nitro:/sfx_table_alt.bin"
         : "nitro:/sfx_table.bin";
 
-    // Load encrypted file from NitroFS
-    if (!nitroFSInit(gArgv)) return;
+    // Try NitroFS (works on melonDS with DLDI, encrypted files)
+    // On real R4 hardware, nitroFSInit may crash — so try embedded data first,
+    // only attempt NitroFS if embedded data isn't available
+    bool loaded = false;
 
-    FILE* f = fopen(encFile, "rb");
-    if (!f) return;
+    // For German: must use NitroFS (encrypted German file)
+    // For English: try embedded plaintext first (safe on real hardware),
+    //             fall back to NitroFS if embedded is a stub
+    if (gActiveLang == StrLang::EN) {
+        extern const u8 zen_masters_bin[];
+        extern const u8 zen_masters_bin_end[];
+        long embeddedSize = (long)(zen_masters_bin_end - zen_masters_bin);
+        if (embeddedSize > 100) {
+            sEncSize = embeddedSize;
+            sEncBuffer = (u8*)malloc(sEncSize);
+            if (sEncBuffer) {
+                memcpy(sEncBuffer, zen_masters_bin, sEncSize);
+                sNeedDecrypt = false;
+                loaded = true;
+            }
+        }
+    }
 
-    fseek(f, 0, SEEK_END);
-    sEncSize = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if (sEncSize <= 0) { fclose(f); return; }
+    // German, or English without embedded data: try NitroFS
+    if (!loaded && nitroFSInit(gArgv)) {
+        FILE* f = fopen(encFile, "rb");
+        if (f) {
+            fseek(f, 0, SEEK_END);
+            sEncSize = ftell(f);
+            fseek(f, 0, SEEK_SET);
+            if (sEncSize > 0) {
+                sEncBuffer = (u8*)malloc(sEncSize);
+                if (sEncBuffer) {
+                    fread(sEncBuffer, 1, sEncSize, f);
+                    loaded = true;
+                    sNeedDecrypt = true;
+                }
+            }
+            fclose(f);
+        }
+    }
 
-    sEncBuffer = (u8*)malloc(sEncSize);
-    if (!sEncBuffer) { fclose(f); sEncSize = 0; return; }
-    fread(sEncBuffer, 1, sEncSize, f);
-    fclose(f);
+    // No data loaded at all — give up gracefully
+    if (!loaded) return;
+
+    if (!sEncBuffer || sEncSize <= 0) return;
 
     // Temporarily decrypt a copy for parsing (to build the name + offset index)
     char* tmp = (char*)malloc(sEncSize + 1);
     if (!tmp) return;
     memcpy(tmp, sEncBuffer, sEncSize);
-    {
+    if (sNeedDecrypt) {
         u8 key[32];
         int keyLen = buildKey(key, sLangTag);
         processStream(key, keyLen, (u8*)tmp, (int)sEncSize);

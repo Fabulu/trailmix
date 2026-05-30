@@ -5,6 +5,7 @@
 #include "strings.h"
 #include "save.h"
 #include <filesystem.h>
+#include <fat.h>
 #include "enemy_sprites.h"
 #include "entities.h"
 
@@ -127,6 +128,11 @@ int main(int argc, char** argv) {
 
     // Map screens: top = main engine, bottom = sub engine
     lcdMainOnTop();
+
+    // NOTE: fatInitDefault() is NOT called here.
+    // On melonDS with DLDI enabled, NitroFS handles its own init.
+    // On real R4 hardware, fatInitDefault() causes a white screen crash.
+    // Saves are handled in saveInit() which tries fat independently.
 
     // Store argv globally for NitroFS init (needed by sayingsInit)
     extern char** gArgv;

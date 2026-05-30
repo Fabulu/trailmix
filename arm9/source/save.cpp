@@ -31,9 +31,12 @@ static u8 computeChecksum(const u8* data, int len) {
 // saveInit -- init libfat, read save file, validate magic + version + checksum
 // ---------------------------------------------------------------------------
 void saveInit() {
-    // Initialize libfat for SD card access
-    sFatOk = fatInitDefault();
-    if (!sFatOk) { sValid = false; return; }
+    // Saves disabled — fatInitDefault() crashes on some R4 hardware.
+    // Sayings collection persists within a session but not across power cycles.
+    // TODO: find a save method that works on both melonDS and real R4.
+    sFatOk = false;
+    sValid = false;
+    return;
 
     FILE* f = fopen(SAVE_PATH, "rb");
     if (!f) { sValid = false; return; }
