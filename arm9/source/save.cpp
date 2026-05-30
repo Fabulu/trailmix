@@ -31,12 +31,9 @@ static u8 computeChecksum(const u8* data, int len) {
 // saveInit -- init libfat, read save file, validate magic + version + checksum
 // ---------------------------------------------------------------------------
 void saveInit() {
-    // Saves disabled — fatInitDefault() crashes on some R4 hardware.
-    // Sayings collection persists within a session but not across power cycles.
-    // TODO: find a save method that works on both melonDS and real R4.
-    sFatOk = false;
-    sValid = false;
-    return;
+    // Don't call fatInitDefault() — NitroFS already initialized fat.
+    // Just try to open/create the save file directly.
+    sFatOk = true;
 
     FILE* f = fopen(SAVE_PATH, "rb");
     if (!f) { sValid = false; return; }
