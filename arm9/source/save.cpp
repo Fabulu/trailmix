@@ -31,9 +31,10 @@ static u8 computeChecksum(const u8* data, int len) {
 // saveInit -- init libfat, read save file, validate magic + version + checksum
 // ---------------------------------------------------------------------------
 void saveInit() {
-    // Don't call fatInitDefault() — NitroFS already initialized fat.
-    // Just try to open/create the save file directly.
-    sFatOk = true;
+    // Skip saves entirely — fat initialization crashes on some R4 carts
+    sFatOk = false;
+    sValid = false;
+    return;
 
     FILE* f = fopen(SAVE_PATH, "rb");
     if (!f) { sValid = false; return; }

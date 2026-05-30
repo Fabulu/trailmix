@@ -154,11 +154,24 @@ void sayingsInit() {
     // only attempt NitroFS if embedded data isn't available
     bool loaded = false;
 
-    // Try NitroFS — use NULL (reads from cart ROM directly on real hardware)
-    // gArgv is needed for melonDS but crashes on some R4 carts
-    bool nitroOk = nitroFSInit(NULL);
+    // Try embedded English first (always works, even on R4 real hardware)
+    {
+        extern const u8 zen_masters_bin[];
+        extern const u8 zen_masters_bin_end[];
+        long embeddedSize = (long)(zen_masters_bin_end - zen_masters_bin);
+        if (embeddedSize > 100) {
+            sEncSize = embeddedSize;
+            sEncBuffer = (u8*)malloc(sEncSize);
+            if (sEncBuffer) {
+                memcpy(sEncBuffer, zen_masters_bin, sEncSize);
+                sNeedDecrypt = false;
+                loaded = true;
+            }
+        }
+    }
 
-    if (nitroOk) {
+    // If German or embedded failed, try NitroFS (melonDS only — crashes on R4)
+    if (!loaded && nitroFSInit(gArgv)) {
         FILE* f = fopen(encFile, "rb");
         if (f) {
             fseek(f, 0, SEEK_END);
